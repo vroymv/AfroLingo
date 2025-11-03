@@ -1,75 +1,133 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { Colors } from "@/constants/Colors";
+import { useOnboarding } from "@/contexts/OnboardingContext";
+import { useColorScheme } from "@/hooks/useColorScheme";
+import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+// Import home components
+import CommunitySection from "@/components/home/CommunitySection";
+import CulturalNuggetCard from "@/components/home/CulturalNuggetCard";
+import DailyGoalCard from "@/components/home/DailyGoalCard";
+import HeaderSection from "@/components/home/HeaderSection";
+import HeritageJourneySection from "@/components/home/HeritageJourneySection";
+import QuickActionsSection from "@/components/home/QuickActionsSection";
+import { useLessonProgress } from "@/contexts/LessonProgressContext";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const { state } = useOnboarding();
+  const colorScheme = useColorScheme();
+  const { activeLesson, startLesson, nextLessonId } = useLessonProgress();
+
+  useEffect(() => {
+    if (!state.isCompleted) {
+      setTimeout(() => {
+        router.push("/(onboarding)/welcome" as any);
+      }, 100);
+    }
+  }, [state.isCompleted, router]);
+
+  if (!state.isCompleted) {
+    return (
+      <ThemedView style={styles.loadingContainer}>
+        <ThemedText>Setting up your learning experience...</ThemedText>
+      </ThemedView>
+    );
+  }
+
+  const handleTodayLesson = () => {
+    // If already have an active (not completed) lesson, resume, else pick next lesson
+    let targetLessonId = activeLesson?.lessonId;
+    if (!targetLessonId) {
+      targetLessonId = nextLessonId();
+      if (targetLessonId) {
+        startLesson(targetLessonId);
+      }
+    }
+    if (targetLessonId) {
+      router.push(`/learn/lesson/${targetLessonId}` as any);
+    } else {
+      console.warn("No lessons available");
+    }
+  };
+
+  const handleQuickAction = (action: string) => {
+    // Handle quick actions
+    console.log(`Starting ${action} practice...`);
+  };
+
+  const handleLessonPress = (lessonName: string) => {
+    // Navigate to specific lesson
+    console.log(`Opening lesson: ${lessonName}`);
+  };
+
+  const handleNavigateToCommunity = () => {
+    console.log("Navigate to Community tab");
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <SafeAreaView
+      style={[
+        styles.safeContainer,
+        { backgroundColor: Colors[colorScheme ?? "light"].background },
+      ]}
+    >
+      <StatusBar style="auto" />
+      <ScrollView
+        style={[
+          styles.container,
+          { backgroundColor: Colors[colorScheme ?? "light"].background },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <HeaderSection selectedLanguage={state.selectedLanguage} />
+
+        <DailyGoalCard onContinueLesson={handleTodayLesson} />
+
+        <QuickActionsSection
+          selectedLanguage={state.selectedLanguage}
+          onQuickAction={handleQuickAction}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+
+        <CommunitySection
+          selectedLanguage={state.selectedLanguage}
+          onNavigateToCommunity={handleNavigateToCommunity}
+        />
+
+        <HeritageJourneySection
+          selectedLanguage={state.selectedLanguage}
+          selectedLevel={state.selectedLevel}
+          onLessonPress={handleLessonPress}
+        />
+
+        <CulturalNuggetCard selectedLanguage={state.selectedLanguage} />
+
+        <View style={styles.bottomPadding} />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  safeContainer: {
+    flex: 1,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  container: {
+    paddingTop: 2,
+    flex: 1,
+  },
+  bottomPadding: {
+    height: 40,
   },
 });
