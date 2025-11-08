@@ -1,0 +1,1532 @@
+{
+  "id": "main-path",
+  "name": "African Languages Journey",
+  "totalXP": 0,
+  "units": [
+    {
+      "id": "unit-1",
+      "title": "Beginning - The Alphabet",
+      "level": "Absolute Beginner",
+      "progress": 0,
+      "totalLessons": 1,
+      "completedLessons": 0,
+      "icon": "🔤",
+      "color": "#4CAF50",
+      "xpReward": 50,
+      "lessons": [
+        {
+          "id": "lesson-alphabet",
+          "phrase": "The Swahili Alphabet",
+          "meaning": "Learn the foundation of the language",
+          "pronunciation": "ah-leh-fah-beh-tee",
+          "alphabetImage": "/assets/images/Swahili-alphabet.png",
+          "audio": "/assets/audio/swahili-alphabet.mp3",
+          "activities": [
+            {
+              "id": "activity-alphabet-1",
+              "type": "introduction",
+              "question": "Welcome! Let's start your journey by learning the Swahili alphabet."
+            },
+            {
+              "id": "activity-alphabet-2",
+              "type": "alphabet",
+              "question": "The Swahili Alphabet"
+            },
+            {
+              "id": "activity-alphabet-3",
+              "type": "listening-dictation",
+              "question": "Listening Exercise: Write What You Hear",
+              "audio": "/assets/audio/alphabet-dictation.mp3"
+            },
+            {
+              "id": "activity-alphabet-4",
+              "type": "vocabulary-fill-in",
+              "question": "Complete the Vocabulary Words",
+              "audio": "/assets/audio/vocabulary-items.mp3"
+            },
+            {
+              "id": "activity-alphabet-5",
+              "type": "alphabet-vocabulary-table",
+              "question": "Alphabet with Example Words",
+              "description": "Learn words that start with each letter"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unit-2",
+      "title": "Numbers - Counting in Swahili",
+      "level": "Absolute Beginner",
+      "progress": 0,
+      "totalLessons": 1,
+      "completedLessons": 0,
+      "icon": "🔢",
+      "color": "#2196F3",
+      "xpReward": 75,
+      "lessons": [
+        {
+          "id": "lesson-counting",
+          "phrase": "Counting in Swahili",
+          "meaning": "Learn to count from 1 to 1000",
+          "pronunciation": "he-sa-bu",
+          "audio": "/assets/audio/swahili-counting.mp3",
+          "activities": [
+            {
+              "id": "activity-counting-1",
+              "type": "introduction",
+              "question": "Let's learn to count in Swahili! Numbers are essential for everyday conversations."
+            },
+            {
+              "id": "activity-counting-2",
+              "type": "numbers-table",
+              "question": "Numbers 1-20",
+              "description": "Learn to count from one to twenty",
+              "audio": "/assets/audio/numbers-1-20.mp3"
+            },
+            {
+              "id": "activity-counting-3",
+              "type": "numbers-table",
+              "question": "Tens (30-100)",
+              "description": "Learn to count by tens",
+              "audio": "/assets/audio/numbers-tens.mp3"
+            },
+            {
+              "id": "activity-counting-4",
+              "type": "numbers-table",
+              "question": "Hundreds and Thousands",
+              "description": "Learn larger numbers",
+              "audio": "/assets/audio/numbers-hundreds.mp3"
+            },
+            {
+              "id": "activity-counting-5",
+              "type": "multiple-choice",
+              "question": "What is 'tano' in English?",
+              "options": ["Three", "Four", "Five", "Six"],
+              "correctAnswer": 2,
+              "explanation": "Tano means five in Swahili"
+            },
+            {
+              "id": "activity-counting-6",
+              "type": "multiple-choice",
+              "question": "How do you say '15' in Swahili?",
+              "options": [
+                "kumi na tano",
+                "kumi na nne",
+                "ishirini",
+                "thelathini"
+              ],
+              "correctAnswer": 0,
+              "explanation": "15 is 'kumi na tano' (ten and five)"
+            },
+            {
+              "id": "activity-counting-7",
+              "type": "multiple-choice",
+              "question": "What is 'hamsini'?",
+              "options": ["30", "40", "50", "60"],
+              "correctAnswer": 2,
+              "explanation": "Hamsini means fifty"
+            },
+            {
+              "id": "activity-counting-8",
+              "type": "numbers-listening",
+              "question": "Numbers Listening Exercise",
+              "description": "Listen and write the 10 numbers you hear",
+              "audio": "/assets/audio/numbers-listening-exercise.mp3"
+            },
+            {
+              "id": "activity-counting-9",
+              "type": "numbers-translation",
+              "question": "Translate Numbers to Figures",
+              "description": "Convert Swahili numbers into numeric form"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unit-3",
+      "title": "Days, Months, and Seasons",
+      "level": "Absolute Beginner",
+      "progress": 0,
+      "totalLessons": 1,
+      "completedLessons": 0,
+      "icon": "📅",
+      "color": "#9C27B0",
+      "xpReward": 100,
+      "lessons": [
+        {
+          "id": "lesson-time",
+          "phrase": "Siku, Miezi, na Majira",
+          "meaning": "Days, Months, and Seasons",
+          "pronunciation": "see-koo, mee-eh-zee, nah mah-jee-rah",
+          "audio": "/assets/audio/swahili-time.mp3",
+          "activities": [
+            {
+              "id": "activity-time-1",
+              "type": "introduction",
+              "question": "Let's learn how to talk about days, months, and seasons in Swahili!"
+            },
+            {
+              "id": "activity-time-2",
+              "type": "vocabulary-table",
+              "question": "Days of the Week",
+              "description": "Learn the seven days",
+              "audio": "/assets/audio/days-week.mp3",
+              "items": [
+                {
+                  "swahili": "Jumatatu",
+                  "english": "Monday",
+                  "pronunciation": "joo-mah-tah-too"
+                },
+                {
+                  "swahili": "Jumanne",
+                  "english": "Tuesday",
+                  "pronunciation": "joo-mah-neh"
+                },
+                {
+                  "swahili": "Jumatano",
+                  "english": "Wednesday",
+                  "pronunciation": "joo-mah-tah-no"
+                },
+                {
+                  "swahili": "Alhamisi",
+                  "english": "Thursday",
+                  "pronunciation": "al-hah-mee-see"
+                },
+                {
+                  "swahili": "Ijumaa",
+                  "english": "Friday",
+                  "pronunciation": "ee-joo-mah"
+                },
+                {
+                  "swahili": "Jumamosi",
+                  "english": "Saturday",
+                  "pronunciation": "joo-mah-mo-see"
+                },
+                {
+                  "swahili": "Jumapili",
+                  "english": "Sunday",
+                  "pronunciation": "joo-mah-pee-lee"
+                }
+              ]
+            },
+            {
+              "id": "activity-time-3",
+              "type": "vocabulary-table",
+              "question": "Months of the Year",
+              "description": "Learn all twelve months",
+              "audio": "/assets/audio/months-year.mp3",
+              "items": [
+                {
+                  "swahili": "Januari",
+                  "english": "January",
+                  "pronunciation": "jah-noo-ah-ree"
+                },
+                {
+                  "swahili": "Februari",
+                  "english": "February",
+                  "pronunciation": "feh-broo-ah-ree"
+                },
+                {
+                  "swahili": "Machi",
+                  "english": "March",
+                  "pronunciation": "mah-chee"
+                },
+                {
+                  "swahili": "Aprili",
+                  "english": "April",
+                  "pronunciation": "ah-pree-lee"
+                },
+                {
+                  "swahili": "Mei",
+                  "english": "May",
+                  "pronunciation": "meh-ee"
+                },
+                {
+                  "swahili": "Juni",
+                  "english": "June",
+                  "pronunciation": "joo-nee"
+                },
+                {
+                  "swahili": "Julai",
+                  "english": "July",
+                  "pronunciation": "joo-lah-ee"
+                },
+                {
+                  "swahili": "Agosti",
+                  "english": "August",
+                  "pronunciation": "ah-go-stee"
+                },
+                {
+                  "swahili": "Septemba",
+                  "english": "September",
+                  "pronunciation": "seh-ptem-bah"
+                },
+                {
+                  "swahili": "Oktoba",
+                  "english": "October",
+                  "pronunciation": "ok-to-bah"
+                },
+                {
+                  "swahili": "Novemba",
+                  "english": "November",
+                  "pronunciation": "no-vem-bah"
+                },
+                {
+                  "swahili": "Desemba",
+                  "english": "December",
+                  "pronunciation": "deh-sem-bah"
+                }
+              ]
+            },
+            {
+              "id": "activity-time-4",
+              "type": "vocabulary-table",
+              "question": "Seasons",
+              "description": "Learn about the seasons",
+              "audio": "/assets/audio/seasons.mp3",
+              "items": [
+                {
+                  "swahili": "Kiangazi",
+                  "english": "Summer/Dry Season",
+                  "pronunciation": "kee-ah-ngah-zee"
+                },
+                {
+                  "swahili": "Masika",
+                  "english": "Rainy Season",
+                  "pronunciation": "mah-see-kah"
+                },
+                {
+                  "swahili": "Kipupwe",
+                  "english": "Cool Season",
+                  "pronunciation": "kee-poo-pweh"
+                },
+                {
+                  "swahili": "Majira",
+                  "english": "Seasons (general)",
+                  "pronunciation": "mah-jee-rah"
+                }
+              ]
+            },
+            {
+              "id": "activity-time-5",
+              "type": "multiple-choice",
+              "question": "What day comes after 'Jumanne'?",
+              "options": ["Jumatatu", "Jumatano", "Alhamisi", "Ijumaa"],
+              "correctAnswer": 1,
+              "explanation": "Jumatano (Wednesday) comes after Jumanne (Tuesday)"
+            },
+            {
+              "id": "activity-time-6",
+              "type": "multiple-choice",
+              "question": "Which month is 'Machi'?",
+              "options": ["February", "March", "April", "May"],
+              "correctAnswer": 1,
+              "explanation": "Machi is March in Swahili"
+            },
+            {
+              "id": "activity-time-7",
+              "type": "multiple-choice",
+              "question": "What is the Swahili word for Friday?",
+              "options": ["Jumamosi", "Jumapili", "Ijumaa", "Alhamisi"],
+              "correctAnswer": 2,
+              "explanation": "Ijumaa means Friday in Swahili"
+            },
+            {
+              "id": "activity-time-8",
+              "type": "spelling-completion",
+              "question": "Complete the Days of the Week",
+              "description": "Fill in the missing letters to complete each day",
+              "items": [
+                {
+                  "word": "Jumatatu",
+                  "blanks": "Juma_a_u",
+                  "meaning": "Monday"
+                },
+                {
+                  "word": "Jumanne",
+                  "blanks": "Juma_ _e",
+                  "meaning": "Tuesday"
+                },
+                {
+                  "word": "Jumatano",
+                  "blanks": "Juma_an_",
+                  "meaning": "Wednesday"
+                },
+                {
+                  "word": "Alhamisi",
+                  "blanks": "Al_ami_i",
+                  "meaning": "Thursday"
+                },
+                {
+                  "word": "Ijumaa",
+                  "blanks": "I_um_a",
+                  "meaning": "Friday"
+                },
+                {
+                  "word": "Jumamosi",
+                  "blanks": "Juma_o_i",
+                  "meaning": "Saturday"
+                },
+                {
+                  "word": "Jumapili",
+                  "blanks": "Juma_i_i",
+                  "meaning": "Sunday"
+                }
+              ]
+            },
+            {
+              "id": "activity-time-9",
+              "type": "spelling-completion",
+              "question": "Complete the Months of the Year",
+              "description": "Fill in the missing letters to complete each month",
+              "items": [
+                {
+                  "word": "Januari",
+                  "blanks": "Jan_a_i",
+                  "meaning": "January"
+                },
+                {
+                  "word": "Februari",
+                  "blanks": "Feb_ua_i",
+                  "meaning": "February"
+                },
+                {
+                  "word": "Machi",
+                  "blanks": "Ma_h_",
+                  "meaning": "March"
+                },
+                {
+                  "word": "Aprili",
+                  "blanks": "Ap_i_i",
+                  "meaning": "April"
+                },
+                {
+                  "word": "Mei",
+                  "blanks": "M_i",
+                  "meaning": "May"
+                },
+                {
+                  "word": "Juni",
+                  "blanks": "Ju_i",
+                  "meaning": "June"
+                },
+                {
+                  "word": "Julai",
+                  "blanks": "Jul_i",
+                  "meaning": "July"
+                },
+                {
+                  "word": "Agosti",
+                  "blanks": "Ago_t_",
+                  "meaning": "August"
+                },
+                {
+                  "word": "Septemba",
+                  "blanks": "Sep_em_a",
+                  "meaning": "September"
+                },
+                {
+                  "word": "Oktoba",
+                  "blanks": "Ok_o_a",
+                  "meaning": "October"
+                },
+                {
+                  "word": "Novemba",
+                  "blanks": "Nov_m_a",
+                  "meaning": "November"
+                },
+                {
+                  "word": "Desemba",
+                  "blanks": "Des_m_a",
+                  "meaning": "December"
+                }
+              ]
+            },
+            {
+              "id": "activity-time-10",
+              "type": "multiple-choice",
+              "question": "What is 'Jumapili'?",
+              "options": ["Saturday", "Sunday", "Friday", "Monday"],
+              "correctAnswer": 1,
+              "explanation": "Jumapili means Sunday in Swahili"
+            },
+            {
+              "id": "activity-time-11",
+              "type": "multiple-choice",
+              "question": "Which season is 'Masika'?",
+              "options": ["Summer", "Rainy Season", "Cool Season", "Winter"],
+              "correctAnswer": 1,
+              "explanation": "Masika is the rainy season in East Africa"
+            },
+            {
+              "id": "activity-time-12",
+              "type": "matching",
+              "question": "Match Days to English",
+              "description": "Connect the Swahili days with their English translations",
+              "pairs": [
+                { "left": "Jumatatu", "right": "Monday" },
+                { "left": "Jumanne", "right": "Tuesday" },
+                { "left": "Jumatano", "right": "Wednesday" },
+                { "left": "Alhamisi", "right": "Thursday" },
+                { "left": "Ijumaa", "right": "Friday" },
+                { "left": "Jumamosi", "right": "Saturday" },
+                { "left": "Jumapili", "right": "Sunday" }
+              ]
+            },
+            {
+              "id": "activity-time-13",
+              "type": "matching",
+              "question": "Match Months to English",
+              "description": "Connect the Swahili months with their English translations",
+              "pairs": [
+                { "left": "Januari", "right": "January" },
+                { "left": "Februari", "right": "February" },
+                { "left": "Machi", "right": "March" },
+                { "left": "Aprili", "right": "April" },
+                { "left": "Mei", "right": "May" },
+                { "left": "Juni", "right": "June" }
+              ]
+            },
+            {
+              "id": "activity-time-14",
+              "type": "listening-dictation",
+              "question": "Listening Exercise: Days and Months",
+              "description": "Write the days and months you hear",
+              "audio": "/assets/audio/time-dictation.mp3"
+            },
+            {
+              "id": "activity-time-15",
+              "type": "conversation-practice",
+              "question": "Practice Talking About Days",
+              "description": "Practice asking and answering about days of the week",
+              "conversation": [
+                {
+                  "speaker": "Person A",
+                  "text": "Leo ni siku gani?",
+                  "translation": "What day is it today?"
+                },
+                {
+                  "speaker": "Person B",
+                  "text": "Leo ni Jumatatu",
+                  "translation": "Today is Monday"
+                },
+                {
+                  "speaker": "Person A",
+                  "text": "Kesho ni siku gani?",
+                  "translation": "What day is tomorrow?"
+                },
+                {
+                  "speaker": "Person B",
+                  "text": "Kesho ni Jumanne",
+                  "translation": "Tomorrow is Tuesday"
+                }
+              ]
+            },
+            {
+              "id": "activity-time-16",
+              "type": "dialogue",
+              "question": "Planning a Meeting",
+              "description": "Listen to people planning when to meet",
+              "audio": "/assets/audio/time-dialogue.mp3",
+              "dialogue": [
+                {
+                  "speaker": "Amina",
+                  "text": "Tutakutana siku gani?",
+                  "translation": "What day shall we meet?",
+                  "audio": "/assets/audio/dialogue/amina-day.mp3"
+                },
+                {
+                  "speaker": "Juma",
+                  "text": "Tutakutana Ijumaa",
+                  "translation": "We'll meet on Friday",
+                  "audio": "/assets/audio/dialogue/juma-friday.mp3"
+                },
+                {
+                  "speaker": "Amina",
+                  "text": "Mwezi gani?",
+                  "translation": "Which month?",
+                  "audio": "/assets/audio/dialogue/amina-month.mp3"
+                },
+                {
+                  "speaker": "Juma",
+                  "text": "Mwezi wa Machi",
+                  "translation": "The month of March",
+                  "audio": "/assets/audio/dialogue/juma-march.mp3"
+                },
+                {
+                  "speaker": "Amina",
+                  "text": "Sawa, nitakuona Ijumaa",
+                  "translation": "Okay, I'll see you on Friday",
+                  "audio": "/assets/audio/dialogue/amina-see-you.mp3"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unit-4",
+      "title": "Greetings - Salamu",
+      "level": "Absolute Beginner",
+      "progress": 0,
+      "totalLessons": 1,
+      "completedLessons": 0,
+      "icon": "👋",
+      "color": "#FF9800",
+      "xpReward": 100,
+      "lessons": [
+        {
+          "id": "lesson-greetings",
+          "phrase": "Salamu na Maagano",
+          "meaning": "Greetings and Farewells",
+          "pronunciation": "sah-lah-moo nah mah-ah-gah-no",
+          "audio": "/assets/audio/swahili-greetings.mp3",
+          "activities": [
+            {
+              "id": "activity-greetings-1",
+              "type": "introduction",
+              "question": "Welcome! Let's learn how to greet people in Swahili - an essential part of African culture!"
+            },
+            {
+              "id": "activity-greetings-2",
+              "type": "vocabulary-table",
+              "question": "Basic Greetings",
+              "description": "Learn essential greetings for everyday conversations",
+              "audio": "/assets/audio/basic-greetings.mp3",
+              "items": [
+                {
+                  "swahili": "Habari",
+                  "english": "Hello / How are you?",
+                  "pronunciation": "hah-bah-ree",
+                  "image": "/assets/images/vocab/greeting-hello.png"
+                },
+                {
+                  "swahili": "Habari ya asubuhi",
+                  "english": "Good morning",
+                  "pronunciation": "hah-bah-ree yah ah-soo-boo-hee",
+                  "image": "/assets/images/vocab/greeting-morning.png"
+                },
+                {
+                  "swahili": "Habari ya mchana",
+                  "english": "Good afternoon",
+                  "pronunciation": "hah-bah-ree yah m-chah-nah",
+                  "image": "/assets/images/vocab/greeting-afternoon.png"
+                },
+                {
+                  "swahili": "Habari ya jioni",
+                  "english": "Good evening",
+                  "pronunciation": "hah-bah-ree yah jee-oh-nee",
+                  "image": "/assets/images/vocab/greeting-evening.png"
+                },
+                {
+                  "swahili": "Usiku mwema",
+                  "english": "Good night",
+                  "pronunciation": "oo-see-koo mweh-mah",
+                  "image": "/assets/images/vocab/greeting-night.png"
+                },
+                {
+                  "swahili": "Kwaheri",
+                  "english": "Goodbye",
+                  "pronunciation": "kwah-heh-ree",
+                  "image": "/assets/images/vocab/greeting-goodbye.png"
+                },
+                {
+                  "swahili": "Asante",
+                  "english": "Thank you",
+                  "pronunciation": "ah-sahn-teh",
+                  "image": "/assets/images/vocab/greeting-thank-you.png"
+                },
+                {
+                  "swahili": "Nafurahi kukuona",
+                  "english": "Nice to see you",
+                  "pronunciation": "nah-foo-rah-hee koo-koo-oh-nah",
+                  "image": "/assets/images/vocab/greeting-nice-to-see.png"
+                }
+              ]
+            },
+            {
+              "id": "activity-greetings-3",
+              "type": "vocabulary-table",
+              "question": "Common Responses",
+              "description": "Learn how to respond to greetings",
+              "audio": "/assets/audio/greeting-responses.mp3",
+              "items": [
+                {
+                  "swahili": "Nzuri",
+                  "english": "Good / Fine",
+                  "pronunciation": "n-zoo-ree",
+                  "image": "/assets/images/vocab/response-good.png"
+                },
+                {
+                  "swahili": "Salama",
+                  "english": "Peaceful / Well",
+                  "pronunciation": "sah-lah-mah",
+                  "image": "/assets/images/vocab/response-peaceful.png"
+                },
+                {
+                  "swahili": "Karibu",
+                  "english": "Welcome",
+                  "pronunciation": "kah-ree-boo",
+                  "image": "/assets/images/vocab/response-welcome.png"
+                },
+                {
+                  "swahili": "Asante sana",
+                  "english": "Thank you very much",
+                  "pronunciation": "ah-sahn-teh sah-nah",
+                  "image": "/assets/images/vocab/response-thanks-much.png"
+                }
+              ]
+            },
+            {
+              "id": "activity-greetings-4",
+              "type": "multiple-choice",
+              "question": "How do you say 'Good morning' in Swahili?",
+              "options": [
+                "Habari ya jioni",
+                "Habari ya asubuhi",
+                "Usiku mwema",
+                "Habari ya mchana"
+              ],
+              "correctAnswer": 1,
+              "explanation": "Habari ya asubuhi means 'Good morning' in Swahili"
+            },
+            {
+              "id": "activity-greetings-5",
+              "type": "multiple-choice",
+              "question": "What is the correct response to 'Habari'?",
+              "options": ["Kwaheri", "Asante", "Nzuri", "Karibu"],
+              "correctAnswer": 2,
+              "explanation": "Nzuri (Good/Fine) is the common response to Habari"
+            },
+            {
+              "id": "activity-greetings-6",
+              "type": "multiple-choice",
+              "question": "How do you say 'Thank you very much'?",
+              "options": [
+                "Asante",
+                "Asante sana",
+                "Karibu",
+                "Nafurahi kukuona"
+              ],
+              "correctAnswer": 1,
+              "explanation": "Asante sana means 'Thank you very much' (sana means 'very much')"
+            },
+            {
+              "id": "activity-greetings-7",
+              "type": "multiple-choice",
+              "question": "What does 'Kwaheri' mean?",
+              "options": ["Hello", "Good night", "Goodbye", "Welcome"],
+              "correctAnswer": 2,
+              "explanation": "Kwaheri means 'Goodbye' in Swahili"
+            },
+            {
+              "id": "activity-greetings-8",
+              "type": "spelling-completion",
+              "question": "Complete the Spelling of These Greetings",
+              "description": "Fill in the missing letters to complete each greeting",
+              "items": [
+                {
+                  "partial": "H_b_ri",
+                  "complete": "Habari",
+                  "hint": "Hello / How are you?",
+                  "image": "/assets/images/vocab/greeting-hello.png"
+                },
+                {
+                  "partial": "Habari ya _s_b_hi",
+                  "complete": "Habari ya asubuhi",
+                  "hint": "Good morning",
+                  "image": "/assets/images/vocab/greeting-morning.png"
+                },
+                {
+                  "partial": "Habari ya j__ni",
+                  "complete": "Habari ya jioni",
+                  "hint": "Good evening",
+                  "image": "/assets/images/vocab/greeting-evening.png"
+                },
+                {
+                  "partial": "Us_ku mw_ma",
+                  "complete": "Usiku mwema",
+                  "hint": "Good night",
+                  "image": "/assets/images/vocab/greeting-night.png"
+                },
+                {
+                  "partial": "Kw_h_ri",
+                  "complete": "Kwaheri",
+                  "hint": "Goodbye",
+                  "image": "/assets/images/vocab/greeting-goodbye.png"
+                },
+                {
+                  "partial": "As_nt_",
+                  "complete": "Asante",
+                  "hint": "Thank you",
+                  "image": "/assets/images/vocab/greeting-thank-you.png"
+                },
+                {
+                  "partial": "K_r_bu",
+                  "complete": "Karibu",
+                  "hint": "Welcome",
+                  "image": "/assets/images/vocab/response-welcome.png"
+                },
+                {
+                  "partial": "Nz_ri",
+                  "complete": "Nzuri",
+                  "hint": "Good / Fine",
+                  "image": "/assets/images/vocab/response-good.png"
+                }
+              ]
+            },
+            {
+              "id": "activity-greetings-9",
+              "type": "listening-dictation",
+              "question": "Listening Exercise: Greetings",
+              "description": "Write the greetings you hear",
+              "audio": "/assets/audio/greetings-dictation.mp3"
+            },
+
+            {
+              "id": "activity-greetings-10",
+              "type": "matching",
+              "question": "Match Greetings to Their Meanings",
+              "description": "Connect the Swahili greetings with their English translations",
+              "pairs": [
+                { "left": "Habari ya asubuhi", "right": "Good morning" },
+                { "left": "Habari ya jioni", "right": "Good evening" },
+                { "left": "Asante", "right": "Thank you" },
+                { "left": "Kwaheri", "right": "Goodbye" },
+                { "left": "Karibu", "right": "Welcome" }
+              ]
+            },
+            {
+              "id": "activity-greetings-11",
+              "type": "conversation-practice",
+              "question": "Practice a Greeting Conversation",
+              "description": "Practice a typical greeting exchange",
+              "conversation": [
+                {
+                  "speaker": "Person A",
+                  "text": "Habari ya asubuhi!",
+                  "translation": "Good morning!"
+                },
+                {
+                  "speaker": "Person B",
+                  "text": "Habari! Nzuri. Wewe je?",
+                  "translation": "Hello! I'm fine. And you?"
+                },
+                {
+                  "speaker": "Person A",
+                  "text": "Nzuri pia. Asante!",
+                  "translation": "I'm fine too. Thank you!"
+                }
+              ]
+            },
+            {
+              "id": "activity-greetings-12",
+              "type": "dialogue",
+              "question": "Meeting Someone New",
+              "description": "Listen to a conversation between two people meeting for the first time",
+              "image": "/assets/images/vocab/meeting-handshake.png",
+              "audio": "/assets/audio/greetings-dialogue-meeting.mp3",
+              "dialogue": [
+                {
+                  "speaker": "Kombo",
+                  "text": "Habari!",
+                  "translation": "Hello!",
+                  "audio": "/assets/audio/dialogue/kombo-habari.mp3"
+                },
+                {
+                  "speaker": "Were",
+                  "text": "Habari!",
+                  "translation": "Hello!",
+                  "audio": "/assets/audio/dialogue/were-habari.mp3"
+                },
+                {
+                  "speaker": "Kombo",
+                  "text": "Unafanya vipi?",
+                  "translation": "How are you doing?",
+                  "audio": "/assets/audio/dialogue/kombo-unafanya-vipi.mp3"
+                },
+                {
+                  "speaker": "Were",
+                  "text": "Nafanya vizuri, unafanya vipi?",
+                  "translation": "I'm doing fine, how are you doing?",
+                  "audio": "/assets/audio/dialogue/were-nafanya-vizuri.mp3"
+                },
+                {
+                  "speaker": "Kombo",
+                  "text": "Mimi pia nafanya vizuri.",
+                  "translation": "I am doing fine too.",
+                  "audio": "/assets/audio/dialogue/kombo-mimi-pia.mp3"
+                },
+                {
+                  "speaker": "Were",
+                  "text": "Nafurahi kukutana nawe!",
+                  "translation": "Nice to meet you!",
+                  "audio": "/assets/audio/dialogue/were-nafurahi-kukutana.mp3"
+                },
+                {
+                  "speaker": "Kombo",
+                  "text": "Nafurahi kukutana nawe pia.",
+                  "translation": "Nice to meet you too.",
+                  "audio": "/assets/audio/dialogue/kombo-nafurahi-kukutana-pia.mp3"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unit-5",
+      "title": "Occupations and Places",
+      "level": "Absolute Beginner",
+      "progress": 0,
+      "totalLessons": 1,
+      "completedLessons": 0,
+      "icon": "🏢",
+      "color": "#00BCD4",
+      "xpReward": 120,
+      "lessons": [
+        {
+          "id": "lesson-occupations-places",
+          "phrase": "Kazi na Maeneo",
+          "meaning": "Occupations and Places",
+          "pronunciation": "kah-zee nah mah-eh-neh-oh",
+          "audio": "/assets/audio/swahili-occupations-places.mp3",
+          "activities": [
+            {
+              "id": "activity-occ-places-1",
+              "type": "introduction",
+              "question": "Let's learn about different occupations and important places in our community!"
+            },
+            {
+              "id": "activity-occ-places-2",
+              "type": "vocabulary-table",
+              "question": "Common Places",
+              "description": "Learn the names of important places around you",
+              "audio": "/assets/audio/places.mp3",
+              "items": [
+                {
+                  "swahili": "Darasa",
+                  "english": "Class",
+                  "pronunciation": "dah-rah-sah",
+                  "image": "/assets/images/vocab/place-class.png",
+                  "audio": "/assets/audio/place-class.mp3"
+                },
+                {
+                  "swahili": "Nyumba",
+                  "english": "House",
+                  "pronunciation": "nyoom-bah",
+                  "image": "/assets/images/vocab/place-house.png",
+                  "audio": "/assets/audio/place-house.mp3"
+                },
+                {
+                  "swahili": "Maktaba",
+                  "english": "Library",
+                  "pronunciation": "mah-ktah-bah",
+                  "image": "/assets/images/vocab/place-library.png",
+                  "audio": "/assets/audio/place-library.mp3"
+                },
+                {
+                  "swahili": "Uwanja wa ndege",
+                  "english": "Airport",
+                  "pronunciation": "oo-wahn-jah wah ndeh-geh",
+                  "image": "/assets/images/vocab/place-airport.png",
+                  "audio": "/assets/audio/place-airport.mp3"
+                },
+                {
+                  "swahili": "Soko",
+                  "english": "Market",
+                  "pronunciation": "soh-koh",
+                  "image": "/assets/images/vocab/place-market.png",
+                  "audio": "/assets/audio/place-market.mp3"
+                },
+                {
+                  "swahili": "Ofisi",
+                  "english": "Office",
+                  "pronunciation": "oh-fee-see",
+                  "image": "/assets/images/vocab/place-office.png",
+                  "audio": "/assets/audio/place-office.mp3"
+                },
+                {
+                  "swahili": "Duka la dawa",
+                  "english": "Pharmacy",
+                  "pronunciation": "doo-kah lah dah-wah",
+                  "image": "/assets/images/vocab/place-pharmacy.png",
+                  "audio": "/assets/audio/place-pharmacy.mp3"
+                },
+                {
+                  "swahili": "Hospitali",
+                  "english": "Hospital",
+                  "pronunciation": "hoh-spee-tah-lee",
+                  "image": "/assets/images/vocab/place-hospital.png",
+                  "audio": "/assets/audio/place-hospital.mp3"
+                },
+                {
+                  "swahili": "Benki",
+                  "english": "Bank",
+                  "pronunciation": "behn-kee",
+                  "image": "/assets/images/vocab/place-bank.png",
+                  "audio": "/assets/audio/place-bank.mp3"
+                },
+                {
+                  "swahili": "Shule",
+                  "english": "School",
+                  "pronunciation": "shoo-leh",
+                  "image": "/assets/images/vocab/place-school.png",
+                  "audio": "/assets/audio/place-school.mp3"
+                }
+              ]
+            },
+            {
+              "id": "activity-occ-places-3",
+              "type": "vocabulary-table",
+              "question": "Common Occupations",
+              "description": "Learn the names of different professions",
+              "audio": "/assets/audio/occupations.mp3",
+              "items": [
+                {
+                  "swahili": "Mwalimu",
+                  "english": "Teacher",
+                  "pronunciation": "mwah-lee-moo",
+                  "image": "/assets/images/vocab/occupation-teacher.png",
+                  "audio": "/assets/audio/occupation-teacher.mp3"
+                },
+                {
+                  "swahili": "Karani",
+                  "english": "Cashier",
+                  "pronunciation": "kah-rah-nee",
+                  "image": "/assets/images/vocab/occupation-cashier.png",
+                  "audio": "/assets/audio/occupation-cashier.mp3"
+                },
+                {
+                  "swahili": "Mtumishi",
+                  "english": "Waiter",
+                  "pronunciation": "mtoo-mee-shee",
+                  "image": "/assets/images/vocab/occupation-waiter.png",
+                  "audio": "/assets/audio/occupation-waiter.mp3"
+                },
+                {
+                  "swahili": "Mwanasheria",
+                  "english": "Lawyer",
+                  "pronunciation": "mwah-nah-sheh-ree-ah",
+                  "image": "/assets/images/vocab/occupation-lawyer.png",
+                  "audio": "/assets/audio/occupation-lawyer.mp3"
+                },
+                {
+                  "swahili": "Kinyozi",
+                  "english": "Barber",
+                  "pronunciation": "kee-nyoh-zee",
+                  "image": "/assets/images/vocab/occupation-barber.png",
+                  "audio": "/assets/audio/occupation-barber.mp3"
+                },
+                {
+                  "swahili": "Askari",
+                  "english": "Police",
+                  "pronunciation": "ah-skah-ree",
+                  "image": "/assets/images/vocab/occupation-police.png",
+                  "audio": "/assets/audio/occupation-police.mp3"
+                },
+                {
+                  "swahili": "Dereva",
+                  "english": "Driver",
+                  "pronunciation": "deh-reh-vah",
+                  "image": "/assets/images/vocab/occupation-driver.png",
+                  "audio": "/assets/audio/occupation-driver.mp3"
+                },
+                {
+                  "swahili": "Daktari",
+                  "english": "Doctor",
+                  "pronunciation": "dah-ktah-ree",
+                  "image": "/assets/images/vocab/occupation-doctor.png",
+                  "audio": "/assets/audio/occupation-doctor.mp3"
+                },
+                {
+                  "swahili": "Mfamasia",
+                  "english": "Pharmacist",
+                  "pronunciation": "mfah-mah-see-ah",
+                  "image": "/assets/images/vocab/occupation-pharmacist.png",
+                  "audio": "/assets/audio/occupation-pharmacist.mp3"
+                },
+                {
+                  "swahili": "Mkulima",
+                  "english": "Farmer",
+                  "pronunciation": "mkoo-lee-mah",
+                  "image": "/assets/images/vocab/occupation-farmer.png",
+                  "audio": "/assets/audio/occupation-farmer.mp3"
+                }
+              ]
+            },
+            {
+              "id": "activity-occ-places-4",
+              "type": "multiple-choice",
+              "question": "Where would you find a 'Mwalimu'?",
+              "options": ["Soko", "Shule", "Benki", "Hospitali"],
+              "correctAnswer": 1,
+              "explanation": "A Mwalimu (Teacher) works at a Shule (School)"
+            },
+            {
+              "id": "activity-occ-places-5",
+              "type": "multiple-choice",
+              "question": "What is 'Hospitali' in English?",
+              "options": ["Hotel", "Hospital", "House", "Office"],
+              "correctAnswer": 1,
+              "explanation": "Hospitali means Hospital in Swahili"
+            },
+            {
+              "id": "activity-occ-places-6",
+              "type": "multiple-choice",
+              "question": "How do you say 'Doctor' in Swahili?",
+              "options": ["Daktari", "Dereva", "Mkulima", "Askari"],
+              "correctAnswer": 0,
+              "explanation": "Daktari means Doctor in Swahili"
+            },
+            {
+              "id": "activity-occ-places-7",
+              "type": "multiple-choice",
+              "question": "Where would you buy medicine?",
+              "options": ["Soko", "Maktaba", "Duka la dawa", "Ofisi"],
+              "correctAnswer": 2,
+              "explanation": "Duka la dawa (Pharmacy) is where you buy medicine"
+            },
+            {
+              "id": "activity-occ-places-8",
+              "type": "spelling-completion",
+              "question": "Complete the Spelling of Places",
+              "description": "Fill in the missing letters to complete each place name",
+              "items": [
+                {
+                  "word": "Shule",
+                  "blanks": "Sh__le",
+                  "hint": "School",
+                  "image": "/assets/images/vocab/place-school.png"
+                },
+                {
+                  "word": "Nyumba",
+                  "blanks": "Ny__mb__",
+                  "hint": "House",
+                  "image": "/assets/images/vocab/place-house.png"
+                },
+                {
+                  "word": "Soko",
+                  "blanks": "S__k__",
+                  "hint": "Market",
+                  "image": "/assets/images/vocab/place-market.png"
+                },
+                {
+                  "word": "Benki",
+                  "blanks": "B__nk__",
+                  "hint": "Bank",
+                  "image": "/assets/images/vocab/place-bank.png"
+                },
+                {
+                  "word": "Maktaba",
+                  "blanks": "M__kt__ba",
+                  "hint": "Library",
+                  "image": "/assets/images/vocab/place-library.png"
+                }
+              ]
+            },
+            {
+              "id": "activity-occ-places-9",
+              "type": "spelling-completion",
+              "question": "Complete the Spelling of Occupations",
+              "description": "Fill in the missing letters to complete each occupation",
+              "items": [
+                {
+                  "word": "Mwalimu",
+                  "blanks": "Mw__l__mu",
+                  "hint": "Teacher",
+                  "image": "/assets/images/vocab/occupation-teacher.png"
+                },
+                {
+                  "word": "Daktari",
+                  "blanks": "D__kt__ri",
+                  "hint": "Doctor",
+                  "image": "/assets/images/vocab/occupation-doctor.png"
+                },
+                {
+                  "word": "Askari",
+                  "blanks": "As__ar__",
+                  "hint": "Police",
+                  "image": "/assets/images/vocab/occupation-police.png"
+                },
+                {
+                  "word": "Mkulima",
+                  "blanks": "Mk__l__ma",
+                  "hint": "Farmer",
+                  "image": "/assets/images/vocab/occupation-farmer.png"
+                },
+                {
+                  "word": "Dereva",
+                  "blanks": "D__r__va",
+                  "hint": "Driver",
+                  "image": "/assets/images/vocab/occupation-driver.png"
+                }
+              ]
+            },
+            {
+              "id": "activity-occ-places-10",
+              "type": "matching",
+              "question": "Match Occupations to Their Workplaces",
+              "description": "Connect each occupation with where they work",
+              "pairs": [
+                { "left": "Mwalimu", "right": "Shule" },
+                { "left": "Daktari", "right": "Hospitali" },
+                { "left": "Mfamasia", "right": "Duka la dawa" },
+                { "left": "Karani", "right": "Benki" },
+                { "left": "Mkulima", "right": "Soko" }
+              ]
+            },
+            {
+              "id": "activity-occ-places-11",
+              "type": "listening-dictation",
+              "question": "Listening Exercise: Places and Occupations",
+              "description": "Write the words you hear",
+              "audio": "/assets/audio/occ-places-dictation.mp3"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unit-6",
+      "title": "Plurals of Nouns",
+      "level": "Beginner",
+      "progress": 0,
+      "totalLessons": 1,
+      "completedLessons": 0,
+      "icon": "🔄",
+      "color": "#FF9800",
+      "xpReward": 120,
+      "lessons": [
+        {
+          "id": "lesson-plurals",
+          "phrase": "Wingi wa Nomino",
+          "meaning": "Plurals of Nouns",
+          "pronunciation": "wee-ngee wah no-mee-no",
+          "audio": "/assets/audio/swahili-plurals.mp3",
+          "activities": [
+            {
+              "id": "activity-plurals-1",
+              "type": "introduction",
+              "question": "Let's master the plural forms of Swahili nouns! Swahili uses noun classes to form plurals, making it systematic and logical."
+            },
+            {
+              "id": "activity-plurals-2",
+              "type": "introduction",
+              "question": "How Swahili Plurals Work: The Noun Class System\n\n📋 THE PATTERN:\nSwahili nouns belong to different 'classes' based on their prefixes (letters at the start). Each class has its own formula for forming plurals:\n\n1️⃣ M-WA CLASS (People)\nFormula: M- → WA-\nExample: Mtu → Watu (person → people)\nRule: Remove M-, add WA-\n\n2️⃣ M-MI CLASS (Plants & Objects)\nFormula: M- → MI-\nExample: Mti → Miti (tree → trees)\nRule: Remove M-, add MI-\n\n3️⃣ KI-VI CLASS (Small Things)\nFormula: KI- → VI-\nExample: Kiti → Viti (chair → chairs)\nRule: Remove KI-, add VI-\n\n4️⃣ N-N CLASS (No Change)\nFormula: SAME FORM\nExample: Nyumba → Nyumba (house → houses)\nRule: Singular and plural look identical!\n\n💡 THE KEY:\n• Look at the PREFIX (start of the word)\n• Identify which CLASS it belongs to\n• Apply the CLASS FORMULA\n• The rest of the word stays the same!\n\n✨ Example:\nMtoto (child) → M- prefix → M-WA class → Remove M-, add WA- → Watoto (children)\n\nNow let's practice with real examples!"
+            },
+            {
+              "id": "activity-plurals-3",
+              "type": "vocabulary-table",
+              "question": "M-WA Class (People)",
+              "description": "The most common class for people and living beings",
+              "audio": "/assets/audio/plurals-mwa-class.mp3",
+              "items": [
+                {
+                  "swahili": "Mtu → Watu",
+                  "english": "Person → People",
+                  "pronunciation": "mm-too → wah-too"
+                },
+                {
+                  "swahili": "Mtoto → Watoto",
+                  "english": "Child → Children",
+                  "pronunciation": "mm-to-to → wah-to-to"
+                },
+                {
+                  "swahili": "Mwalimu → Walimu",
+                  "english": "Teacher → Teachers",
+                  "pronunciation": "mwah-lee-moo → wah-lee-moo"
+                },
+                {
+                  "swahili": "Mwanafunzi → Wanafunzi",
+                  "english": "Student → Students",
+                  "pronunciation": "mwah-nah-foon-zee → wah-nah-foon-zee"
+                },
+                {
+                  "swahili": "Mwanamke → Wanawake",
+                  "english": "Woman → Women",
+                  "pronunciation": "mwah-nahm-keh → wah-nah-wah-keh"
+                },
+                {
+                  "swahili": "Mwanaume → Wanaume",
+                  "english": "Man → Men",
+                  "pronunciation": "mwah-nah-oo-meh → wah-nah-oo-meh"
+                }
+              ]
+            },
+            {
+              "id": "activity-plurals-4",
+              "type": "vocabulary-table",
+              "question": "M-MI Class (Plants & Objects)",
+              "description": "Used for trees, plants, and some objects",
+              "audio": "/assets/audio/plurals-mmi-class.mp3",
+              "items": [
+                {
+                  "swahili": "Mti → Miti",
+                  "english": "Tree → Trees",
+                  "pronunciation": "mm-tee → mee-tee"
+                },
+                {
+                  "swahili": "Mkono → Mikono",
+                  "english": "Hand/Arm → Hands/Arms",
+                  "pronunciation": "mm-ko-no → mee-ko-no"
+                },
+                {
+                  "swahili": "Mguu → Miguu",
+                  "english": "Foot/Leg → Feet/Legs",
+                  "pronunciation": "mm-goo → mee-goo"
+                },
+                {
+                  "swahili": "Mzigo → Mizigo",
+                  "english": "Load → Loads",
+                  "pronunciation": "mm-zee-go → mee-zee-go"
+                },
+                {
+                  "swahili": "Mlango → Milango",
+                  "english": "Door → Doors",
+                  "pronunciation": "mm-lah-ngo → mee-lah-ngo"
+                },
+                {
+                  "swahili": "Mstari → Mistari",
+                  "english": "Line → Lines",
+                  "pronunciation": "mm-stah-ree → mee-stah-ree"
+                }
+              ]
+            },
+            {
+              "id": "activity-plurals-5",
+              "type": "vocabulary-table",
+              "question": "KI-VI Class (Small Things & Objects)",
+              "description": "Used for small objects, tools, and diminutives",
+              "audio": "/assets/audio/plurals-kivi-class.mp3",
+              "items": [
+                {
+                  "swahili": "Kiti → Viti",
+                  "english": "Chair → Chairs",
+                  "pronunciation": "kee-tee → vee-tee"
+                },
+                {
+                  "swahili": "Kitabu → Vitabu",
+                  "english": "Book → Books",
+                  "pronunciation": "kee-tah-boo → vee-tah-boo"
+                },
+                {
+                  "swahili": "Kisu → Visu",
+                  "english": "Knife → Knives",
+                  "pronunciation": "kee-soo → vee-soo"
+                },
+                {
+                  "swahili": "Kiatu → Viatu",
+                  "english": "Shoe → Shoes",
+                  "pronunciation": "kee-ah-too → vee-ah-too"
+                },
+                {
+                  "swahili": "Kikombe → Vikombe",
+                  "english": "Cup → Cups",
+                  "pronunciation": "kee-kom-beh → vee-kom-beh"
+                },
+                {
+                  "swahili": "Kioo → Vioo",
+                  "english": "Mirror/Glass → Mirrors/Glasses",
+                  "pronunciation": "kee-oh → vee-oh"
+                }
+              ]
+            },
+            {
+              "id": "activity-plurals-6",
+              "type": "vocabulary-table",
+              "question": "N-N Class (Animals & Things)",
+              "description": "Nouns that don't change form between singular and plural",
+              "audio": "/assets/audio/plurals-nn-class.mp3",
+              "items": [
+                {
+                  "swahili": "Nyumba → Nyumba",
+                  "english": "House → Houses",
+                  "pronunciation": "nyoom-bah → nyoom-bah"
+                },
+                {
+                  "swahili": "Ndege → Ndege",
+                  "english": "Bird/Plane → Birds/Planes",
+                  "pronunciation": "ndeh-geh → ndeh-geh"
+                },
+                {
+                  "swahili": "Samaki → Samaki",
+                  "english": "Fish → Fish (plural)",
+                  "pronunciation": "sah-mah-kee → sah-mah-kee"
+                },
+                {
+                  "swahili": "Kalamu → Kalamu",
+                  "english": "Pen → Pens",
+                  "pronunciation": "kah-lah-moo → kah-lah-moo"
+                },
+                {
+                  "swahili": "Nguo → Nguo",
+                  "english": "Cloth/Clothes → Clothes",
+                  "pronunciation": "ngoo-oh → ngoo-oh"
+                },
+                {
+                  "swahili": "Nchi → Nchi",
+                  "english": "Country → Countries",
+                  "pronunciation": "nn-chee → nn-chee"
+                }
+              ]
+            },
+            {
+              "id": "activity-plurals-7",
+              "type": "multiple-choice",
+              "question": "What is the plural of 'mtu' (person)?",
+              "options": ["watu", "mitu", "vitu", "nyumba"],
+              "correctAnswer": 0,
+              "explanation": "Mtu becomes watu in plural. The M-WA class is used for people."
+            },
+            {
+              "id": "activity-plurals-8",
+              "type": "multiple-choice",
+              "question": "What is the plural of 'kiti' (chair)?",
+              "options": ["miti", "viti", "witi", "kiti"],
+              "correctAnswer": 1,
+              "explanation": "Kiti becomes viti in plural. The KI-VI class is used for objects and tools."
+            },
+            {
+              "id": "activity-plurals-9",
+              "type": "multiple-choice",
+              "question": "Which noun keeps the same form in plural?",
+              "options": ["mtoto", "mti", "ndege", "kisu"],
+              "correctAnswer": 2,
+              "explanation": "Ndege stays the same in plural. It belongs to the N-N class."
+            },
+            {
+              "id": "activity-plurals-10",
+              "type": "multiple-choice",
+              "question": "What is the plural of 'mwalimu' (teacher)?",
+              "options": ["walimu", "walimu", "vialimu", "nyalimu"],
+              "correctAnswer": 0,
+              "explanation": "Mwalimu becomes walimu. People words use the M-WA class."
+            },
+            {
+              "id": "activity-plurals-11",
+              "type": "multiple-choice",
+              "question": "What is the plural of 'mlango' (door)?",
+              "options": ["wilango", "milango", "vilango", "mlango"],
+              "correctAnswer": 1,
+              "explanation": "Mlango becomes milango. The M-MI class is used for objects and plants."
+            },
+            {
+              "id": "activity-plurals-12",
+              "type": "matching",
+              "question": "Match Singular to Plural Forms",
+              "description": "Connect each singular noun with its correct plural form",
+              "pairs": [
+                { "left": "Mtoto", "right": "Watoto" },
+                { "left": "Kitabu", "right": "Vitabu" },
+                { "left": "Mti", "right": "Miti" },
+                { "left": "Nyumba", "right": "Nyumba" },
+                { "left": "Kisu", "right": "Visu" },
+                { "left": "Mguu", "right": "Miguu" }
+              ]
+            },
+            {
+              "id": "activity-plurals-13",
+              "type": "matching",
+              "question": "Match Nouns to Their Classes",
+              "description": "Connect each noun with its noun class pattern",
+              "pairs": [
+                { "left": "Mwanafunzi", "right": "M-WA (People)" },
+                { "left": "Mkono", "right": "M-MI (Plants/Objects)" },
+                { "left": "Kiatu", "right": "KI-VI (Small things)" },
+                { "left": "Kalamu", "right": "N-N (Same form)" }
+              ]
+            },
+            {
+              "id": "activity-plurals-14",
+              "type": "spelling-completion",
+              "question": "Complete the Plural Forms",
+              "description": "Fill in the missing letters for plural nouns",
+              "items": [
+                {
+                  "word": "Watu",
+                  "blanks": "W__t__",
+                  "meaning": "People (from mtu)"
+                },
+                {
+                  "word": "Vitabu",
+                  "blanks": "V__t__bu",
+                  "meaning": "Books (from kitabu)"
+                },
+                {
+                  "word": "Miti",
+                  "blanks": "M__t__",
+                  "meaning": "Trees (from mti)"
+                },
+                {
+                  "word": "Watoto",
+                  "blanks": "W__to__o",
+                  "meaning": "Children (from mtoto)"
+                },
+                {
+                  "word": "Viti",
+                  "blanks": "V__t__",
+                  "meaning": "Chairs (from kiti)"
+                },
+                {
+                  "word": "Miguu",
+                  "blanks": "M__gu__",
+                  "meaning": "Feet/Legs (from mguu)"
+                },
+                {
+                  "word": "Walimu",
+                  "blanks": "W__li__u",
+                  "meaning": "Teachers (from mwalimu)"
+                },
+                {
+                  "word": "Vikombe",
+                  "blanks": "V__kom__e",
+                  "meaning": "Cups (from kikombe)"
+                }
+              ]
+            },
+            {
+              "id": "activity-plurals-15",
+              "type": "spelling-completion",
+              "question": "Identify the Noun Class",
+              "description": "Complete the class name for each group",
+              "items": [
+                {
+                  "word": "M-WA",
+                  "blanks": "M-__A",
+                  "meaning": "Class for people (mtu → watu)"
+                },
+                {
+                  "word": "M-MI",
+                  "blanks": "M-__I",
+                  "meaning": "Class for plants/objects (mti → miti)"
+                },
+                {
+                  "word": "KI-VI",
+                  "blanks": "KI-__I",
+                  "meaning": "Class for small things (kiti → viti)"
+                },
+                {
+                  "word": "N-N",
+                  "blanks": "N-__",
+                  "meaning": "Class with same form (nyumba → nyumba)"
+                }
+              ]
+            },
+            {
+              "id": "activity-plurals-16",
+              "type": "listening-dictation",
+              "question": "Listening Exercise: Write the Plural Forms",
+              "description": "Listen and write the plural forms you hear",
+              "audio": "/assets/audio/plurals-dictation.mp3"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
