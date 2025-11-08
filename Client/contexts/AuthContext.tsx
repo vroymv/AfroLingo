@@ -112,7 +112,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         email,
         password
       );
-      console.log("[Auth] login userCredential", userCredential);
       const user = convertFirebaseUser(userCredential.user);
       const token = await userCredential.user.getIdToken();
 
@@ -150,7 +149,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         email,
         password
       );
-      console.log("[Auth] signup userCredential", userCredential);
 
       // Update display name in Firebase
       await firebaseUpdateProfile(userCredential.user, {
@@ -278,7 +276,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       let userCredential;
       if (Platform.OS === "web") {
         userCredential = await signInWithPopup(auth, provider);
-        console.log("[Auth] google login userCredential", userCredential);
       } else {
         // For React Native, we'll need to implement this differently
         // For now, use redirect which works on web

@@ -4,7 +4,7 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Redirect, Stack } from "expo-router";
+import { Stack } from "expo-router";
 import "react-native-reanimated";
 
 import { LoadingScreen } from "@/components/LoadingScreen";
@@ -17,26 +17,29 @@ import {
 import { UserProgressProvider } from "@/contexts/UserProgressContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
 
-function RootNavigator() {
+// Inner component that consumes Auth/Onboarding contexts (must be inside providers)
+function AppNavigator() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { state: onboardingState } = useOnboarding();
 
-  // Show loading screen while checking auth state
-  if (authLoading) {
-    return <LoadingScreen />;
-  }
+  if (authLoading) return <LoadingScreen />;
 
-  // Not authenticated - redirect to auth screens
   if (!isAuthenticated) {
-    return <Redirect href="/(auth)/login" />;
+    return (
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" />
+      </Stack>
+    );
   }
 
-  // Authenticated but onboarding not complete - redirect to onboarding
   if (!onboardingState.isCompleted) {
-    return <Redirect href="/(onboarding)/welcome" />;
+    return (
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(onboarding)" />
+      </Stack>
+    );
   }
 
-  // Authenticated and onboarding complete - show main app
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
@@ -48,16 +51,14 @@ function RootNavigator() {
   );
 }
 
+// Consolidated navigation & gating logic to avoid dual stacks + perpetual Redirect loop
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
-  }
+  if (!loaded) return null;
 
   return (
     <AuthProvider>
@@ -67,16 +68,7 @@ export default function RootLayout() {
             <ThemeProvider
               value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
             >
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen name="(onboarding)" />
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen
-                  name="learn/lesson/[lessonId]"
-                  options={{ headerShown: true }}
-                />
-              </Stack>
-              <RootNavigator />
+              <AppNavigator />
             </ThemeProvider>
           </LessonProgressProvider>
         </UserProgressProvider>
