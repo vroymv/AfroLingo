@@ -124,14 +124,15 @@ export default function PersonalizationScreen() {
     // Complete onboarding
     dispatch({ type: "COMPLETE_ONBOARDING" });
 
-    // Navigate to main app
-    router.push("/(tabs)");
+    // Navigate to setup loading screen
+    router.push("./setup-loading");
   };
 
   const handleSkip = () => {
     // Complete onboarding without personalization
     dispatch({ type: "COMPLETE_ONBOARDING" });
-    router.push("/(tabs)");
+    // Navigate to setup loading screen
+    router.push("./setup-loading");
   };
 
   const handleBack = () => {

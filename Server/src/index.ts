@@ -2,6 +2,14 @@ import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { connectDB } from "./config/database";
+import {
+  healthRouter,
+  usersRouter,
+  onboardingRouter,
+  lessonsRouter,
+  progressRouter,
+  activitiesRouter,
+} from "./routes";
 
 dotenv.config();
 
@@ -13,17 +21,13 @@ app.use(cors());
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
-// Health check endpoint
-app.get("/health", (_req: Request, res: Response) => {
-  res.status(200).json({
-    status: "ok",
-    message: "AfroLingo Server is running",
-    timestamp: new Date().toISOString(),
-  });
-});
-
-// API Routes will be added here
-// Example: app.use('/api/lessons', lessonsRouter);
+// API Routes
+app.use("/health", healthRouter);
+app.use("/api/users", usersRouter);
+app.use("/api/onboarding", onboardingRouter);
+app.use("/api/lessons", lessonsRouter);
+app.use("/api/progress/lessons", progressRouter);
+app.use("/api/activities", activitiesRouter);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {

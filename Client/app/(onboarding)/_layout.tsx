@@ -15,6 +15,7 @@ export default function OnboardingLayout() {
       <Stack.Screen name="level-selection" />
       <Stack.Screen name="placement-test" />
       <Stack.Screen name="personalization" />
+      <Stack.Screen name="setup-loading" />
     </Stack>
   );
 }

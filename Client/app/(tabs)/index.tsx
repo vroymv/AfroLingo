@@ -24,8 +24,6 @@ export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const { activeLesson, startLesson, nextLessonId } = useLessonProgress();
 
-  console.log("Onboarding State in HomeScreen:", state);
-
   useEffect(() => {
     if (!state.isCompleted) {
       setTimeout(() => {

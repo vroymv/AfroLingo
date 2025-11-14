@@ -1,20 +1,25 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import {
+  AuthButton,
+  AuthDivider,
+  AuthHeader,
+  AuthInput,
+  PasswordInput,
+  SocialAuthButtons,
+} from "@/components/auth";
 import { useAuth } from "@/contexts/AuthContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -24,11 +29,9 @@ export default function LoginScreen() {
   const { login, loginWithGoogle, loginWithApple, isLoading } = useAuth();
   const backgroundColor = useThemeColor({}, "background");
   const tintColor = useThemeColor({}, "tint");
-  const textColor = useThemeColor({}, "text");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
@@ -128,113 +131,44 @@ export default function LoginScreen() {
             keyboardShouldPersistTaps="handled"
           >
             {/* Header */}
-            <View style={styles.header}>
-              <View
-                style={[
-                  styles.logoContainer,
-                  { backgroundColor: tintColor + "20" },
-                ]}
-              >
-                <ThemedText style={styles.logoIcon}>🌍</ThemedText>
-              </View>
-              <ThemedText style={styles.title}>Welcome Back!</ThemedText>
-              <ThemedText style={styles.subtitle}>
-                Sign in to continue your language journey
-              </ThemedText>
-            </View>
+            <AuthHeader
+              title="Welcome Back!"
+              subtitle="Sign in to continue your language journey"
+            />
 
             {/* Form */}
             <View style={styles.form}>
               {/* Email Input */}
-              <View style={styles.inputGroup}>
-                <ThemedText style={styles.label}>Email</ThemedText>
-                <View
-                  style={[
-                    styles.inputContainer,
-                    {
-                      borderColor: errors.email ? "#FF6B6B" : tintColor + "30",
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    name="mail-outline"
-                    size={20}
-                    color={tintColor}
-                    style={styles.inputIcon}
-                  />
-                  <TextInput
-                    style={[styles.input, { color: textColor }]}
-                    placeholder="your.email@example.com"
-                    placeholderTextColor={textColor + "60"}
-                    value={email}
-                    onChangeText={(text) => {
-                      setEmail(text);
-                      if (errors.email)
-                        setErrors((prev) => ({ ...prev, email: undefined }));
-                    }}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoComplete="email"
-                    autoCorrect={false}
-                  />
-                </View>
-                {errors.email && (
-                  <ThemedText style={styles.errorText}>
-                    {errors.email}
-                  </ThemedText>
-                )}
-              </View>
+              <AuthInput
+                label="Email"
+                icon="mail-outline"
+                placeholder="your.email@example.com"
+                value={email}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  if (errors.email)
+                    setErrors((prev) => ({ ...prev, email: undefined }));
+                }}
+                error={errors.email}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                autoCorrect={false}
+              />
 
               {/* Password Input */}
-              <View style={styles.inputGroup}>
-                <ThemedText style={styles.label}>Password</ThemedText>
-                <View
-                  style={[
-                    styles.inputContainer,
-                    {
-                      borderColor: errors.password
-                        ? "#FF6B6B"
-                        : tintColor + "30",
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={20}
-                    color={tintColor}
-                    style={styles.inputIcon}
-                  />
-                  <TextInput
-                    style={[styles.input, { color: textColor }]}
-                    placeholder="Enter your password"
-                    placeholderTextColor={textColor + "60"}
-                    value={password}
-                    onChangeText={(text) => {
-                      setPassword(text);
-                      if (errors.password)
-                        setErrors((prev) => ({ ...prev, password: undefined }));
-                    }}
-                    secureTextEntry={!showPassword}
-                    autoCapitalize="none"
-                    autoComplete="password"
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowPassword(!showPassword)}
-                    style={styles.passwordToggle}
-                  >
-                    <Ionicons
-                      name={showPassword ? "eye-outline" : "eye-off-outline"}
-                      size={20}
-                      color={tintColor}
-                    />
-                  </TouchableOpacity>
-                </View>
-                {errors.password && (
-                  <ThemedText style={styles.errorText}>
-                    {errors.password}
-                  </ThemedText>
-                )}
-              </View>
+              <PasswordInput
+                label="Password"
+                placeholder="Enter your password"
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  if (errors.password)
+                    setErrors((prev) => ({ ...prev, password: undefined }));
+                }}
+                error={errors.password}
+                autoComplete="password"
+              />
 
               {/* Forgot Password Link */}
               <Link href="/(auth)/forgot-password" asChild>
@@ -248,81 +182,23 @@ export default function LoginScreen() {
               </Link>
 
               {/* Login Button */}
-              <TouchableOpacity
-                style={[styles.loginButton, { backgroundColor: tintColor }]}
+              <AuthButton
+                title="Sign In"
                 onPress={handleLogin}
-                disabled={isLoading}
-                activeOpacity={0.8}
-              >
-                {isLoading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <ThemedText style={styles.loginButtonText}>
-                    Sign In
-                  </ThemedText>
-                )}
-              </TouchableOpacity>
+                isLoading={isLoading}
+              />
 
               {/* Divider */}
-              <View style={styles.divider}>
-                <View
-                  style={[
-                    styles.dividerLine,
-                    { backgroundColor: tintColor + "30" },
-                  ]}
-                />
-                <ThemedText style={styles.dividerText}>or</ThemedText>
-                <View
-                  style={[
-                    styles.dividerLine,
-                    { backgroundColor: tintColor + "30" },
-                  ]}
-                />
-              </View>
+              <AuthDivider />
 
-              {/* Social Login (Optional - can be implemented later) */}
-              <View style={styles.socialButtons}>
-                <TouchableOpacity
-                  style={[
-                    styles.socialButton,
-                    { borderColor: tintColor + "30" },
-                  ]}
-                  onPress={handleGoogleLogin}
-                  disabled={isGoogleLoading || isLoading}
-                  activeOpacity={0.7}
-                >
-                  {isGoogleLoading ? (
-                    <ActivityIndicator size="small" color={tintColor} />
-                  ) : (
-                    <>
-                      <ThemedText style={styles.socialIcon}>G</ThemedText>
-                      <ThemedText style={styles.socialButtonText}>
-                        Google
-                      </ThemedText>
-                    </>
-                  )}
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.socialButton,
-                    { borderColor: tintColor + "30" },
-                  ]}
-                  onPress={handleAppleLogin}
-                  disabled={isAppleLoading || isLoading}
-                  activeOpacity={0.7}
-                >
-                  {isAppleLoading ? (
-                    <ActivityIndicator size="small" color={tintColor} />
-                  ) : (
-                    <>
-                      <ThemedText style={styles.socialIcon}></ThemedText>
-                      <ThemedText style={styles.socialButtonText}>
-                        Apple
-                      </ThemedText>
-                    </>
-                  )}
-                </TouchableOpacity>
-              </View>
+              {/* Social Login */}
+              <SocialAuthButtons
+                onGooglePress={handleGoogleLogin}
+                onApplePress={handleAppleLogin}
+                isGoogleLoading={isGoogleLoading}
+                isAppleLoading={isAppleLoading}
+                disabled={isLoading}
+              />
 
               {/* Sign Up Link */}
               <View style={styles.signupContainer}>
@@ -366,67 +242,8 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     paddingBottom: 32,
   },
-  header: {
-    alignItems: "center",
-    marginBottom: 40,
-  },
-  logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
-  },
-  logoIcon: {
-    fontSize: 40,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 16,
-    opacity: 0.7,
-    textAlign: "center",
-  },
   form: {
     flex: 1,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1.5,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 56,
-  },
-  inputIcon: {
-    marginRight: 12,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    paddingVertical: 8,
-  },
-  passwordToggle: {
-    padding: 4,
-  },
-  errorText: {
-    color: "#FF6B6B",
-    fontSize: 12,
-    marginTop: 4,
-    marginLeft: 4,
   },
   forgotPassword: {
     alignSelf: "flex-end",
@@ -436,59 +253,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
-  loginButton: {
-    height: 56,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 24,
-  },
-  loginButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  divider: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-  },
-  dividerText: {
-    marginHorizontal: 16,
-    fontSize: 14,
-    opacity: 0.6,
-  },
-  socialButtons: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 32,
-  },
-  socialButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    height: 52,
-    borderWidth: 1.5,
-    borderRadius: 12,
-    gap: 8,
-  },
-  socialIcon: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  socialButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
   signupContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    marginTop: 32,
   },
   signupText: {
     fontSize: 14,

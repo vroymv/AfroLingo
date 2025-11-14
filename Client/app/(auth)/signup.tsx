@@ -1,37 +1,40 @@
-import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import {
+  AuthButton,
+  AuthDivider,
+  AuthHeader,
+  AuthInput,
+  PasswordInput,
+  SocialAuthButtons,
+  TermsCheckbox,
+} from "@/components/auth";
 import { useAuth } from "@/contexts/AuthContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ThemedText } from "@/components/ThemedText";
 
 export default function SignupScreen() {
   const { signup, loginWithGoogle, loginWithApple, isLoading } = useAuth();
   const backgroundColor = useThemeColor({}, "background");
   const tintColor = useThemeColor({}, "tint");
-  const textColor = useThemeColor({}, "text");
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
@@ -164,329 +167,111 @@ export default function SignupScreen() {
             keyboardShouldPersistTaps="handled"
           >
             {/* Header */}
-            <View style={styles.header}>
-              <View
-                style={[
-                  styles.logoContainer,
-                  { backgroundColor: tintColor + "20" },
-                ]}
-              >
-                <ThemedText style={styles.logoIcon}>🌍</ThemedText>
-              </View>
-              <ThemedText style={styles.title}>Create Account</ThemedText>
-              <ThemedText style={styles.subtitle}>
-                Start your African language learning journey today
-              </ThemedText>
-            </View>
+            <AuthHeader
+              title="Create Account"
+              subtitle="Start your African language learning journey today"
+            />
 
             {/* Form */}
             <View style={styles.form}>
               {/* Name Input */}
-              <View style={styles.inputGroup}>
-                <ThemedText style={styles.label}>Full Name</ThemedText>
-                <View
-                  style={[
-                    styles.inputContainer,
-                    {
-                      borderColor: errors.name ? "#FF6B6B" : tintColor + "30",
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    name="person-outline"
-                    size={20}
-                    color={tintColor}
-                    style={styles.inputIcon}
-                  />
-                  <TextInput
-                    style={[styles.input, { color: textColor }]}
-                    placeholder="John Doe"
-                    placeholderTextColor={textColor + "60"}
-                    value={name}
-                    onChangeText={(text) => {
-                      setName(text);
-                      if (errors.name)
-                        setErrors((prev) => ({ ...prev, name: undefined }));
-                    }}
-                    autoCapitalize="words"
-                    autoComplete="name"
-                  />
-                </View>
-                {errors.name && (
-                  <ThemedText style={styles.errorText}>
-                    {errors.name}
-                  </ThemedText>
-                )}
-              </View>
+              <AuthInput
+                label="Full Name"
+                icon="person-outline"
+                placeholder="John Doe"
+                value={name}
+                onChangeText={(text) => {
+                  setName(text);
+                  if (errors.name)
+                    setErrors((prev) => ({ ...prev, name: undefined }));
+                }}
+                error={errors.name}
+                autoCapitalize="words"
+                autoComplete="name"
+              />
 
               {/* Email Input */}
-              <View style={styles.inputGroup}>
-                <ThemedText style={styles.label}>Email</ThemedText>
-                <View
-                  style={[
-                    styles.inputContainer,
-                    {
-                      borderColor: errors.email ? "#FF6B6B" : tintColor + "30",
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    name="mail-outline"
-                    size={20}
-                    color={tintColor}
-                    style={styles.inputIcon}
-                  />
-                  <TextInput
-                    style={[styles.input, { color: textColor }]}
-                    placeholder="your.email@example.com"
-                    placeholderTextColor={textColor + "60"}
-                    value={email}
-                    onChangeText={(text) => {
-                      setEmail(text);
-                      if (errors.email)
-                        setErrors((prev) => ({ ...prev, email: undefined }));
-                    }}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoComplete="email"
-                    autoCorrect={false}
-                  />
-                </View>
-                {errors.email && (
-                  <ThemedText style={styles.errorText}>
-                    {errors.email}
-                  </ThemedText>
-                )}
-              </View>
+              <AuthInput
+                label="Email"
+                icon="mail-outline"
+                placeholder="your.email@example.com"
+                value={email}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  if (errors.email)
+                    setErrors((prev) => ({ ...prev, email: undefined }));
+                }}
+                error={errors.email}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                autoCorrect={false}
+              />
 
               {/* Password Input */}
-              <View style={styles.inputGroup}>
-                <ThemedText style={styles.label}>Password</ThemedText>
-                <View
-                  style={[
-                    styles.inputContainer,
-                    {
-                      borderColor: errors.password
-                        ? "#FF6B6B"
-                        : tintColor + "30",
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={20}
-                    color={tintColor}
-                    style={styles.inputIcon}
-                  />
-                  <TextInput
-                    style={[styles.input, { color: textColor }]}
-                    placeholder="Create a strong password"
-                    placeholderTextColor={textColor + "60"}
-                    value={password}
-                    onChangeText={(text) => {
-                      setPassword(text);
-                      if (errors.password)
-                        setErrors((prev) => ({
-                          ...prev,
-                          password: undefined,
-                        }));
-                    }}
-                    secureTextEntry={!showPassword}
-                    autoCapitalize="none"
-                    autoComplete="password-new"
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowPassword(!showPassword)}
-                    style={styles.passwordToggle}
-                  >
-                    <Ionicons
-                      name={showPassword ? "eye-outline" : "eye-off-outline"}
-                      size={20}
-                      color={tintColor}
-                    />
-                  </TouchableOpacity>
-                </View>
-                {errors.password && (
-                  <ThemedText style={styles.errorText}>
-                    {errors.password}
-                  </ThemedText>
-                )}
-              </View>
+              <PasswordInput
+                label="Password"
+                placeholder="Create a strong password"
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  if (errors.password)
+                    setErrors((prev) => ({
+                      ...prev,
+                      password: undefined,
+                    }));
+                }}
+                error={errors.password}
+                autoComplete="password-new"
+              />
 
               {/* Confirm Password Input */}
-              <View style={styles.inputGroup}>
-                <ThemedText style={styles.label}>Confirm Password</ThemedText>
-                <View
-                  style={[
-                    styles.inputContainer,
-                    {
-                      borderColor: errors.confirmPassword
-                        ? "#FF6B6B"
-                        : tintColor + "30",
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={20}
-                    color={tintColor}
-                    style={styles.inputIcon}
-                  />
-                  <TextInput
-                    style={[styles.input, { color: textColor }]}
-                    placeholder="Confirm your password"
-                    placeholderTextColor={textColor + "60"}
-                    value={confirmPassword}
-                    onChangeText={(text) => {
-                      setConfirmPassword(text);
-                      if (errors.confirmPassword)
-                        setErrors((prev) => ({
-                          ...prev,
-                          confirmPassword: undefined,
-                        }));
-                    }}
-                    secureTextEntry={!showConfirmPassword}
-                    autoCapitalize="none"
-                  />
-                  <TouchableOpacity
-                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                    style={styles.passwordToggle}
-                  >
-                    <Ionicons
-                      name={
-                        showConfirmPassword ? "eye-outline" : "eye-off-outline"
-                      }
-                      size={20}
-                      color={tintColor}
-                    />
-                  </TouchableOpacity>
-                </View>
-                {errors.confirmPassword && (
-                  <ThemedText style={styles.errorText}>
-                    {errors.confirmPassword}
-                  </ThemedText>
-                )}
-              </View>
+              <PasswordInput
+                label="Confirm Password"
+                placeholder="Confirm your password"
+                value={confirmPassword}
+                onChangeText={(text) => {
+                  setConfirmPassword(text);
+                  if (errors.confirmPassword)
+                    setErrors((prev) => ({
+                      ...prev,
+                      confirmPassword: undefined,
+                    }));
+                }}
+                error={errors.confirmPassword}
+                autoComplete="password-new"
+              />
 
               {/* Terms and Conditions */}
-              <TouchableOpacity
-                style={styles.termsContainer}
-                onPress={() => {
+              <TermsCheckbox
+                agreed={agreedToTerms}
+                onToggle={() => {
                   setAgreedToTerms(!agreedToTerms);
                   if (errors.terms)
                     setErrors((prev) => ({ ...prev, terms: undefined }));
                 }}
-                activeOpacity={0.7}
-              >
-                <View
-                  style={[
-                    styles.checkbox,
-                    {
-                      borderColor: errors.terms ? "#FF6B6B" : tintColor + "30",
-                      backgroundColor: agreedToTerms
-                        ? tintColor
-                        : "transparent",
-                    },
-                  ]}
-                >
-                  {agreedToTerms && (
-                    <Ionicons name="checkmark" size={16} color="#fff" />
-                  )}
-                </View>
-                <ThemedText style={styles.termsText}>
-                  I agree to the{" "}
-                  <ThemedText style={[styles.termsLink, { color: tintColor }]}>
-                    Terms of Service
-                  </ThemedText>{" "}
-                  and{" "}
-                  <ThemedText style={[styles.termsLink, { color: tintColor }]}>
-                    Privacy Policy
-                  </ThemedText>
-                </ThemedText>
-              </TouchableOpacity>
-              {errors.terms && (
-                <ThemedText style={styles.errorText}>{errors.terms}</ThemedText>
-              )}
+                error={errors.terms}
+              />
 
               {/* Signup Button */}
-              <TouchableOpacity
-                style={[
-                  styles.signupButton,
-                  { backgroundColor: tintColor, marginTop: 24 },
-                ]}
+              <AuthButton
+                title="Create Account"
                 onPress={handleSignup}
-                disabled={isLoading}
-                activeOpacity={0.8}
-              >
-                {isLoading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <ThemedText style={styles.signupButtonText}>
-                    Create Account
-                  </ThemedText>
-                )}
-              </TouchableOpacity>
+                isLoading={isLoading}
+                style={{ marginTop: 24, marginBottom: 24 }}
+              />
 
               {/* Divider */}
-              <View style={styles.divider}>
-                <View
-                  style={[
-                    styles.dividerLine,
-                    { backgroundColor: tintColor + "30" },
-                  ]}
-                />
-                <ThemedText style={styles.dividerText}>or</ThemedText>
-                <View
-                  style={[
-                    styles.dividerLine,
-                    { backgroundColor: tintColor + "30" },
-                  ]}
-                />
-              </View>
+              <AuthDivider />
 
-              {/* Social Signup (Optional - can be implemented later) */}
-              <View style={styles.socialButtons}>
-                <TouchableOpacity
-                  style={[
-                    styles.socialButton,
-                    { borderColor: tintColor + "30" },
-                  ]}
-                  onPress={handleGoogleSignup}
-                  disabled={isGoogleLoading || isLoading}
-                  activeOpacity={0.7}
-                >
-                  {isGoogleLoading ? (
-                    <ActivityIndicator size="small" color={tintColor} />
-                  ) : (
-                    <>
-                      <ThemedText style={styles.socialIcon}>G</ThemedText>
-                      <ThemedText style={styles.socialButtonText}>
-                        Google
-                      </ThemedText>
-                    </>
-                  )}
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.socialButton,
-                    { borderColor: tintColor + "30" },
-                  ]}
-                  onPress={handleAppleSignup}
-                  disabled={isAppleLoading || isLoading}
-                  activeOpacity={0.7}
-                >
-                  {isAppleLoading ? (
-                    <ActivityIndicator size="small" color={tintColor} />
-                  ) : (
-                    <>
-                      <ThemedText style={styles.socialIcon}></ThemedText>
-                      <ThemedText style={styles.socialButtonText}>
-                        Apple
-                      </ThemedText>
-                    </>
-                  )}
-                </TouchableOpacity>
-              </View>
+              {/* Social Signup */}
+              <SocialAuthButtons
+                onGooglePress={handleGoogleSignup}
+                onApplePress={handleAppleSignup}
+                isGoogleLoading={isGoogleLoading}
+                isAppleLoading={isAppleLoading}
+                disabled={isLoading}
+              />
 
               {/* Login Link */}
               <View style={styles.loginContainer}>
@@ -530,145 +315,14 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     paddingBottom: 32,
   },
-  header: {
-    alignItems: "center",
-    marginBottom: 32,
-  },
-  logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
-  },
-  logoIcon: {
-    fontSize: 40,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 16,
-    opacity: 0.7,
-    textAlign: "center",
-  },
   form: {
     flex: 1,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1.5,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 56,
-  },
-  inputIcon: {
-    marginRight: 12,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    paddingVertical: 8,
-  },
-  passwordToggle: {
-    padding: 4,
-  },
-  errorText: {
-    color: "#FF6B6B",
-    fontSize: 12,
-    marginTop: 4,
-    marginLeft: 4,
-  },
-  termsContainer: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginTop: 4,
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    borderWidth: 1.5,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-    marginTop: 2,
-  },
-  termsText: {
-    flex: 1,
-    fontSize: 13,
-    lineHeight: 20,
-  },
-  termsLink: {
-    fontWeight: "600",
-    textDecorationLine: "underline",
-  },
-  signupButton: {
-    height: 56,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 24,
-  },
-  signupButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  divider: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-  },
-  dividerText: {
-    marginHorizontal: 16,
-    fontSize: 14,
-    opacity: 0.6,
-  },
-  socialButtons: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 32,
-  },
-  socialButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    height: 52,
-    borderWidth: 1.5,
-    borderRadius: 12,
-    gap: 8,
-  },
-  socialIcon: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  socialButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
   },
   loginContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    marginTop: 32,
   },
   loginText: {
     fontSize: 14,

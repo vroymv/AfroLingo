@@ -7,5 +7,6 @@ export const ENV = {
   API_ENDPOINTS: {
     USERS: `${API_BASE_URL}/users`,
     AUTH: `${API_BASE_URL}/auth`,
+    LESSONS: `${API_BASE_URL}/lessons`,
   },
 };
