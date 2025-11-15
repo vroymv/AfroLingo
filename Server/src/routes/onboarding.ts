@@ -1,6 +1,5 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
-import { verifyToken } from "../middleware/auth";
 import { prisma } from "../config/prisma";
 import { onboardingDataSchema } from "../schemas/onboarding.schema";
 
@@ -15,18 +14,12 @@ const router = Router();
  * @body {OnboardingData} - Onboarding selections from the client
  * @returns {Object} - Updated user object with onboarding data
  */
-router.put("/:userId", verifyToken, async (req: Request, res: Response) => {
+router.put("/:userId", async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
 
-    console.log("📥 Received onboarding data from client");
-    console.log("User ID:", userId);
-    console.log("Data:", JSON.stringify(req.body, null, 2));
-
-    // Validate request body
     const validatedData = onboardingDataSchema.parse(req.body);
 
-    // Check if user exists
     const existingUser = await prisma.user.findUnique({
       where: { id: userId },
     });
@@ -72,21 +65,13 @@ router.put("/:userId", verifyToken, async (req: Request, res: Response) => {
       },
     });
 
-    console.log("✅ Onboarding data saved successfully for user:", userId);
-    console.log("Updated user data:", {
-      language: updatedUser.selectedLanguage,
-      level: updatedUser.selectedLevel,
-      reasons: updatedUser.learningReasons,
-      timeCommitment: updatedUser.timeCommitment,
-    });
-
     return res.status(200).json({
       success: true,
       message: "Onboarding data saved successfully",
       data: updatedUser,
     });
   } catch (error) {
-    console.error("❌ Error saving onboarding data:", error);
+    console.error(" Error saving onboarding data:", error);
 
     // Handle validation errors
     if (error instanceof z.ZodError) {
@@ -125,7 +110,7 @@ router.put("/:userId", verifyToken, async (req: Request, res: Response) => {
  * @param userId - The Firebase UID of the user
  * @returns {Object} - User's onboarding data
  */
-router.get("/:userId", verifyToken, async (req: Request, res: Response) => {
+router.get("/:userId", async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
 

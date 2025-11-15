@@ -4,12 +4,8 @@ import {
   requestActivityHint,
   skipActivity,
 } from "../controllers/activitiesController";
-import { authenticateUser } from "../middleware/auth";
 
 const router = express.Router();
-
-// All routes require authentication
-router.use(authenticateUser);
 
 // POST /api/activities/:activityId/submit - Submit activity answer
 router.post("/:activityId/submit", submitActivityAnswer);

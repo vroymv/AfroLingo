@@ -5,12 +5,8 @@ import {
   getLessonProgress,
   getLessonSessions,
 } from "../controllers/lessonsController";
-import { authenticateUser } from "../middleware/auth";
 
 const router = express.Router();
-
-// All routes require authentication
-router.use(authenticateUser);
 
 // POST /api/lessons/:lessonId/start - Start or resume a lesson
 router.post("/:lessonId/start", startLesson);

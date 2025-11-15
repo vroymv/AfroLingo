@@ -30,20 +30,13 @@ export async function setupUserProfile(
   userData: UserSetupData
 ): Promise<SetupResponse> {
   try {
-    // Get current authenticated user
     const user = auth.currentUser;
     if (!user) {
       throw new Error("User not authenticated");
     }
 
-    // Get Firebase authentication token
     const token = await user.getIdToken();
 
-    console.log("📤 Sending onboarding data to server...");
-    console.log("User ID:", user.uid);
-    console.log("Data:", userData);
-
-    // Prepare data for the API (match the onboarding schema)
     const onboardingData = {
       selectedLanguage: userData.language,
       selectedLevel: userData.level,
@@ -51,7 +44,6 @@ export async function setupUserProfile(
       personalization: userData.personalization,
     };
 
-    // Make actual API call to save onboarding data
     const response = await fetch(`${ENV.API_BASE_URL}/onboarding/${user.uid}`, {
       method: "PUT",
       headers: {
@@ -69,8 +61,6 @@ export async function setupUserProfile(
     }
 
     const result = await response.json();
-
-    console.log("✅ Server response:", result);
 
     return {
       success: result.success,

@@ -1,6 +1,5 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
-import { verifyToken } from "../middleware/auth";
 import { prisma } from "../config/prisma";
 
 const router = Router();
@@ -14,7 +13,7 @@ const createUserSchema = z.object({
 });
 
 // POST /api/users - Create a new user
-router.post("/", verifyToken, async (req: Request, res: Response) => {
+router.post("/", async (req: Request, res: Response) => {
   try {
     // Validate request body
     const validatedData = createUserSchema.parse(req.body);
