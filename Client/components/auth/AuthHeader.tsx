@@ -1,8 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import React from "react";
-import { StyleSheet, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { StyleSheet, View, Image, Text } from "react-native";
 
 interface AuthHeaderProps {
   title: string;
@@ -14,24 +13,17 @@ export function AuthHeader({ title, subtitle }: AuthHeaderProps) {
 
   return (
     <View style={styles.header}>
-      {/* Logo with gradient background and subtle shadow */}
+      {/* Logo */}
       <View style={styles.logoWrapper}>
-        <LinearGradient
-          colors={[tintColor + "25", tintColor + "15"]}
-          style={styles.logoGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        >
-          <View
-            style={[styles.logoInner, { backgroundColor: tintColor + "10" }]}
-          >
-            <ThemedText style={styles.logoIcon}>🌍</ThemedText>
-          </View>
-        </LinearGradient>
+        <Image
+          source={require("@/assets/images/icons/login-icon.png")}
+          style={styles.logoImage}
+          resizeMode="contain"
+        />
       </View>
 
       {/* Title with improved spacing */}
-      <ThemedText style={styles.title}>{title}</ThemedText>
+      <Text style={styles.title}>{title}</Text>
 
       {/* Subtitle with better hierarchy */}
       <ThemedText style={styles.subtitle}>{subtitle}</ThemedText>
@@ -49,11 +41,11 @@ export function AuthHeader({ title, subtitle }: AuthHeaderProps) {
 const styles = StyleSheet.create({
   header: {
     alignItems: "center",
-    marginBottom: 40,
+    marginBottom: 10,
     paddingHorizontal: 20,
   },
   logoWrapper: {
-    marginBottom: 24,
+    marginBottom: 10,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -63,20 +55,9 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
   },
-  logoGradient: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    padding: 4,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logoInner: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    alignItems: "center",
-    justifyContent: "center",
+  logoImage: {
+    width: 160,
+    height: 160,
   },
   logoIcon: {
     fontSize: 48,
@@ -94,7 +75,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 24,
     maxWidth: 300,
-    marginBottom: 20,
+    marginBottom: 15,
   },
   decorativeLine: {
     flexDirection: "row",
