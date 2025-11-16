@@ -1,6 +1,6 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { Unit } from "@/data/lessons";
+import { ProgressTrackerStats } from "@/services/userProgress";
 import React from "react";
 import {
   ScrollView,
@@ -11,146 +11,133 @@ import {
 } from "react-native";
 
 interface ProgressTrackerProps {
-  units: Unit[];
-  stats?: {
-    totalXP: number;
-    streakDays: number;
-    completedUnits: number;
-    inProgressUnits: number;
-  };
+  stats: ProgressTrackerStats;
 }
 
-export const ProgressTracker = React.memo<ProgressTrackerProps>(
-  ({ units, stats }) => {
-    const totalUnits = units.length;
-    const completedUnits =
-      stats?.completedUnits ||
-      units.filter((unit: Unit) => unit.progress === 100).length;
-    const overallProgress = Math.round((completedUnits / totalUnits) * 100);
-    const inProgressUnits =
-      stats?.inProgressUnits ||
-      units.filter((unit: Unit) => unit.progress > 0 && unit.progress < 100)
-        .length;
+export const ProgressTracker = React.memo<ProgressTrackerProps>(({ stats }) => {
+  const {
+    totalXP,
+    streakDays,
+    completedUnits,
+    inProgressUnits,
+    totalUnits,
+    milestones,
+  } = stats;
+  const overallProgress =
+    totalUnits > 0 ? Math.round((completedUnits / totalUnits) * 100) : 0;
 
-    const streakDays = stats?.streakDays || 7;
-    const totalXP =
-      stats?.totalXP ||
-      units.reduce(
-        (acc: number, unit: Unit) =>
-          acc + (unit.completedLessons / unit.totalLessons) * unit.xpReward,
-        0
-      );
+  console.log("Rendering ProgressTracker with stats:", stats);
 
-    return (
-      <ThemedView style={styles.progressTracker}>
-        <ThemedText type="subtitle" style={styles.progressTitle}>
-          Your Learning Journey
-        </ThemedText>
+  return (
+    <ThemedView style={styles.progressTracker}>
+      <ThemedText type="subtitle" style={styles.progressTitle}>
+        Your Learning Journey
+      </ThemedText>
 
-        {/* Stats Row */}
-        <View style={styles.statsRow}>
-          <View style={styles.statItem}>
-            <ThemedText type="defaultSemiBold" style={styles.statNumber}>
-              {Math.round(totalXP)}
-            </ThemedText>
-            <ThemedText type="default" style={styles.statLabel}>
-              Total XP
-            </ThemedText>
-          </View>
-          <View style={styles.statItem}>
-            <ThemedText type="defaultSemiBold" style={styles.statNumber}>
-              {streakDays}
-            </ThemedText>
-            <ThemedText type="default" style={styles.statLabel}>
-              Day Streak
-            </ThemedText>
-          </View>
-          <View style={styles.statItem}>
-            <ThemedText type="defaultSemiBold" style={styles.statNumber}>
-              {completedUnits}
-            </ThemedText>
-            <ThemedText type="default" style={styles.statLabel}>
-              Completed
-            </ThemedText>
-          </View>
+      {/* Stats Row */}
+      <View style={styles.statsRow}>
+        <View style={styles.statItem}>
+          <ThemedText type="defaultSemiBold" style={styles.statNumber}>
+            {Math.round(totalXP)}
+          </ThemedText>
+          <ThemedText type="default" style={styles.statLabel}>
+            Total XP
+          </ThemedText>
         </View>
+        <View style={styles.statItem}>
+          <ThemedText type="defaultSemiBold" style={styles.statNumber}>
+            {streakDays}
+          </ThemedText>
+          <ThemedText type="default" style={styles.statLabel}>
+            Day Streak
+          </ThemedText>
+        </View>
+        <View style={styles.statItem}>
+          <ThemedText type="defaultSemiBold" style={styles.statNumber}>
+            {completedUnits}
+          </ThemedText>
+          <ThemedText type="default" style={styles.statLabel}>
+            Completed
+          </ThemedText>
+        </View>
+      </View>
 
-        {/* Milestone Progress - Horizontally Scrollable */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.milestoneScrollContent}
-          style={styles.milestoneScrollView}
-        >
-          <View style={styles.milestoneContainer}>
-            {units.map((unit: Unit, index: number) => (
-              <View key={unit.id} style={styles.milestone}>
-                <TouchableOpacity
+      {/* Milestone Progress - Horizontally Scrollable */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.milestoneScrollContent}
+        style={styles.milestoneScrollView}
+      >
+        <View style={styles.milestoneContainer}>
+          {milestones.map((milestone, index) => (
+            <View key={milestone.id} style={styles.milestone}>
+              <TouchableOpacity
+                style={[
+                  styles.milestoneCircle,
+                  {
+                    backgroundColor:
+                      milestone.progress > 0 ? milestone.color : "#333",
+                    borderColor: milestone.color,
+                    borderWidth: milestone.progress === 100 ? 3 : 2,
+                  },
+                ]}
+                accessibilityLabel={`${milestone.title}, ${milestone.progress}% complete`}
+              >
+                <Text
                   style={[
-                    styles.milestoneCircle,
+                    styles.milestoneIcon,
+                    { opacity: milestone.progress > 0 ? 1 : 0.5 },
+                  ]}
+                >
+                  {milestone.icon}
+                </Text>
+                {milestone.progress === 100 && (
+                  <View style={styles.milestoneCheck}>
+                    <Text style={styles.milestoneCheckText}>✓</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+              {index < milestones.length - 1 && (
+                <View
+                  style={[
+                    styles.milestoneLine,
                     {
-                      backgroundColor: unit.progress > 0 ? unit.color : "#333",
-                      borderColor: unit.color,
-                      borderWidth: unit.progress === 100 ? 3 : 2,
+                      backgroundColor:
+                        milestone.progress === 100 ? milestone.color : "#333",
                     },
                   ]}
-                  accessibilityLabel={`${unit.title}, ${unit.progress}% complete`}
-                >
-                  <Text
-                    style={[
-                      styles.milestoneIcon,
-                      { opacity: unit.progress > 0 ? 1 : 0.5 },
-                    ]}
-                  >
-                    {unit.icon}
-                  </Text>
-                  {unit.progress === 100 && (
-                    <View style={styles.milestoneCheck}>
-                      <Text style={styles.milestoneCheckText}>✓</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-                {index < units.length - 1 && (
-                  <View
-                    style={[
-                      styles.milestoneLine,
-                      {
-                        backgroundColor:
-                          unit.progress === 100 ? unit.color : "#333",
-                      },
-                    ]}
-                  />
-                )}
-              </View>
-            ))}
-          </View>
-        </ScrollView>
-
-        {/* Overall Progress */}
-        <View style={styles.overallProgressContainer}>
-          <View style={styles.progressSummary}>
-            <ThemedText type="default" style={styles.overallProgress}>
-              {overallProgress}% Complete • {completedUnits}/{totalUnits} Units
-            </ThemedText>
-            {inProgressUnits > 0 && (
-              <ThemedText type="default" style={styles.inProgressText}>
-                {inProgressUnits} in progress
-              </ThemedText>
-            )}
-          </View>
-          <View style={styles.overallProgressTrack}>
-            <View
-              style={[
-                styles.overallProgressFill,
-                { width: `${overallProgress}%` },
-              ]}
-            />
-          </View>
+                />
+              )}
+            </View>
+          ))}
         </View>
-      </ThemedView>
-    );
-  }
-);
+      </ScrollView>
+
+      {/* Overall Progress */}
+      <View style={styles.overallProgressContainer}>
+        <View style={styles.progressSummary}>
+          <ThemedText type="default" style={styles.overallProgress}>
+            {overallProgress}% Complete • {completedUnits}/{totalUnits} Units
+          </ThemedText>
+          {inProgressUnits > 0 && (
+            <ThemedText type="default" style={styles.inProgressText}>
+              {inProgressUnits} in progress
+            </ThemedText>
+          )}
+        </View>
+        <View style={styles.overallProgressTrack}>
+          <View
+            style={[
+              styles.overallProgressFill,
+              { width: `${overallProgress}%` },
+            ]}
+          />
+        </View>
+      </View>
+    </ThemedView>
+  );
+});
 
 ProgressTracker.displayName = "ProgressTracker";
 

@@ -256,4 +256,150 @@ router.get("/unit/:unitId", async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * GET /api/lessons/user/:userId - Get all lessons with user progress
+ * Query params:
+ *   - level: filter by level (e.g., "Absolute Beginner", "Beginner")
+ *   - includeActivities: include activities in response (default: true)
+ *
+ * This endpoint combines lesson data with user progress for a personalized view
+ */
+router.get("/user/:userId", async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const { level, includeActivities = "true" } = req.query;
+
+    // Check if user exists
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Fetch units with lessons and user progress
+    const units = await prisma.unit.findMany({
+      where: {
+        ...(level && { level: level as string }),
+        isActive: true,
+      },
+      include: {
+        userProgress: {
+          where: { userId },
+        },
+        lessons: {
+          where: { isActive: true },
+          include: {
+            lessonProgress: {
+              where: { userId },
+            },
+            activities:
+              includeActivities === "true"
+                ? {
+                    where: { isActive: true },
+                    orderBy: { order: "asc" },
+                  }
+                : false,
+          },
+          orderBy: { order: "asc" },
+        },
+      },
+      orderBy: { order: "asc" },
+    });
+
+    // Calculate total XP
+    const totalXP = units.reduce((sum, unit) => {
+      const userProgress = unit.userProgress[0];
+      return sum + (userProgress?.xpEarned || 0);
+    }, 0);
+
+    // Transform the data to match the expected format with user progress
+    const transformedData = {
+      id: "main-path",
+      name: "African Languages Journey",
+      totalXP,
+      units: units.map((unit) => {
+        const userProgress = unit.userProgress[0];
+
+        return {
+          id: unit.externalId,
+          title: unit.title,
+          level: unit.level,
+          progress: userProgress?.progress || 0,
+          totalLessons: unit.totalLessons,
+          completedLessons: userProgress?.completedLessons || 0,
+          icon: unit.icon,
+          color: unit.color,
+          xpReward: unit.xpReward,
+          xpEarned: userProgress?.xpEarned || 0,
+          lessons: unit.lessons.map((lesson) => {
+            const lessonProgress = lesson.lessonProgress[0];
+
+            return {
+              id: lesson.externalId,
+              phrase: lesson.phrase,
+              meaning: lesson.meaning,
+              pronunciation: lesson.pronunciation,
+              alphabetImage: lesson.alphabetImage,
+              audio: lesson.audio,
+              // User progress for this lesson
+              isStarted: !!lessonProgress,
+              isCompleted: lessonProgress?.isCompleted || false,
+              progress: lessonProgress
+                ? Math.round(
+                    (lessonProgress.completedActivities /
+                      lessonProgress.totalActivities) *
+                      100
+                  )
+                : 0,
+              currentActivityIndex: lessonProgress?.currentActivityIndex || 0,
+              completedActivities: lessonProgress?.completedActivities || 0,
+              totalActivities:
+                lessonProgress?.totalActivities || lesson.activities.length,
+              accuracyRate: lessonProgress?.accuracyRate || null,
+              xpEarned: lessonProgress?.xpEarned || 0,
+              lastAccessedAt: lessonProgress?.lastAccessedAt || null,
+              // Lesson activities
+              activities:
+                includeActivities === "true"
+                  ? lesson.activities.map((activity) => ({
+                      id: activity.externalId,
+                      type: activity.type,
+                      question: activity.question,
+                      description: activity.description,
+                      audio: activity.audio,
+                      options: activity.options,
+                      correctAnswer: activity.correctAnswer,
+                      explanation: activity.explanation,
+                      items: activity.items,
+                      pairs: activity.pairs,
+                      conversation: activity.conversation,
+                      dialogue: activity.dialogue,
+                      alphabetImage: activity.alphabetImage,
+                    }))
+                  : [],
+            };
+          }),
+        };
+      }),
+    };
+
+    return res.status(200).json({
+      success: true,
+      data: transformedData,
+    });
+  } catch (error) {
+    console.error("Error fetching lessons with user progress:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch lessons with user progress",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
+
 export default router;

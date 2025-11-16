@@ -13,9 +13,8 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -24,9 +23,17 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function LoginScreen() {
-  const { login, loginWithGoogle, loginWithApple, isLoading } = useAuth();
+  const {
+    login,
+    loginWithGoogle,
+    loginWithApple,
+    isLoading,
+    error: authError,
+    clearError,
+  } = useAuth();
   const backgroundColor = useThemeColor({}, "background");
   const tintColor = useThemeColor({}, "tint");
 
@@ -37,6 +44,15 @@ export default function LoginScreen() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
     {}
   );
+
+  // Clear auth error when component unmounts or when user starts typing
+  useEffect(() => {
+    return () => {
+      if (authError) {
+        clearError();
+      }
+    };
+  }, [authError, clearError]);
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
@@ -62,51 +78,49 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     if (!validateForm()) return;
 
+    // Clear any previous auth errors
+    if (authError) {
+      clearError();
+    }
+
     try {
       await login(email.toLowerCase().trim(), password);
       // Navigation will be handled by the root layout based on auth state
-    } catch (error) {
-      Alert.alert(
-        "Login Failed",
-        error instanceof Error
-          ? error.message
-          : "Invalid email or password. Please try again.",
-        [{ text: "OK" }]
-      );
+    } catch {
+      // Error is now displayed inline via authError state
+      // No need for Alert
     }
   };
 
   const handleGoogleLogin = async () => {
+    // Clear any previous auth errors
+    if (authError) {
+      clearError();
+    }
+
     try {
       setIsGoogleLoading(true);
       await loginWithGoogle();
       // Navigation will be handled by the root layout based on auth state
-    } catch (error) {
-      Alert.alert(
-        "Google Sign In Failed",
-        error instanceof Error
-          ? error.message
-          : "Unable to sign in with Google. Please try again.",
-        [{ text: "OK" }]
-      );
+    } catch {
+      // Error is now displayed inline via authError state
     } finally {
       setIsGoogleLoading(false);
     }
   };
 
   const handleAppleLogin = async () => {
+    // Clear any previous auth errors
+    if (authError) {
+      clearError();
+    }
+
     try {
       setIsAppleLoading(true);
       await loginWithApple();
       // Navigation will be handled by the root layout based on auth state
-    } catch (error) {
-      Alert.alert(
-        "Apple Sign In Failed",
-        error instanceof Error
-          ? error.message
-          : "Unable to sign in with Apple. Please try again.",
-        [{ text: "OK" }]
-      );
+    } catch {
+      // Error is now displayed inline via authError state
     } finally {
       setIsAppleLoading(false);
     }
@@ -134,10 +148,30 @@ export default function LoginScreen() {
             <AuthHeader
               title="Welcome Back!"
               subtitle="Sign in to continue your language journey"
+              variant="login"
             />
 
             {/* Form */}
             <View style={styles.form}>
+              {/* Error Message */}
+              {authError && (
+                <View
+                  style={[
+                    styles.errorContainer,
+                    { backgroundColor: "#FEE2E2", borderColor: "#EF4444" },
+                  ]}
+                >
+                  <Ionicons name="alert-circle" size={20} color="#DC2626" />
+                  <ThemedText style={styles.errorText}>{authError}</ThemedText>
+                  <TouchableOpacity
+                    onPress={clearError}
+                    style={styles.errorClose}
+                  >
+                    <Ionicons name="close" size={20} color="#DC2626" />
+                  </TouchableOpacity>
+                </View>
+              )}
+
               {/* Email Input */}
               <AuthInput
                 label="Email"
@@ -148,6 +182,7 @@ export default function LoginScreen() {
                   setEmail(text);
                   if (errors.email)
                     setErrors((prev) => ({ ...prev, email: undefined }));
+                  if (authError) clearError();
                 }}
                 error={errors.email}
                 keyboardType="email-address"
@@ -165,6 +200,7 @@ export default function LoginScreen() {
                   setPassword(text);
                   if (errors.password)
                     setErrors((prev) => ({ ...prev, password: undefined }));
+                  if (authError) clearError();
                 }}
                 error={errors.password}
                 autoComplete="password"
@@ -244,6 +280,24 @@ const styles = StyleSheet.create({
   },
   form: {
     flex: 1,
+  },
+  errorContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 16,
+    gap: 8,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 14,
+    color: "#DC2626",
+    fontWeight: "500",
+  },
+  errorClose: {
+    padding: 4,
   },
   forgotPassword: {
     alignSelf: "flex-end",

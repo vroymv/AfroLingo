@@ -10,6 +10,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   sendPasswordResetEmail,
+  sendEmailVerification,
   updateProfile as firebaseUpdateProfile,
   onAuthStateChanged,
   User as FirebaseUser,
@@ -27,6 +28,7 @@ export interface User {
   name: string;
   avatar?: string;
   createdAt: Date;
+  emailVerified?: boolean;
 }
 
 export interface AuthState {
@@ -34,6 +36,7 @@ export interface AuthState {
   isLoading: boolean;
   isAuthenticated: boolean;
   token: string | null;
+  error: string | null;
 }
 
 interface AuthContextType extends AuthState {
@@ -43,7 +46,9 @@ interface AuthContextType extends AuthState {
   loginWithApple: () => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  sendVerificationEmail: () => Promise<void>;
   updateProfile: (updates: Partial<User>) => Promise<void>;
+  clearError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -63,6 +68,7 @@ const convertFirebaseUser = (firebaseUser: FirebaseUser): User => {
     createdAt: firebaseUser.metadata.creationTime
       ? new Date(firebaseUser.metadata.creationTime)
       : new Date(),
+    emailVerified: firebaseUser.emailVerified,
   };
 };
 
@@ -72,6 +78,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isLoading: true,
     isAuthenticated: false,
     token: null,
+    error: null,
   });
 
   // Listen to Firebase auth state changes
@@ -87,6 +94,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           token,
           isAuthenticated: true,
           isLoading: false,
+          error: null,
         });
       } else {
         // User is signed out
@@ -95,6 +103,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           token: null,
           isAuthenticated: false,
           isLoading: false,
+          error: null,
         });
       }
     });
@@ -105,7 +114,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const login = async (email: string, password: string) => {
     try {
-      setState((prev) => ({ ...prev, isLoading: true }));
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
       const userCredential = await signInWithEmailAndPassword(
         auth,
@@ -120,28 +129,39 @@ export function AuthProvider({ children }: AuthProviderProps) {
         token,
         isAuthenticated: true,
         isLoading: false,
+        error: null,
       });
     } catch (error: any) {
-      setState((prev) => ({ ...prev, isLoading: false }));
-
-      // Provide user-friendly error messages
+      // Determine user-friendly error message
+      let errorMessage = "Login failed. Please try again.";
       if (error.code === "auth/user-not-found") {
-        throw new Error("No account found with this email");
+        errorMessage = "No account found with this email";
       } else if (error.code === "auth/wrong-password") {
-        throw new Error("Incorrect password");
+        errorMessage = "Incorrect password";
       } else if (error.code === "auth/invalid-email") {
-        throw new Error("Invalid email address");
+        errorMessage = "Invalid email address";
       } else if (error.code === "auth/user-disabled") {
-        throw new Error("This account has been disabled");
-      } else {
-        throw new Error("Login failed. Please try again.");
+        errorMessage = "This account has been disabled";
+      } else if (error.code === "auth/invalid-credential") {
+        errorMessage = "Invalid email or password";
       }
+
+      // Update state with error - keep user logged out
+      setState({
+        user: null,
+        token: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: errorMessage,
+      });
+
+      throw new Error(errorMessage);
     }
   };
 
   const signup = async (name: string, email: string, password: string) => {
     try {
-      setState((prev) => ({ ...prev, isLoading: true }));
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
       // Create user account in Firebase
       const userCredential = await createUserWithEmailAndPassword(
@@ -154,6 +174,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
       await firebaseUpdateProfile(userCredential.user, {
         displayName: name,
       });
+
+      // Send email verification
+      try {
+        await sendEmailVerification(userCredential.user);
+        console.log("Verification email sent successfully");
+      } catch (verificationError) {
+        console.warn("Failed to send verification email:", verificationError);
+        // Don't throw here - account creation was successful
+      }
 
       const user = convertFirebaseUser(userCredential.user);
       const token = await userCredential.user.getIdToken();
@@ -176,39 +205,45 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         if (!response.ok) {
           console.warn("Failed to sync user with backend:", response.status);
-          // Don't throw error - Firebase user is already created
-          // Backend sync can be retried later
         }
       } catch (backendError) {
         console.warn("Backend sync error:", backendError);
-        // Don't throw error - Firebase user is already created
       }
 
       setState({
-        user: { ...user, name }, // Use the provided name
+        user: { ...user, name },
         token,
         isAuthenticated: true,
         isLoading: false,
+        error: null,
       });
     } catch (error: any) {
-      setState((prev) => ({ ...prev, isLoading: false }));
-
-      // Provide user-friendly error messages
+      // Determine user-friendly error message
+      let errorMessage = "Signup failed. Please try again.";
       if (error.code === "auth/email-already-in-use") {
-        throw new Error("An account with this email already exists");
+        errorMessage = "An account with this email already exists";
       } else if (error.code === "auth/invalid-email") {
-        throw new Error("Invalid email address");
+        errorMessage = "Invalid email address";
       } else if (error.code === "auth/weak-password") {
-        throw new Error("Password should be at least 6 characters");
-      } else {
-        throw new Error("Signup failed. Please try again.");
+        errorMessage = "Password should be at least 6 characters";
       }
+
+      // Update state with error - keep user logged out
+      setState({
+        user: null,
+        token: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: errorMessage,
+      });
+
+      throw new Error(errorMessage);
     }
   };
 
   const logout = async () => {
     try {
-      setState((prev) => ({ ...prev, isLoading: true }));
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
       await signOut(auth);
 
@@ -217,10 +252,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         token: null,
         isAuthenticated: false,
         isLoading: false,
+        error: null,
       });
     } catch (error: any) {
-      setState((prev) => ({ ...prev, isLoading: false }));
-      throw new Error(error.message || "Logout failed. Please try again.");
+      const errorMessage = error.message || "Logout failed. Please try again.";
+      setState((prev) => ({ ...prev, isLoading: false, error: errorMessage }));
+      throw new Error(errorMessage);
     }
   };
 
@@ -242,7 +279,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       if (!auth.currentUser) throw new Error("No user logged in");
 
-      setState((prev) => ({ ...prev, isLoading: true }));
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
       // Update Firebase profile
       const profileUpdates: any = {};
@@ -257,18 +294,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
         ...prev,
         user: updatedUser,
         isLoading: false,
+        error: null,
       }));
     } catch (error: any) {
-      setState((prev) => ({ ...prev, isLoading: false }));
-      throw new Error(
-        error.message || "Failed to update profile. Please try again."
-      );
+      const errorMessage =
+        error.message || "Failed to update profile. Please try again.";
+      setState((prev) => ({ ...prev, isLoading: false, error: errorMessage }));
+      throw new Error(errorMessage);
     }
   };
 
   const loginWithGoogle = async () => {
     try {
-      setState((prev) => ({ ...prev, isLoading: true }));
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
       const provider = new GoogleAuthProvider();
 
@@ -292,35 +330,82 @@ export function AuthProvider({ children }: AuthProviderProps) {
         token,
         isAuthenticated: true,
         isLoading: false,
+        error: null,
       });
     } catch (error: any) {
-      setState((prev) => ({ ...prev, isLoading: false }));
-
+      // Determine user-friendly error message
+      let errorMessage = "Google sign in failed. Please try again.";
       if (error.code === "auth/popup-closed-by-user") {
-        throw new Error("Sign in was cancelled");
+        errorMessage = "Sign in was cancelled";
       } else if (error.code === "auth/popup-blocked") {
-        throw new Error(
-          "Popup was blocked. Please allow popups for this site."
-        );
-      } else {
-        throw new Error("Google sign in failed. Please try again.");
+        errorMessage = "Popup was blocked. Please allow popups for this site.";
       }
+
+      // Update state with error - keep user logged out
+      setState({
+        user: null,
+        token: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: errorMessage,
+      });
+
+      throw new Error(errorMessage);
     }
   };
 
   const loginWithApple = async () => {
     try {
-      setState((prev) => ({ ...prev, isLoading: true }));
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
       // Apple Sign In will be implemented when you get Apple Developer account
       // For now, show a message
-      setState((prev) => ({ ...prev, isLoading: false }));
-      throw new Error(
-        "Apple Sign In requires an Apple Developer account. Coming soon!"
-      );
+      const errorMessage =
+        "Apple Sign In requires an Apple Developer account. Coming soon!";
+
+      setState({
+        user: null,
+        token: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: errorMessage,
+      });
+
+      throw new Error(errorMessage);
     } catch (error) {
-      setState((prev) => ({ ...prev, isLoading: false }));
+      // Ensure state is properly set even if error is re-thrown
+      if (state.isLoading) {
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: error instanceof Error ? error.message : "An error occurred",
+        }));
+      }
       throw error;
+    }
+  };
+
+  const clearError = () => {
+    setState((prev) => ({ ...prev, error: null }));
+  };
+
+  const sendVerificationEmail = async () => {
+    try {
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        throw new Error("No user is currently signed in");
+      }
+
+      if (currentUser.emailVerified) {
+        throw new Error("Email is already verified");
+      }
+
+      await sendEmailVerification(currentUser);
+      console.log("Verification email sent successfully");
+    } catch (error: any) {
+      const errorMessage = error.message || "Failed to send verification email";
+      setState((prev) => ({ ...prev, error: errorMessage }));
+      throw new Error(errorMessage);
     }
   };
 
@@ -332,7 +417,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     loginWithApple,
     logout,
     resetPassword,
+    sendVerificationEmail,
     updateProfile,
+    clearError,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

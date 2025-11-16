@@ -13,7 +13,7 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -25,9 +25,17 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemedText } from "@/components/ThemedText";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function SignupScreen() {
-  const { signup, loginWithGoogle, loginWithApple, isLoading } = useAuth();
+  const {
+    signup,
+    loginWithGoogle,
+    loginWithApple,
+    isLoading,
+    error: authError,
+    clearError,
+  } = useAuth();
   const backgroundColor = useThemeColor({}, "background");
   const tintColor = useThemeColor({}, "tint");
 
@@ -45,6 +53,15 @@ export default function SignupScreen() {
     confirmPassword?: string;
     terms?: string;
   }>({});
+
+  // Clear auth error when component unmounts
+  useEffect(() => {
+    return () => {
+      if (authError) {
+        clearError();
+      }
+    };
+  }, [authError, clearError]);
 
   const validateForm = () => {
     const newErrors: {
@@ -98,51 +115,64 @@ export default function SignupScreen() {
   const handleSignup = async () => {
     if (!validateForm()) return;
 
+    // Clear any previous auth errors
+    if (authError) {
+      clearError();
+    }
+
     try {
       await signup(name.trim(), email.toLowerCase().trim(), password);
-      // Navigation will be handled by the root layout based on auth state
-    } catch (error) {
+
+      // Show non-blocking verification reminder
       Alert.alert(
-        "Signup Failed",
-        error instanceof Error
-          ? error.message
-          : "Unable to create account. Please try again.",
-        [{ text: "OK" }]
+        "📧 Check Your Email",
+        `We've sent a verification email to ${email
+          .toLowerCase()
+          .trim()}.\n\nPlease check your inbox (and spam folder) to verify your account.\n\nYou can continue using the app while we wait for verification!`,
+        [
+          {
+            text: "Got it!",
+            style: "default",
+          },
+        ],
+        { cancelable: true }
       );
+
+      // Navigation will be handled by the root layout based on auth state
+    } catch {
+      // Error is now displayed inline via authError state
     }
   };
 
   const handleGoogleSignup = async () => {
+    // Clear any previous auth errors
+    if (authError) {
+      clearError();
+    }
+
     try {
       setIsGoogleLoading(true);
       await loginWithGoogle();
       // Navigation will be handled by the root layout based on auth state
-    } catch (error) {
-      Alert.alert(
-        "Google Sign Up Failed",
-        error instanceof Error
-          ? error.message
-          : "Unable to sign up with Google. Please try again.",
-        [{ text: "OK" }]
-      );
+    } catch {
+      // Error is now displayed inline via authError state
     } finally {
       setIsGoogleLoading(false);
     }
   };
 
   const handleAppleSignup = async () => {
+    // Clear any previous auth errors
+    if (authError) {
+      clearError();
+    }
+
     try {
       setIsAppleLoading(true);
       await loginWithApple();
       // Navigation will be handled by the root layout based on auth state
-    } catch (error) {
-      Alert.alert(
-        "Apple Sign Up Failed",
-        error instanceof Error
-          ? error.message
-          : "Unable to sign up with Apple. Please try again.",
-        [{ text: "OK" }]
-      );
+    } catch {
+      // Error is now displayed inline via authError state
     } finally {
       setIsAppleLoading(false);
     }
@@ -170,10 +200,30 @@ export default function SignupScreen() {
             <AuthHeader
               title="Create Account"
               subtitle="Start your African language learning journey today"
+              variant="signup"
             />
 
             {/* Form */}
             <View style={styles.form}>
+              {/* Error Message */}
+              {authError && (
+                <View
+                  style={[
+                    styles.errorContainer,
+                    { backgroundColor: "#FEE2E2", borderColor: "#EF4444" },
+                  ]}
+                >
+                  <Ionicons name="alert-circle" size={20} color="#DC2626" />
+                  <ThemedText style={styles.errorText}>{authError}</ThemedText>
+                  <TouchableOpacity
+                    onPress={clearError}
+                    style={styles.errorClose}
+                  >
+                    <Ionicons name="close" size={20} color="#DC2626" />
+                  </TouchableOpacity>
+                </View>
+              )}
+
               {/* Name Input */}
               <AuthInput
                 label="Full Name"
@@ -184,6 +234,7 @@ export default function SignupScreen() {
                   setName(text);
                   if (errors.name)
                     setErrors((prev) => ({ ...prev, name: undefined }));
+                  if (authError) clearError();
                 }}
                 error={errors.name}
                 autoCapitalize="words"
@@ -200,6 +251,7 @@ export default function SignupScreen() {
                   setEmail(text);
                   if (errors.email)
                     setErrors((prev) => ({ ...prev, email: undefined }));
+                  if (authError) clearError();
                 }}
                 error={errors.email}
                 keyboardType="email-address"
@@ -220,6 +272,7 @@ export default function SignupScreen() {
                       ...prev,
                       password: undefined,
                     }));
+                  if (authError) clearError();
                 }}
                 error={errors.password}
                 autoComplete="password-new"
@@ -237,6 +290,7 @@ export default function SignupScreen() {
                       ...prev,
                       confirmPassword: undefined,
                     }));
+                  if (authError) clearError();
                 }}
                 error={errors.confirmPassword}
                 autoComplete="password-new"
@@ -317,6 +371,24 @@ const styles = StyleSheet.create({
   },
   form: {
     flex: 1,
+  },
+  errorContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 16,
+    gap: 8,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 14,
+    color: "#DC2626",
+    fontWeight: "500",
+  },
+  errorClose: {
+    padding: 4,
   },
   loginContainer: {
     flexDirection: "row",

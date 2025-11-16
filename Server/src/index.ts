@@ -10,6 +10,7 @@ import {
   progressRouter,
   activitiesRouter,
 } from "./routes";
+import { extractUserId } from "./middleware/auth";
 
 dotenv.config();
 
@@ -21,8 +22,13 @@ app.use(cors());
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
-// API Routes
+// Public Routes (no auth required)
 app.use("/health", healthRouter);
+
+// Protected API Routes (require authentication)
+// Apply extractUserId middleware to all /api routes
+app.use("/api", extractUserId);
+
 app.use("/api/users", usersRouter);
 app.use("/api/onboarding", onboardingRouter);
 app.use("/api/lessons", lessonsRouter);

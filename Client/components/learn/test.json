@@ -1,0 +1,58 @@
+{
+  "completedUnits": 0,
+  "inProgressUnits": 0,
+  "milestones": [
+    {
+      "color": "#4CAF50",
+      "icon": "🔤",
+      "id": "unit-1",
+      "progress": 0,
+      "title": "Beginning - The Alphabet"
+    },
+    {
+      "color": "#2196F3",
+      "icon": "🔢",
+      "id": "unit-2",
+      "progress": 0,
+      "title": "Numbers - Counting in Swahili"
+    },
+    {
+      "color": "#9C27B0",
+      "icon": "📅",
+      "id": "unit-3",
+      "progress": 0,
+      "title": "Days, Months, and Seasons"
+    },
+    {
+      "color": "#FF9800",
+      "icon": "👋",
+      "id": "unit-4",
+      "progress": 0,
+      "title": "Greetings - Salamu"
+    },
+    {
+      "color": "#00BCD4",
+      "icon": "🏢",
+      "id": "unit-5",
+      "progress": 0,
+      "title": "Occupations and Places"
+    },
+    {
+      "color": "#FF9800",
+      "icon": "🔄",
+      "id": "unit-6",
+      "progress": 0,
+      "title": "Plurals of Nouns"
+    },
+    {
+      "color": "#E91E63",
+      "icon": "🎨",
+      "id": "unit-7",
+      "progress": 0,
+      "title": "Colors - Rangi"
+    }
+  ],
+  "streakDays": 0,
+  "totalUnits": 7,
+  "totalXP": 0
+}

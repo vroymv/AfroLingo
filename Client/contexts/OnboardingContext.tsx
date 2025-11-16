@@ -1,4 +1,12 @@
-import React, { createContext, ReactNode, useContext, useReducer } from "react";
+import React, {
+  createContext,
+  ReactNode,
+  useContext,
+  useReducer,
+  useEffect,
+  useState,
+} from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface OnboardingState {
   isCompleted: boolean;
@@ -20,7 +28,8 @@ interface OnboardingAction {
     | "SET_PERSONALIZATION"
     | "SET_CURRENT_STEP"
     | "COMPLETE_ONBOARDING"
-    | "RESET";
+    | "RESET"
+    | "LOAD_STATE";
   payload?: any;
 }
 
@@ -33,9 +42,12 @@ const initialState: OnboardingState = {
   personalization: null,
 };
 
+const ONBOARDING_STORAGE_KEY = "@afrolingo_onboarding_state";
+
 const OnboardingContext = createContext<{
   state: OnboardingState;
   dispatch: React.Dispatch<OnboardingAction>;
+  isLoading: boolean;
 } | null>(null);
 
 function onboardingReducer(
@@ -43,6 +55,8 @@ function onboardingReducer(
   action: OnboardingAction
 ): OnboardingState {
   switch (action.type) {
+    case "LOAD_STATE":
+      return action.payload || initialState;
     case "SET_LANGUAGE":
       return { ...state, selectedLanguage: action.payload };
     case "SET_LEVEL":
@@ -68,9 +82,47 @@ interface OnboardingProviderProps {
 
 export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const [state, dispatch] = useReducer(onboardingReducer, initialState);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load onboarding state from AsyncStorage on mount
+  useEffect(() => {
+    const loadOnboardingState = async () => {
+      try {
+        const storedState = await AsyncStorage.getItem(ONBOARDING_STORAGE_KEY);
+        if (storedState) {
+          const parsedState = JSON.parse(storedState);
+          dispatch({ type: "LOAD_STATE", payload: parsedState });
+        }
+      } catch (error) {
+        console.error("Failed to load onboarding state:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadOnboardingState();
+  }, []);
+
+  // Save onboarding state to AsyncStorage whenever it changes
+  useEffect(() => {
+    if (!isLoading) {
+      const saveOnboardingState = async () => {
+        try {
+          await AsyncStorage.setItem(
+            ONBOARDING_STORAGE_KEY,
+            JSON.stringify(state)
+          );
+        } catch (error) {
+          console.error("Failed to save onboarding state:", error);
+        }
+      };
+
+      saveOnboardingState();
+    }
+  }, [state, isLoading]);
 
   return (
-    <OnboardingContext.Provider value={{ state, dispatch }}>
+    <OnboardingContext.Provider value={{ state, dispatch, isLoading }}>
       {children}
     </OnboardingContext.Provider>
   );

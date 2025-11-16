@@ -17,6 +17,8 @@ export default function LessonPlayerScreen() {
   const { completeLesson: recordLessonComplete } = useUserProgress();
   const {
     activeLesson,
+    lessonsData,
+    isLoading,
     startLesson,
     advanceActivity,
     goToNextLesson,
@@ -25,10 +27,18 @@ export default function LessonPlayerScreen() {
   } = useLessonProgress();
 
   useEffect(() => {
-    if (lessonId && activeLesson?.lessonId !== lessonId) {
+    if (lessonId && activeLesson?.lessonId !== lessonId && !isLoading) {
       startLesson(lessonId);
     }
-  }, [lessonId, activeLesson?.lessonId, startLesson]);
+  }, [lessonId, activeLesson?.lessonId, isLoading, startLesson]);
+
+  if (isLoading || !lessonsData) {
+    return (
+      <ThemedView style={styles.center}>
+        <ThemedText>Loading lesson...</ThemedText>
+      </ThemedView>
+    );
+  }
 
   if (!lessonId) {
     return (
@@ -49,10 +59,10 @@ export default function LessonPlayerScreen() {
     );
   }
 
-  // Calculate progress based on actual lesson activities
+  // Get lesson data from lessonsData
   const lessonData = activeLesson
     ? (() => {
-        for (const unit of require("@/data/lessons.json").units) {
+        for (const unit of lessonsData.units) {
           const lesson = unit.lessons.find(
             (l: any) => l.id === activeLesson.lessonId
           );

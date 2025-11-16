@@ -1,69 +1,48 @@
 import { useState, useEffect } from "react";
-import { fetchLessons, LessonsData, Unit } from "@/services/lessons";
-import { fetchUserProgress, UserProgressData } from "@/services/userProgress";
+import { fetchLessonsWithProgress, LessonsData } from "@/services/lessons";
+import { getCurrentUserId } from "@/services/apiClient";
+import { useAuth } from "@/contexts/AuthContext";
 
 /**
- * Combined hook that fetches lessons and merges them with user progress
- * This ensures that the UI shows real-time progress data
+ * Hook that fetches lessons with user progress from the API
+ * Uses the new /api/lessons/user/:userId endpoint which returns lessons
+ * already merged with user progress data
+ * Note: Stats are now fetched separately via useProgressStats hook
  */
 export const useLessonsWithProgress = (
   level?: string,
   includeActivities: boolean = true
 ) => {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [data, setData] = useState<LessonsData | null>(null);
-  const [stats, setStats] = useState<UserProgressData["stats"] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
+      // Don't fetch if auth is still loading or user is not authenticated
+      if (authLoading || !isAuthenticated) {
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
 
-        // Fetch both lessons and progress in parallel
-        const [lessonsData, progressData] = await Promise.all([
-          fetchLessons(level, includeActivities),
-          fetchUserProgress().catch(() => null), // Don't fail if progress fetch fails
-        ]);
+        // Get current user ID
+        const userId = getCurrentUserId();
 
-        // If we have progress data, merge it with lessons
-        if (progressData) {
-          const progressMap = new Map(
-            progressData.units.map((unit) => [unit.id, unit])
-          );
+        // Fetch lessons with user progress already merged from API
+        const lessonsData = await fetchLessonsWithProgress(
+          userId,
+          level,
+          includeActivities
+        );
 
-          const mergedUnits = lessonsData.units.map((unit): Unit => {
-            const userProgress = progressMap.get(unit.id);
-
-            if (userProgress) {
-              return {
-                ...unit,
-                progress: userProgress.progress,
-                completedLessons: userProgress.completedLessons,
-                xpReward: userProgress.xpEarned || unit.xpReward,
-              };
-            }
-
-            // No progress yet - return unit with default values
-            return {
-              ...unit,
-              progress: 0,
-              completedLessons: 0,
-            };
-          });
-
-          setData({
-            ...lessonsData,
-            units: mergedUnits,
-          });
-          setStats(progressData.stats);
-        } else {
-          // No progress data - use lessons as-is with default progress
-          setData(lessonsData);
-          setStats(null);
-        }
+        setData(lessonsData);
       } catch (err) {
+        console.error("Error loading lessons with progress:", err);
         setError(
           err instanceof Error ? err : new Error("Failed to load lessons")
         );
@@ -73,49 +52,26 @@ export const useLessonsWithProgress = (
     };
 
     loadData();
-  }, [level, includeActivities]);
+  }, [authLoading, isAuthenticated, level, includeActivities]);
 
   const refetch = async () => {
     try {
       setLoading(true);
-      const [lessonsData, progressData] = await Promise.all([
-        fetchLessons(level, includeActivities),
-        fetchUserProgress().catch(() => null),
-      ]);
+      setError(null);
 
-      if (progressData) {
-        const progressMap = new Map(
-          progressData.units.map((unit) => [unit.id, unit])
-        );
+      const userId = getCurrentUserId();
+      const lessonsData = await fetchLessonsWithProgress(
+        userId,
+        level,
+        includeActivities
+      );
 
-        const mergedUnits = lessonsData.units.map((unit): Unit => {
-          const userProgress = progressMap.get(unit.id);
-
-          if (userProgress) {
-            return {
-              ...unit,
-              progress: userProgress.progress,
-              completedLessons: userProgress.completedLessons,
-              xpReward: userProgress.xpEarned || unit.xpReward,
-            };
-          }
-
-          return {
-            ...unit,
-            progress: 0,
-            completedLessons: 0,
-          };
-        });
-
-        setData({
-          ...lessonsData,
-          units: mergedUnits,
-        });
-        setStats(progressData.stats);
-      } else {
-        setData(lessonsData);
-        setStats(null);
-      }
+      setData(lessonsData);
+    } catch (err) {
+      console.error("Error refetching lessons:", err);
+      setError(
+        err instanceof Error ? err : new Error("Failed to refetch lessons")
+      );
     } finally {
       setLoading(false);
     }
@@ -123,7 +79,6 @@ export const useLessonsWithProgress = (
 
   return {
     data,
-    stats,
     loading,
     error,
     refetch,

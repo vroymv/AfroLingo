@@ -158,6 +158,96 @@ router.patch("/:id", async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/users/:id/stats - Get user's progress statistics only
+router.get("/:id/stats", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // Check if user exists
+    const user = await prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Get all units with user progress (minimal data for stats calculation)
+    const units = await prisma.unit.findMany({
+      where: { isActive: true },
+      include: {
+        userProgress: {
+          where: { userId: id },
+          select: {
+            progress: true,
+            xpEarned: true,
+            completedLessons: true,
+          },
+        },
+      },
+    });
+
+    // Calculate streak from user activity
+    const { calculateCurrentStreak } = await import(
+      "../services/streakService"
+    );
+    const streakDays = await calculateCurrentStreak(id);
+
+    // Calculate overall statistics
+    let totalXP = 0;
+    let completedUnits = 0;
+    let inProgressUnits = 0;
+
+    units.forEach((unit) => {
+      const userProgress = unit.userProgress[0];
+      if (userProgress) {
+        totalXP += userProgress.xpEarned || 0;
+
+        if (userProgress.progress === 100) {
+          completedUnits++;
+        } else if (userProgress.progress > 0) {
+          inProgressUnits++;
+        }
+      }
+    });
+
+    // Get milestone data for each unit (minimal info for progress visualization)
+    const milestones = units.map((unit) => {
+      const userProgress = unit.userProgress[0];
+      return {
+        id: unit.externalId,
+        title: unit.title,
+        icon: unit.icon,
+        color: unit.color,
+        progress: userProgress?.progress || 0,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        totalXP,
+        streakDays,
+        completedUnits,
+        inProgressUnits,
+        totalUnits: units.length,
+        milestones,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching user stats:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch user stats",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
+
 // GET /api/users/:id/progress - Get user's progress with units
 router.get("/:id/progress", async (req: Request, res: Response) => {
   try {
@@ -195,10 +285,16 @@ router.get("/:id/progress", async (req: Request, res: Response) => {
       orderBy: { order: "asc" },
     });
 
+    // Calculate streak from user activity
+    const { calculateCurrentStreak } = await import(
+      "../services/streakService"
+    );
+    const streakDays = await calculateCurrentStreak(id);
+
     // Calculate overall statistics
     const stats = {
       totalXP: 0,
-      streakDays: 7, // TODO: Calculate actual streak from user activity
+      streakDays,
       completedUnits: 0,
       inProgressUnits: 0,
       totalUnits: units.length,

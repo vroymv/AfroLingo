@@ -1,5 +1,6 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import EmailVerificationBanner from "@/components/auth/EmailVerificationBanner";
 import React from "react";
 import { ScrollView, StyleSheet, TouchableOpacity } from "react-native";
 
@@ -7,6 +8,8 @@ export default function ProfileScreen() {
   return (
     <ThemedView style={styles.container}>
       <ScrollView style={styles.content}>
+        <EmailVerificationBanner />
+
         <ThemedView style={styles.header}>
           <ThemedView style={styles.avatar}>
             <ThemedText type="title">👤</ThemedText>

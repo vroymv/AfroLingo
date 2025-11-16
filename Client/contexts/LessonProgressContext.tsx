@@ -1,9 +1,16 @@
-import { mockLessonsData } from "@/data/lessons";
+import {
+  fetchLessonsWithProgress,
+  startLessonApi,
+  LessonsData,
+} from "@/services/lessons";
+import { getCurrentUserId } from "@/services/apiClient";
+import { useAuth } from "@/contexts/AuthContext";
 import React, {
   createContext,
   ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -12,14 +19,17 @@ export interface ActiveLessonState {
   lessonId: string;
   unitId: string;
   lessonIndex: number; // index within unit
-  activityIndex: number; // placeholder for future multi-activity lessons
+  activityIndex: number; // current activity index
   startedAt: Date;
   completed: boolean;
 }
 
 interface LessonProgressContextType {
   activeLesson?: ActiveLessonState;
-  startLesson: (lessonId: string) => void;
+  lessonsData?: LessonsData;
+  isLoading: boolean;
+  error: string | null;
+  startLesson: (lessonId: string) => Promise<void>;
   nextLessonId: () => string | undefined;
   completeLesson: () => void;
   advanceActivity: () => void;
@@ -35,14 +45,17 @@ interface LessonProgressContextType {
       }
     | undefined;
   getCurrentActivity: () => any | undefined;
+  refreshLessons: () => Promise<void>;
 }
 
 const LessonProgressContext = createContext<
   LessonProgressContextType | undefined
 >(undefined);
 
-function findLesson(lessonId: string) {
-  for (const unit of mockLessonsData.units) {
+function findLesson(lessonsData: LessonsData | undefined, lessonId: string) {
+  if (!lessonsData) return undefined;
+
+  for (const unit of lessonsData.units) {
     const idx = unit.lessons.findIndex((l) => l.id === lessonId);
     if (idx !== -1) {
       return { unit, lesson: unit.lessons[idx], lessonIndex: idx };
@@ -51,10 +64,15 @@ function findLesson(lessonId: string) {
   return undefined;
 }
 
-function computeNextLessonId(currentLessonId?: string): string | undefined {
+function computeNextLessonId(
+  lessonsData: LessonsData | undefined,
+  currentLessonId?: string
+): string | undefined {
+  if (!lessonsData) return undefined;
+
   // Flatten lessons preserving unit ordering
   const flattened: { unitId: string; lessonId: string }[] = [];
-  mockLessonsData.units.forEach((u) => {
+  lessonsData.units.forEach((u) => {
     u.lessons.forEach((l) => flattened.push({ unitId: u.id, lessonId: l.id }));
   });
 
@@ -70,56 +88,125 @@ export const LessonProgressProvider = ({
 }: {
   children: ReactNode;
 }) => {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [activeLesson, setActiveLesson] = useState<
     ActiveLessonState | undefined
   >();
+  const [lessonsData, setLessonsData] = useState<LessonsData | undefined>();
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const startLesson = useCallback((lessonId: string) => {
-    const meta = findLesson(lessonId);
-    if (!meta) return;
-    setActiveLesson({
-      lessonId,
-      unitId: meta.unit.id,
-      lessonIndex: meta.lessonIndex,
-      activityIndex: 0,
-      startedAt: new Date(),
-      completed: false,
-    });
-  }, []);
+  // Fetch lessons with user progress on mount
+  const fetchLessons = useCallback(async () => {
+    // Don't fetch if not authenticated
+    if (!isAuthenticated) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const userId = getCurrentUserId();
+      const data = await fetchLessonsWithProgress(userId);
+
+      setLessonsData(data);
+    } catch (err) {
+      console.error("Error fetching lessons:", err);
+      setError(err instanceof Error ? err.message : "Failed to load lessons");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    // Only fetch when auth is ready and user is authenticated
+    if (!authLoading && isAuthenticated) {
+      fetchLessons();
+    } else if (!authLoading && !isAuthenticated) {
+      // User is not authenticated, clear data
+      setIsLoading(false);
+      setLessonsData(undefined);
+    }
+  }, [authLoading, isAuthenticated, fetchLessons]);
+
+  const startLesson = useCallback(
+    async (lessonId: string) => {
+      try {
+        const meta = findLesson(lessonsData, lessonId);
+        if (!meta) {
+          console.error("Lesson not found:", lessonId);
+          return;
+        }
+
+        // Call API to track lesson start
+        await startLessonApi(lessonId);
+
+        // Update local state
+        setActiveLesson({
+          lessonId,
+          unitId: meta.unit.id,
+          lessonIndex: meta.lessonIndex,
+          activityIndex: meta.lesson.currentActivityIndex || 0,
+          startedAt: new Date(),
+          completed: false,
+        });
+      } catch (err) {
+        console.error("Error starting lesson:", err);
+        // Still set local state even if API call fails
+        const meta = findLesson(lessonsData, lessonId);
+        if (meta) {
+          setActiveLesson({
+            lessonId,
+            unitId: meta.unit.id,
+            lessonIndex: meta.lessonIndex,
+            activityIndex: 0,
+            startedAt: new Date(),
+            completed: false,
+          });
+        }
+      }
+    },
+    [lessonsData]
+  );
 
   const completeLesson = useCallback(() => {
     setActiveLesson((prev) => (prev ? { ...prev, completed: true } : prev));
   }, []);
 
   const goToNextLesson = useCallback(() => {
-    const nextId = computeNextLessonId(activeLesson?.lessonId);
+    const nextId = computeNextLessonId(lessonsData, activeLesson?.lessonId);
     if (nextId) {
       startLesson(nextId);
     }
     return nextId;
-  }, [activeLesson?.lessonId, startLesson]);
+  }, [lessonsData, activeLesson?.lessonId, startLesson]);
 
   const nextLessonIdFn = useCallback(
-    () => computeNextLessonId(activeLesson?.lessonId),
-    [activeLesson?.lessonId]
+    () => computeNextLessonId(lessonsData, activeLesson?.lessonId),
+    [lessonsData, activeLesson?.lessonId]
   );
 
-  const getLessonMeta = useCallback((lessonId: string) => {
-    const res = findLesson(lessonId);
-    if (!res) return undefined;
-    return {
-      phrase: res.lesson.phrase,
-      meaning: res.lesson.meaning,
-      unitTitle: res.unit.title,
-      alphabetImage: res.lesson.alphabetImage,
-      audio: res.lesson.audio,
-    };
-  }, []);
+  const getLessonMeta = useCallback(
+    (lessonId: string) => {
+      const res = findLesson(lessonsData, lessonId);
+      if (!res) return undefined;
+      return {
+        phrase: res.lesson.phrase,
+        meaning: res.lesson.meaning,
+        unitTitle: res.unit.title,
+        alphabetImage: res.lesson.alphabetImage,
+        audio: res.lesson.audio,
+      };
+    },
+    [lessonsData]
+  );
 
   const advanceActivity = useCallback(() => {
     setActiveLesson((prev) => {
       if (!prev) return prev;
-      const meta = findLesson(prev.lessonId);
+      const meta = findLesson(lessonsData, prev.lessonId);
       if (!meta) return prev;
 
       const totalActivities = meta.lesson.activities.length;
@@ -132,18 +219,21 @@ export const LessonProgressProvider = ({
 
       return { ...prev, activityIndex: nextActivityIndex };
     });
-  }, []);
+  }, [lessonsData]);
 
   const getCurrentActivity = useCallback(() => {
     if (!activeLesson) return undefined;
-    const meta = findLesson(activeLesson.lessonId);
+    const meta = findLesson(lessonsData, activeLesson.lessonId);
     if (!meta) return undefined;
     return meta.lesson.activities[activeLesson.activityIndex];
-  }, [activeLesson]);
+  }, [lessonsData, activeLesson]);
 
   const value = useMemo<LessonProgressContextType>(
     () => ({
       activeLesson,
+      lessonsData,
+      isLoading,
+      error,
       startLesson,
       completeLesson,
       advanceActivity,
@@ -152,9 +242,13 @@ export const LessonProgressProvider = ({
       isInLesson: !!activeLesson && !activeLesson.completed,
       getLessonMeta,
       getCurrentActivity,
+      refreshLessons: fetchLessons,
     }),
     [
       activeLesson,
+      lessonsData,
+      isLoading,
+      error,
       startLesson,
       completeLesson,
       advanceActivity,
@@ -162,6 +256,7 @@ export const LessonProgressProvider = ({
       nextLessonIdFn,
       getLessonMeta,
       getCurrentActivity,
+      fetchLessons,
     ]
   );
 

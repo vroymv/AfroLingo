@@ -6,17 +6,27 @@ import { StyleSheet, View, Image, Text } from "react-native";
 interface AuthHeaderProps {
   title: string;
   subtitle: string;
+  variant?: "login" | "signup";
 }
 
-export function AuthHeader({ title, subtitle }: AuthHeaderProps) {
+export function AuthHeader({
+  title,
+  subtitle,
+  variant = "login",
+}: AuthHeaderProps) {
   const tintColor = useThemeColor({}, "tint");
+
+  const iconSource =
+    variant === "login"
+      ? require("@/assets/images/icons/login-icon.png")
+      : require("@/assets/images/icons/signup-icon.png");
 
   return (
     <View style={styles.header}>
       {/* Logo */}
       <View style={styles.logoWrapper}>
         <Image
-          source={require("@/assets/images/icons/login-icon.png")}
+          source={iconSource}
           style={styles.logoImage}
           resizeMode="contain"
         />

@@ -20,9 +20,11 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 // Inner component that consumes Auth/Onboarding contexts (must be inside providers)
 function AppNavigator() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { state: onboardingState } = useOnboarding();
+  const { state: onboardingState, isLoading: onboardingLoading } =
+    useOnboarding();
 
-  if (authLoading) return <LoadingScreen />;
+  // Show loading while checking auth or onboarding state
+  if (authLoading || onboardingLoading) return <LoadingScreen />;
 
   if (!isAuthenticated) {
     return (

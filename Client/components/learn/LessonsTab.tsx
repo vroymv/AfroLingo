@@ -2,6 +2,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { useLessonProgress } from "@/contexts/LessonProgressContext";
 import { Unit } from "@/data/lessons";
 import { useLessonsWithProgress } from "@/hooks/useLessonsWithProgress";
+import { useProgressStats } from "@/hooks/useProgressStats";
 import { useRouter } from "expo-router";
 import React, { useCallback } from "react";
 import {
@@ -18,7 +19,8 @@ import { UnitsList } from "./UnitsList";
 export const LessonsTab: React.FC = () => {
   const router = useRouter();
   const { startLesson, activeLesson } = useLessonProgress();
-  const { data: lessonsData, stats, loading, error } = useLessonsWithProgress();
+  const { data: lessonsData, loading, error } = useLessonsWithProgress();
+  const { stats: progressStats, loading: statsLoading } = useProgressStats();
 
   const getNextLessonInUnit = useCallback(
     (unit: Unit) => {
@@ -61,7 +63,7 @@ export const LessonsTab: React.FC = () => {
     [router, startLesson, getNextLessonInUnit]
   );
 
-  if (loading) {
+  if (loading || statsLoading) {
     return <LoadingState />;
   }
 
@@ -73,6 +75,11 @@ export const LessonsTab: React.FC = () => {
     return <EmptyState />;
   }
 
+  // Don't render ProgressTracker if stats haven't loaded yet
+  if (!progressStats) {
+    return <LoadingState />;
+  }
+
   return (
     <ThemedView style={styles.container}>
       <ScrollView
@@ -80,7 +87,7 @@ export const LessonsTab: React.FC = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <ProgressTracker units={lessonsData.units} stats={stats || undefined} />
+        <ProgressTracker stats={progressStats} />
         <UnitsList units={lessonsData.units} onUnitPress={handleUnitPress} />
         <View style={styles.bottomPadding} />
       </ScrollView>
