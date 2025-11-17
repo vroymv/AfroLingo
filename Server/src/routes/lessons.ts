@@ -95,168 +95,6 @@ router.get("/", async (req: Request, res: Response) => {
 });
 
 /**
- * GET /api/lessons/:lessonId - Get a specific lesson by ID
- */
-router.get("/:lessonId", async (req: Request, res: Response) => {
-  try {
-    const { lessonId } = req.params;
-
-    const lesson = await prisma.lesson.findUnique({
-      where: {
-        externalId: lessonId,
-        isActive: true,
-      },
-      include: {
-        unit: true,
-        activities: {
-          where: { isActive: true },
-          orderBy: { order: "asc" },
-        },
-      },
-    });
-
-    if (!lesson) {
-      return res.status(404).json({
-        success: false,
-        message: "Lesson not found",
-      });
-    }
-
-    // Transform to match expected format
-    const transformedLesson = {
-      id: lesson.externalId,
-      phrase: lesson.phrase,
-      meaning: lesson.meaning,
-      pronunciation: lesson.pronunciation,
-      alphabetImage: lesson.alphabetImage,
-      audio: lesson.audio,
-      unit: {
-        id: lesson.unit.externalId,
-        title: lesson.unit.title,
-        level: lesson.unit.level,
-        icon: lesson.unit.icon,
-        color: lesson.unit.color,
-      },
-      activities: lesson.activities.map((activity) => ({
-        id: activity.externalId,
-        type: activity.type,
-        question: activity.question,
-        description: activity.description,
-        audio: activity.audio,
-        options: activity.options,
-        correctAnswer: activity.correctAnswer,
-        explanation: activity.explanation,
-        items: activity.items,
-        pairs: activity.pairs,
-        conversation: activity.conversation,
-        dialogue: activity.dialogue,
-        alphabetImage: activity.alphabetImage,
-      })),
-    };
-
-    return res.status(200).json({
-      success: true,
-      data: transformedLesson,
-    });
-  } catch (error) {
-    console.error("Error fetching lesson:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch lesson",
-      error: error instanceof Error ? error.message : "Unknown error",
-    });
-  }
-});
-
-/**
- * GET /api/lessons/unit/:unitId - Get all lessons for a specific unit
- */
-router.get("/unit/:unitId", async (req: Request, res: Response) => {
-  try {
-    const { unitId } = req.params;
-    const { includeActivities = "true" } = req.query;
-
-    const unit = await prisma.unit.findUnique({
-      where: {
-        externalId: unitId,
-        isActive: true,
-      },
-      include: {
-        lessons: {
-          where: { isActive: true },
-          include: {
-            activities:
-              includeActivities === "true"
-                ? {
-                    where: { isActive: true },
-                    orderBy: { order: "asc" },
-                  }
-                : false,
-          },
-          orderBy: { order: "asc" },
-        },
-      },
-    });
-
-    if (!unit) {
-      return res.status(404).json({
-        success: false,
-        message: "Unit not found",
-      });
-    }
-
-    // Transform to match expected format
-    const transformedUnit = {
-      id: unit.externalId,
-      title: unit.title,
-      level: unit.level,
-      icon: unit.icon,
-      color: unit.color,
-      xpReward: unit.xpReward,
-      totalLessons: unit.totalLessons,
-      lessons: unit.lessons.map((lesson) => ({
-        id: lesson.externalId,
-        phrase: lesson.phrase,
-        meaning: lesson.meaning,
-        pronunciation: lesson.pronunciation,
-        alphabetImage: lesson.alphabetImage,
-        audio: lesson.audio,
-        activities:
-          includeActivities === "true"
-            ? lesson.activities.map((activity) => ({
-                id: activity.externalId,
-                type: activity.type,
-                question: activity.question,
-                description: activity.description,
-                audio: activity.audio,
-                options: activity.options,
-                correctAnswer: activity.correctAnswer,
-                explanation: activity.explanation,
-                items: activity.items,
-                pairs: activity.pairs,
-                conversation: activity.conversation,
-                dialogue: activity.dialogue,
-                alphabetImage: activity.alphabetImage,
-              }))
-            : [],
-      })),
-    };
-
-    return res.status(200).json({
-      success: true,
-      data: transformedUnit,
-    });
-  } catch (error) {
-    console.error("Error fetching unit lessons:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch unit lessons",
-      error: error instanceof Error ? error.message : "Unknown error",
-    });
-  }
-});
-
-/**
  * GET /api/lessons/user/:userId - Get all lessons with user progress
  * Query params:
  *   - level: filter by level (e.g., "Absolute Beginner", "Beginner")
@@ -266,6 +104,7 @@ router.get("/unit/:unitId", async (req: Request, res: Response) => {
  */
 router.get("/user/:userId", async (req: Request, res: Response) => {
   try {
+    console.log("This function is called");
     const { userId } = req.params;
     const { level, includeActivities = "true" } = req.query;
 
@@ -402,4 +241,165 @@ router.get("/user/:userId", async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * GET /api/lessons/unit/:unitId - Get all lessons for a specific unit
+ */
+router.get("/unit/:unitId", async (req: Request, res: Response) => {
+  try {
+    const { unitId } = req.params;
+    const { includeActivities = "true" } = req.query;
+
+    const unit = await prisma.unit.findUnique({
+      where: {
+        externalId: unitId,
+        isActive: true,
+      },
+      include: {
+        lessons: {
+          where: { isActive: true },
+          include: {
+            activities:
+              includeActivities === "true"
+                ? {
+                    where: { isActive: true },
+                    orderBy: { order: "asc" },
+                  }
+                : false,
+          },
+          orderBy: { order: "asc" },
+        },
+      },
+    });
+
+    if (!unit) {
+      return res.status(404).json({
+        success: false,
+        message: "Unit not found",
+      });
+    }
+
+    // Transform to match expected format
+    const transformedUnit = {
+      id: unit.externalId,
+      title: unit.title,
+      level: unit.level,
+      icon: unit.icon,
+      color: unit.color,
+      xpReward: unit.xpReward,
+      totalLessons: unit.totalLessons,
+      lessons: unit.lessons.map((lesson) => ({
+        id: lesson.externalId,
+        phrase: lesson.phrase,
+        meaning: lesson.meaning,
+        pronunciation: lesson.pronunciation,
+        alphabetImage: lesson.alphabetImage,
+        audio: lesson.audio,
+        activities:
+          includeActivities === "true"
+            ? lesson.activities.map((activity) => ({
+                id: activity.externalId,
+                type: activity.type,
+                question: activity.question,
+                description: activity.description,
+                audio: activity.audio,
+                options: activity.options,
+                correctAnswer: activity.correctAnswer,
+                explanation: activity.explanation,
+                items: activity.items,
+                pairs: activity.pairs,
+                conversation: activity.conversation,
+                dialogue: activity.dialogue,
+                alphabetImage: activity.alphabetImage,
+              }))
+            : [],
+      })),
+    };
+
+    return res.status(200).json({
+      success: true,
+      data: transformedUnit,
+    });
+  } catch (error) {
+    console.error("Error fetching unit lessons:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch unit lessons",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
+
+/**
+ * GET /api/lessons/:lessonId - Get a specific lesson by ID
+ */
+router.get("/:lessonId", async (req: Request, res: Response) => {
+  try {
+    const { lessonId } = req.params;
+
+    const lesson = await prisma.lesson.findUnique({
+      where: {
+        externalId: lessonId,
+        isActive: true,
+      },
+      include: {
+        unit: true,
+        activities: {
+          where: { isActive: true },
+          orderBy: { order: "asc" },
+        },
+      },
+    });
+
+    if (!lesson) {
+      return res.status(404).json({
+        success: false,
+        message: "Lesson not found",
+      });
+    }
+
+    // Transform to match expected format
+    const transformedLesson = {
+      id: lesson.externalId,
+      phrase: lesson.phrase,
+      meaning: lesson.meaning,
+      pronunciation: lesson.pronunciation,
+      alphabetImage: lesson.alphabetImage,
+      audio: lesson.audio,
+      unit: {
+        id: lesson.unit.externalId,
+        title: lesson.unit.title,
+        level: lesson.unit.level,
+        icon: lesson.unit.icon,
+        color: lesson.unit.color,
+      },
+      activities: lesson.activities.map((activity) => ({
+        id: activity.externalId,
+        type: activity.type,
+        question: activity.question,
+        description: activity.description,
+        audio: activity.audio,
+        options: activity.options,
+        correctAnswer: activity.correctAnswer,
+        explanation: activity.explanation,
+        items: activity.items,
+        pairs: activity.pairs,
+        conversation: activity.conversation,
+        dialogue: activity.dialogue,
+        alphabetImage: activity.alphabetImage,
+      })),
+    };
+
+    return res.status(200).json({
+      success: true,
+      data: transformedLesson,
+    });
+  } catch (error) {
+    console.error("Error fetching lesson:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch lesson",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
 export default router;

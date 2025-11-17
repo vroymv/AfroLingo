@@ -51,6 +51,8 @@ export default function LessonPlayerScreen() {
   const currentActivity = getCurrentActivity();
   const meta = getLessonMeta(lessonId);
 
+  console.log("meta: ", meta);
+
   if (!currentActivity || !meta) {
     return (
       <ThemedView style={styles.center}>

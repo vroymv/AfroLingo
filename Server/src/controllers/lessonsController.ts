@@ -18,13 +18,6 @@ export async function startLesson(req: Request, res: Response) {
     const { lessonId } = req.params;
     const userId = (req as any).userId;
 
-    // Log the incoming request
-    console.log("🚀 Start lesson request received:", {
-      lessonId,
-      userId,
-      timestamp: new Date().toISOString(),
-    });
-
     // Validate userId is present (should be set by middleware)
     if (!userId) {
       console.error("❌ No userId found in request");

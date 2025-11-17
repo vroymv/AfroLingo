@@ -1,37 +1,19 @@
 import React, {
   createContext,
-  ReactNode,
   useContext,
   useReducer,
   useEffect,
   useState,
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+  OnboardingState,
+  OnboardingAction,
+  OnboardingContextType,
+  OnboardingProviderProps,
+} from "@/types/contexts";
 
-interface OnboardingState {
-  isCompleted: boolean;
-  currentStep: number;
-  selectedLanguage: string | null;
-  selectedLevel: string | null;
-  placementTestScore: number | null;
-  personalization: {
-    reasons: string[];
-    timeCommitment: string;
-  } | null;
-}
-
-interface OnboardingAction {
-  type:
-    | "SET_LANGUAGE"
-    | "SET_LEVEL"
-    | "SET_PLACEMENT_SCORE"
-    | "SET_PERSONALIZATION"
-    | "SET_CURRENT_STEP"
-    | "COMPLETE_ONBOARDING"
-    | "RESET"
-    | "LOAD_STATE";
-  payload?: any;
-}
+export type { OnboardingState, OnboardingAction, OnboardingContextType };
 
 const initialState: OnboardingState = {
   isCompleted: false,
@@ -44,11 +26,7 @@ const initialState: OnboardingState = {
 
 const ONBOARDING_STORAGE_KEY = "@afrolingo_onboarding_state";
 
-const OnboardingContext = createContext<{
-  state: OnboardingState;
-  dispatch: React.Dispatch<OnboardingAction>;
-  isLoading: boolean;
-} | null>(null);
+const OnboardingContext = createContext<OnboardingContextType | null>(null);
 
 function onboardingReducer(
   state: OnboardingState,
@@ -74,10 +52,6 @@ function onboardingReducer(
     default:
       return state;
   }
-}
-
-interface OnboardingProviderProps {
-  children: ReactNode;
 }
 
 export function OnboardingProvider({ children }: OnboardingProviderProps) {

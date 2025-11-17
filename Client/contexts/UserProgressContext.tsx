@@ -1,34 +1,12 @@
-import React, { createContext, ReactNode, useContext, useState } from "react";
+import React, { createContext, useContext, useState } from "react";
+import {
+  Achievement,
+  UserProgress,
+  UserProgressContextType,
+  UserProgressProviderProps,
+} from "@/types/contexts";
 
-export interface Achievement {
-  id: string;
-  title: string;
-  description: string;
-  icon: string;
-  unlocked: boolean;
-  unlockedAt?: Date;
-}
-
-export interface UserProgress {
-  totalXP: number;
-  currentStreak: number;
-  longestStreak: number;
-  lessonsCompleted: number;
-  storiesRead: number;
-  practiceSessionsCompleted: number;
-  achievements: Achievement[];
-  lastActiveDate: Date;
-}
-
-interface UserProgressContextType {
-  progress: UserProgress;
-  addXP: (amount: number) => void;
-  updateStreak: () => void;
-  completeLesson: (lessonId: string, xpEarned: number) => void;
-  completePractice: (practiceId: string, xpEarned: number) => void;
-  completeStory: (storyId: string, xpEarned: number) => void;
-  unlockAchievement: (achievementId: string) => void;
-}
+export type { Achievement, UserProgress, UserProgressContextType };
 
 const defaultProgress: UserProgress = {
   totalXP: 1250,
@@ -93,10 +71,6 @@ export const useUserProgress = () => {
   }
   return context;
 };
-
-interface UserProgressProviderProps {
-  children: ReactNode;
-}
 
 export const UserProgressProvider: React.FC<UserProgressProviderProps> = ({
   children,

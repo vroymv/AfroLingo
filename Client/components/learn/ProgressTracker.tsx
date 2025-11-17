@@ -26,7 +26,7 @@ export const ProgressTracker = React.memo<ProgressTrackerProps>(({ stats }) => {
   const overallProgress =
     totalUnits > 0 ? Math.round((completedUnits / totalUnits) * 100) : 0;
 
-  console.log("Rendering ProgressTracker with stats:", stats);
+  // console.log("Rendering ProgressTracker with stats:", stats);
 
   return (
     <ThemedView style={styles.progressTracker}>

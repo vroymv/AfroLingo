@@ -7,46 +7,19 @@ import { getCurrentUserId } from "@/services/apiClient";
 import { useAuth } from "@/contexts/AuthContext";
 import React, {
   createContext,
-  ReactNode,
   useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
 } from "react";
+import {
+  ActiveLessonState,
+  LessonProgressContextType,
+  LessonProgressProviderProps,
+} from "@/types/contexts";
 
-export interface ActiveLessonState {
-  lessonId: string;
-  unitId: string;
-  lessonIndex: number; // index within unit
-  activityIndex: number; // current activity index
-  startedAt: Date;
-  completed: boolean;
-}
-
-interface LessonProgressContextType {
-  activeLesson?: ActiveLessonState;
-  lessonsData?: LessonsData;
-  isLoading: boolean;
-  error: string | null;
-  startLesson: (lessonId: string) => Promise<void>;
-  nextLessonId: () => string | undefined;
-  completeLesson: () => void;
-  advanceActivity: () => void;
-  goToNextLesson: () => string | undefined; // returns new lesson id
-  isInLesson: boolean;
-  getLessonMeta: (lessonId: string) =>
-    | {
-        phrase: string;
-        meaning: string;
-        unitTitle: string;
-        alphabetImage?: string;
-        audio?: string;
-      }
-    | undefined;
-  getCurrentActivity: () => any | undefined;
-  refreshLessons: () => Promise<void>;
-}
+export type { ActiveLessonState, LessonProgressContextType };
 
 const LessonProgressContext = createContext<
   LessonProgressContextType | undefined
@@ -85,9 +58,7 @@ function computeNextLessonId(
 
 export const LessonProgressProvider = ({
   children,
-}: {
-  children: ReactNode;
-}) => {
+}: LessonProgressProviderProps) => {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [activeLesson, setActiveLesson] = useState<
     ActiveLessonState | undefined

@@ -3,57 +3,57 @@
   "name": "African Languages Journey",
   "totalXP": 0,
   "units": [
-    {
-      "id": "unit-1",
-      "title": "Beginning - The Alphabet",
-      "level": "Absolute Beginner",
-      "progress": 0,
-      "totalLessons": 1,
-      "completedLessons": 0,
-      "icon": "🔤",
-      "color": "#4CAF50",
-      "xpReward": 50,
-      "lessons": [
-        {
-          "id": "lesson-alphabet",
-          "phrase": "The Swahili Alphabet",
-          "meaning": "Learn the foundation of the language",
-          "pronunciation": "ah-leh-fah-beh-tee",
-          "alphabetImage": "/assets/images/Swahili-alphabet.png",
-          "audio": "/assets/audio/swahili-alphabet.mp3",
-          "activities": [
-            {
-              "id": "activity-alphabet-1",
-              "type": "introduction",
-              "question": "Welcome! Let's start your journey by learning the Swahili alphabet."
-            },
-            {
-              "id": "activity-alphabet-2",
-              "type": "alphabet",
-              "question": "The Swahili Alphabet"
-            },
-            {
-              "id": "activity-alphabet-3",
-              "type": "listening-dictation",
-              "question": "Listening Exercise: Write What You Hear",
-              "audio": "/assets/audio/alphabet-dictation.mp3"
-            },
-            {
-              "id": "activity-alphabet-4",
-              "type": "vocabulary-fill-in",
-              "question": "Complete the Vocabulary Words",
-              "audio": "/assets/audio/vocabulary-items.mp3"
-            },
-            {
-              "id": "activity-alphabet-5",
-              "type": "alphabet-vocabulary-table",
-              "question": "Alphabet with Example Words",
-              "description": "Learn words that start with each letter"
-            }
-          ]
-        }
-      ]
-    },
+    // {
+    //   "id": "unit-1",
+    //   "title": "Beginning - The Alphabet",
+    //   "level": "Absolute Beginner",
+    //   "progress": 0,
+    //   "totalLessons": 1,
+    //   "completedLessons": 0,
+    //   "icon": "🔤",
+    //   "color": "#4CAF50",
+    //   "xpReward": 50,
+    //   "lessons": [
+    //     {
+    //       "id": "lesson-alphabet",
+    //       "phrase": "The Swahili Alphabet",
+    //       "meaning": "Learn the foundation of the language",
+    //       "pronunciation": "ah-leh-fah-beh-tee",
+    //       "alphabetImage": "/assets/images/Swahili-alphabet.png",
+    //       "audio": "/assets/audio/swahili-alphabet.mp3",
+    //       "activities": [
+    //         {
+    //           "id": "activity-alphabet-1",
+    //           "type": "introduction",
+    //           "question": "Welcome! Let's start your journey by learning the Swahili alphabet."
+    //         },
+    //         {
+    //           "id": "activity-alphabet-2",
+    //           "type": "alphabet",
+    //           "question": "The Swahili Alphabet"
+    //         },
+    //         {
+    //           "id": "activity-alphabet-3",
+    //           "type": "listening-dictation",
+    //           "question": "Listening Exercise: Write What You Hear",
+    //           "audio": "/assets/audio/alphabet-dictation.mp3"
+    //         },
+    //         {
+    //           "id": "activity-alphabet-4",
+    //           "type": "vocabulary-fill-in",
+    //           "question": "Complete the Vocabulary Words",
+    //           "audio": "/assets/audio/vocabulary-items.mp3"
+    //         },
+    //         {
+    //           "id": "activity-alphabet-5",
+    //           "type": "alphabet-vocabulary-table",
+    //           "question": "Alphabet with Example Words",
+    //           "description": "Learn words that start with each letter"
+    //         }
+    //       ]
+    //     }
+    //   ]
+    // },
     {
       "id": "unit-2",
       "title": "Numbers - Counting in Swahili",
