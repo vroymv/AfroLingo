@@ -3,12 +3,10 @@ import { ThemedView } from "@/components/ThemedView";
 import { LessonsTab } from "@/components/learn/LessonsTab";
 import { PracticeTab } from "@/components/learn/PracticeTab";
 import { StoriesTab } from "@/components/learn/StoriesTab";
-import { useLessonProgress } from "@/contexts/LessonProgressContext";
 import { useOnboarding } from "@/contexts/OnboardingContext";
-import { useUserProgress } from "@/contexts/UserProgressContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
-import { useRouter } from "expo-router";
+// import { useRouter } from "expo-router";
 import React from "react";
 import { Platform, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,46 +14,27 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const Tab = createMaterialTopTabNavigator();
 
 const ContinueButton: React.FC = () => {
-  const { progress } = useUserProgress();
-  const { totalXP, currentStreak } = progress;
-  const { activeLesson, startLesson, nextLessonId } = useLessonProgress();
-  const router = useRouter();
-
-  const handleContinue = () => {
-    let target = activeLesson?.lessonId;
-    if (!target) {
-      target = nextLessonId();
-      if (target) startLesson(target);
-    }
-    if (target) {
-      router.push(`/learn/lesson/${target}` as any);
-    } else {
-      console.warn("No lessons available");
-    }
-  };
-
+  // Dummy button, no data or navigation
   return (
-    <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
+    <TouchableOpacity style={styles.continueButton} onPress={() => {}}>
       <ThemedView style={styles.continueContent}>
         <View style={styles.continueInfo}>
           <ThemedText type="defaultSemiBold" style={styles.continueTitle}>
             Continue Learning
           </ThemedText>
           <ThemedText type="default" style={styles.continueSubtitle}>
-            {activeLesson
-              ? `Resuming ${activeLesson.lessonId}`
-              : "Start Next Lesson"}
+            Start Next Lesson
           </ThemedText>
         </View>
         <View style={styles.continueStats}>
           <View style={styles.statItem}>
             <ThemedText type="default" style={styles.statLabel}>
-              🔥 {currentStreak}
+              🔥 10
             </ThemedText>
           </View>
           <View style={styles.statItem}>
             <ThemedText type="default" style={styles.statLabel}>
-              ⭐ {totalXP}
+              ⭐ 20
             </ThemedText>
           </View>
         </View>
@@ -68,24 +47,10 @@ export default function LearnScreen() {
   const colorScheme = useColorScheme();
   const { state } = useOnboarding();
 
-  const getLanguageName = (code: string | null) => {
-    const languages: { [key: string]: string } = {
-      sw: "Swahili",
-      zu: "isiZulu",
-      xh: "isiXhosa",
-      ln: "Lingala",
-    };
-    return languages[code || ""] || "African languages";
-  };
-
-  const getLevelName = (level: string | null) => {
-    if (!level) return "structured learning";
-    return `${level.charAt(0).toUpperCase()}${level.slice(1)} level`;
-  };
-
-  const headerSubtitle = `Master ${getLanguageName(
-    state.selectedLanguage
-  )} through ${getLevelName(state.selectedLevel)}`;
+  // Dummy header subtitle using context
+  const headerSubtitle = `Master ${
+    state?.selectedLanguage || "Swahili"
+  } through structured learning`;
 
   const tabBarOptions = {
     tabBarStyle: {
@@ -108,7 +73,6 @@ export default function LearnScreen() {
     tabBarActiveTintColor: "#4A90E2",
     tabBarInactiveTintColor: colorScheme === "dark" ? "#8E8E93" : "#6D6D70",
   } as const;
-
   const isWeb = Platform.OS === "web";
 
   return (
@@ -126,7 +90,6 @@ export default function LearnScreen() {
       <Tab.Navigator
         screenOptions={() => ({
           ...tabBarOptions,
-          // Disable swipe on web
           swipeEnabled: !isWeb,
           lazy: true,
           sceneStyle: { backgroundColor: "transparent" },

@@ -1,6 +1,5 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { ProgressTrackerStats } from "@/services/userProgress";
 import React from "react";
 import {
   ScrollView,
@@ -9,6 +8,25 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
+// Type for milestone item
+interface ProgressMilestone {
+  id: string | number;
+  title: string;
+  icon: string;
+  color: string;
+  progress: number; // 0-100
+}
+
+// Main stats type
+interface ProgressTrackerStats {
+  totalXP: number;
+  streakDays: number;
+  completedUnits: number;
+  inProgressUnits: number;
+  totalUnits: number;
+  milestones: ProgressMilestone[];
+}
 
 interface ProgressTrackerProps {
   stats: ProgressTrackerStats;

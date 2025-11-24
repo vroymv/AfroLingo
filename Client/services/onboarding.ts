@@ -1,5 +1,4 @@
 import { ENV } from "@/config/env";
-import { getAuthHeaders, getCurrentUserId } from "./apiClient";
 
 /**
  * Interface matching the OnboardingState from OnboardingContext
@@ -49,13 +48,11 @@ export const saveOnboardingData = async (
 ): Promise<OnboardingResponse> => {
   try {
     // Get user ID and headers
-    const userId = getCurrentUserId();
-    const headers = await getAuthHeaders();
+    const userId = "tFgOgdOSSZaUkvPKlarhwx25rVZ2";
 
     // Send request
     const response = await fetch(`${ENV.API_BASE_URL}/onboarding/${userId}`, {
       method: "PUT",
-      headers,
       body: JSON.stringify(onboardingData),
     });
 
@@ -89,12 +86,10 @@ export const saveOnboardingData = async (
  */
 export const getOnboardingData = async (): Promise<OnboardingResponse> => {
   try {
-    const userId = getCurrentUserId();
-    const headers = await getAuthHeaders();
+    const userId = "tFgOgdOSSZaUkvPKlarhwx25rVZ2";
 
     const response = await fetch(`${ENV.API_BASE_URL}/onboarding/${userId}`, {
       method: "GET",
-      headers,
     });
 
     const result: OnboardingResponse = await response.json();

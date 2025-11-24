@@ -9,12 +9,10 @@ import "react-native-reanimated";
 
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { LessonProgressProvider } from "@/contexts/LessonProgressContext";
 import {
   OnboardingProvider,
   useOnboarding,
 } from "@/contexts/OnboardingContext";
-import { UserProgressProvider } from "@/contexts/UserProgressContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
 
 // Inner component that consumes Auth/Onboarding contexts (must be inside providers)
@@ -65,15 +63,11 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <OnboardingProvider>
-        <UserProgressProvider>
-          <LessonProgressProvider>
-            <ThemeProvider
-              value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-            >
-              <AppNavigator />
-            </ThemeProvider>
-          </LessonProgressProvider>
-        </UserProgressProvider>
+        <ThemeProvider
+          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+        >
+          <AppNavigator />
+        </ThemeProvider>
       </OnboardingProvider>
     </AuthProvider>
   );

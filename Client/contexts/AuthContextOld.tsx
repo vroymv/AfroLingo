@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react";
+import React, { createContext, useContext } from "react";
 export interface User {
   id: string;
   email: string;
@@ -33,9 +33,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Static user data for development/testing
   const staticUser: User = {
-    id: "tFgOgdOSSZaUkvPKlarhwx25rVZ2",
-    email: "roy@gmail.com",
-    name: "Roy",
+    id: "static-uid-123",
+    email: "testuser@example.com",
+    name: "Test User",
     avatar: undefined,
     createdAt: new Date(),
     emailVerified: true,

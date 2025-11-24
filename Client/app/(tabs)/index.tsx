@@ -15,14 +15,12 @@ import DailyGoalCard from "@/components/home/DailyGoalCard";
 import HeaderSection from "@/components/home/HeaderSection";
 import HeritageJourneySection from "@/components/home/HeritageJourneySection";
 import QuickActionsSection from "@/components/home/QuickActionsSection";
-import { useLessonProgress } from "@/contexts/LessonProgressContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
   const router = useRouter();
   const { state } = useOnboarding();
   const colorScheme = useColorScheme();
-  const { activeLesson, startLesson, nextLessonId } = useLessonProgress();
 
   useEffect(() => {
     if (!state.isCompleted) {
@@ -41,19 +39,8 @@ export default function HomeScreen() {
   }
 
   const handleTodayLesson = () => {
-    // If already have an active (not completed) lesson, resume, else pick next lesson
-    let targetLessonId = activeLesson?.lessonId;
-    if (!targetLessonId) {
-      targetLessonId = nextLessonId();
-      if (targetLessonId) {
-        startLesson(targetLessonId);
-      }
-    }
-    if (targetLessonId) {
-      router.push(`/learn/lesson/${targetLessonId}` as any);
-    } else {
-      console.warn("No lessons available");
-    }
+    // Navigate to today's lesson
+    console.log("Continuing today's lesson...");
   };
 
   const handleQuickAction = (action: string) => {

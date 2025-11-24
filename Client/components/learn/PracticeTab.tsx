@@ -1,6 +1,5 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { useUserProgress } from "@/contexts/UserProgressContext";
 import { mockPracticeData, PracticeSession } from "@/data/practice";
 import React from "react";
 import {
@@ -73,8 +72,7 @@ const PracticeCard: React.FC<PracticeCardProps> = ({ session, onPress }) => {
 };
 
 const StatsOverview: React.FC = () => {
-  const { progress } = useUserProgress();
-  const { currentStreak, totalXP } = progress;
+  const currentStreak = 0; // Replace with actual current streak
   const todayXP = 85; // This would be calculated based on today's activities
 
   return (
@@ -97,7 +95,7 @@ const StatsOverview: React.FC = () => {
         <View style={styles.statItem}>
           <Text style={styles.statEmoji}>⭐</Text>
           <ThemedText type="defaultSemiBold" style={styles.statValue}>
-            {totalXP}
+            {1000}
           </ThemedText>
           <ThemedText type="default" style={styles.statLabel}>
             Total XP

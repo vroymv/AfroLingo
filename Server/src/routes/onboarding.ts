@@ -114,8 +114,6 @@ router.get("/:userId", async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
 
-    console.log("📥 Getting onboarding data for user:", userId);
-
     // Get user's onboarding data
     const user = await prisma.user.findUnique({
       where: { id: userId },

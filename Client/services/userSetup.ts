@@ -1,4 +1,3 @@
-import { ENV } from "@/config/env";
 import { auth } from "@/config/firebase";
 
 export interface UserSetupData {
@@ -18,6 +17,8 @@ export interface SetupResponse {
   message: string;
   data?: any;
 }
+
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 /**
  * Setup user profile after onboarding
@@ -44,7 +45,7 @@ export async function setupUserProfile(
       personalization: userData.personalization,
     };
 
-    const response = await fetch(`${ENV.API_BASE_URL}/onboarding/${user.uid}`, {
+    const response = await fetch(`${API_BASE_URL}/onboarding/${user.uid}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

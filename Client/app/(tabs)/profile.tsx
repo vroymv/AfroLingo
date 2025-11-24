@@ -3,8 +3,11 @@ import { ThemedView } from "@/components/ThemedView";
 import EmailVerificationBanner from "@/components/auth/EmailVerificationBanner";
 import React from "react";
 import { ScrollView, StyleSheet, TouchableOpacity } from "react-native";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function ProfileScreen() {
+  const { user } = useAuth();
+  console.log("Authenticated user:", user);
   return (
     <ThemedView style={styles.container}>
       <ScrollView style={styles.content}>
