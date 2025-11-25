@@ -48,6 +48,11 @@ router.put("/:userId", async (req: Request, res: Response) => {
         onboardingCompleted: true,
         onboardingCompletedAt: new Date(),
         updatedAt: new Date(),
+        currentOnboardingStep:
+          validatedData.currentStep !== undefined &&
+          validatedData.currentStep !== null
+            ? String(validatedData.currentStep)
+            : null,
       },
       select: {
         id: true,
@@ -62,6 +67,7 @@ router.put("/:userId", async (req: Request, res: Response) => {
         onboardingCompletedAt: true,
         createdAt: true,
         updatedAt: true,
+        currentOnboardingStep: true,
       },
     });
 
@@ -128,6 +134,7 @@ router.get("/:userId", async (req: Request, res: Response) => {
         timeCommitment: true,
         onboardingCompleted: true,
         onboardingCompletedAt: true,
+        currentOnboardingStep: true,
       },
     });
 
@@ -151,6 +158,11 @@ router.get("/:userId", async (req: Request, res: Response) => {
               timeCommitment: user.timeCommitment || "15min",
             }
           : null,
+      currentStep:
+        user.currentOnboardingStep !== undefined &&
+        user.currentOnboardingStep !== null
+          ? Number(user.currentOnboardingStep)
+          : 1,
     };
 
     return res.status(200).json({

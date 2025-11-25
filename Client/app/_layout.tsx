@@ -15,13 +15,11 @@ import {
 } from "@/contexts/OnboardingContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
 
-// Inner component that consumes Auth/Onboarding contexts (must be inside providers)
 function AppNavigator() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { state: onboardingState, isLoading: onboardingLoading } =
     useOnboarding();
 
-  // Show loading while checking auth or onboarding state
   if (authLoading || onboardingLoading) return <LoadingScreen />;
 
   if (!isAuthenticated) {
@@ -51,7 +49,6 @@ function AppNavigator() {
   );
 }
 
-// Consolidated navigation & gating logic to avoid dual stacks + perpetual Redirect loop
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({

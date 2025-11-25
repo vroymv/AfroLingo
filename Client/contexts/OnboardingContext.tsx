@@ -119,13 +119,13 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
                 selectedLevel: state.selectedLevel,
                 placementTestScore: state.placementTestScore,
                 personalization: state.personalization,
+                currentStep: state.currentStep,
               }),
             }
           );
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
-          const data = await response.json();
         } catch (error) {
           console.error("Failed to save onboarding data:", error);
         }
@@ -139,6 +139,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     state.selectedLevel,
     state.placementTestScore,
     state.personalization,
+    state.currentStep,
   ]);
 
   return (

@@ -4,8 +4,8 @@ import LessonHeader from "@/components/learn/lesson/LessonHeader";
 import LessonTitleCard from "@/components/learn/lesson/LessonTitleCard";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { useLessonProgress } from "@/contexts/LessonProgressContext";
-import { useUserProgress } from "@/contexts/UserProgressContext";
+// Placeholder for lesson progress context
+// Placeholder for lesson progress actions (remove useUserProgress)
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
@@ -14,17 +14,21 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function LessonPlayerScreen() {
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
   const router = useRouter();
-  const { completeLesson: recordLessonComplete } = useUserProgress();
-  const {
-    activeLesson,
-    lessonsData,
-    isLoading,
-    startLesson,
-    advanceActivity,
-    goToNextLesson,
-    getLessonMeta,
-    getCurrentActivity,
-  } = useLessonProgress();
+  // Placeholder for lesson completion action
+  const recordLessonComplete = (lessonId: string, xp: number) => {
+    // TODO: Implement lesson completion logic
+    // This is a placeholder for awarding XP and marking lesson complete
+    console.log(`Lesson ${lessonId} completed. Awarded ${xp} XP.`);
+  };
+  // Placeholders for lesson progress context values
+  const activeLesson = null; // TODO: Replace with actual lesson data
+  const lessonsData = null; // TODO: Replace with actual lessons data
+  const isLoading = false; // TODO: Replace with actual loading state
+  const startLesson = (lessonId: string) => {}; // TODO: Implement startLesson
+  const advanceActivity = () => {}; // TODO: Implement advanceActivity
+  const goToNextLesson = () => null; // TODO: Implement goToNextLesson
+  const getLessonMeta = (lessonId: string) => null; // TODO: Implement getLessonMeta
+  const getCurrentActivity = () => null; // TODO: Implement getCurrentActivity
 
   useEffect(() => {
     if (lessonId && activeLesson?.lessonId !== lessonId && !isLoading) {

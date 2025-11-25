@@ -27,6 +27,7 @@ model User {
   timeCommitment        String? // e.g., "5min", "15min", "30min"
   onboardingCompleted   Boolean   @default(false)
   onboardingCompletedAt DateTime?
+  currentOnboardingStep String? // Tracks the last onboarding step completed
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
