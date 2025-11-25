@@ -1,10 +1,21 @@
 import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
 import React from "react";
-import { StyleSheet, View, TouchableOpacity } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useAuth } from "@/contexts/AuthContext";
+import ImagePickerComponent from "@/components/ui/ImagePicker";
 
 export default function ProfileHeader() {
+  const { user, updateProfile } = useAuth();
+
+  const handleImageUploaded = async (url: string) => {
+    try {
+      await updateProfile({ avatar: url });
+    } catch (error) {
+      console.error("Failed to update profile with new image:", error);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -19,15 +30,20 @@ export default function ProfileHeader() {
               colors={["#FFD700", "#FFA500", "#FF8C00"]}
               style={styles.avatarGradient}
             >
-              <View style={styles.avatar}>
-                <ThemedText style={styles.avatarEmoji}>👤</ThemedText>
-              </View>
+              <ImagePickerComponent
+                currentImageUrl={user?.avatar}
+                userId={user?.id || "guest"}
+                onImageUploaded={handleImageUploaded}
+                size={92}
+                showEditBadge={true}
+              >
+                <View style={styles.avatar}>
+                  <ThemedText style={styles.avatarEmoji}>👤</ThemedText>
+                </View>
+              </ImagePickerComponent>
             </LinearGradient>
-            <TouchableOpacity style={styles.editBadge}>
-              <ThemedText style={styles.editIcon}>✏️</ThemedText>
-            </TouchableOpacity>
           </View>
-          <ThemedText style={styles.name}>Sarah Johnson</ThemedText>
+          <ThemedText style={styles.name}>{user?.name || "User"}</ThemedText>
           <View style={styles.levelBadge}>
             <ThemedText style={styles.levelText}>🌟 Beginner</ThemedText>
           </View>

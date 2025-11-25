@@ -25,6 +25,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
+      {/* Hamburger Menu Button */}
       <TouchableOpacity
         style={styles.hamburgerButton}
         onPress={() => setDrawerVisible(true)}
@@ -34,8 +35,6 @@ export default function ProfileScreen() {
       </TouchableOpacity>
       <ThemedView style={styles.container}>
         <StatusBar barStyle="light-content" />
-        {/* Hamburger Menu Button */}
-
         <ScrollView
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}

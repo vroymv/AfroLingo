@@ -19,6 +19,8 @@ model User {
   email String @unique
   name  String
 
+  // Profile image
+  profileImageUrl String? // URL to user's profile image
   // Onboarding selections
   selectedLanguage      String? // e.g., "sw", "zu", "ln", "xh"
   selectedLevel         String? // e.g., "absolute-beginner", "beginner", "refresher"

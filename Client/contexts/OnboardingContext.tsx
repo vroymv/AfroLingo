@@ -74,7 +74,10 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   // Fetch onboarding state from backend when userId changes
   useEffect(() => {
     const fetchOnboardingState = async () => {
-      if (!user?.id) return;
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
       setIsLoading(true);
       try {
         const response = await fetch(`${API_BASE_URL}/onboarding/${user.id}`);
