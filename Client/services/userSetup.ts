@@ -69,7 +69,7 @@ export async function setupUserProfile(
       data: result.data,
     };
   } catch (error) {
-    console.error("❌ Error setting up user profile:", error);
+    console.error("Error setting up user profile:", error);
     return {
       success: false,
       message: error instanceof Error ? error.message : "Unknown error",
@@ -100,16 +100,13 @@ export async function getSetupStatus(userId?: string): Promise<any> {
     console.log("📥 Getting setup status for user:", targetUserId);
 
     // Make actual API call to get onboarding data
-    const response = await fetch(
-      `${ENV.API_BASE_URL}/onboarding/${targetUserId}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const response = await fetch(`${API_BASE_URL}/onboarding/${targetUserId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     if (!response.ok) {
       const errorData = await response.json();

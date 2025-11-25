@@ -1,10 +1,6 @@
 import { Stack } from "expo-router";
-import { useOnboarding } from "@/contexts/OnboardingContext";
 
 export default function OnboardingLayout() {
-  const { state } = useOnboarding();
-  console.log("Onboarding context data:", state);
-
   return (
     <Stack
       screenOptions={{

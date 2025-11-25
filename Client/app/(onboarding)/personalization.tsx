@@ -129,9 +129,7 @@ export default function PersonalizationScreen() {
   };
 
   const handleSkip = () => {
-    // Complete onboarding without personalization
     dispatch({ type: "COMPLETE_ONBOARDING" });
-    // Navigate to setup loading screen
     router.push("./setup-loading");
   };
 
