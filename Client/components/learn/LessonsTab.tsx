@@ -2,106 +2,45 @@ import { ThemedView } from "@/components/ThemedView";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { ProgressTracker } from "./ProgressTracker";
 import { UnitsList } from "./UnitsList";
+import { useOnboarding } from "@/contexts/OnboardingContext";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { computeProgressStats, mapUnitsToUi } from "@/services/lessonTap";
+
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 export const LessonsTab: React.FC = () => {
-  // Placeholder for activeLesson
-  // Dummy lessonsData
-  const lessonsData = {
-    units: [
-      {
-        id: "unit1",
-        title: "Introduction",
-        level: "Absolute Beginner" as "Absolute Beginner",
-        progress: 100,
-        totalLessons: 5,
-        completedLessons: 5,
-        icon: "🚀",
-        color: "#4CAF50",
-        lessons: [
+  const { state } = useOnboarding();
+  const { user } = useAuth();
+  const [units, setUnits] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchUnits = async () => {
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/units/level/${state.selectedLevel}`,
           {
-            id: "l1",
-            phrase: "Hello",
-            meaning: "A greeting",
-            audio: undefined,
-            pronunciation: "heh-loh",
-            example: "Hello, world!",
-            exampleTranslation: "Hello, world!",
-            alphabetImage: undefined,
-            activities: [],
-          },
-        ],
-        xpReward: 100,
-      },
-      {
-        id: "unit2",
-        title: "Basics",
-        level: "Beginner" as "Beginner",
-        progress: 50,
-        totalLessons: 8,
-        completedLessons: 4,
-        icon: "📘",
-        color: "#2196F3",
-        lessons: [
-          {
-            id: "l2",
-            phrase: "Goodbye",
-            meaning: "A farewell",
-            audio: undefined,
-            pronunciation: "good-bye",
-            example: "Goodbye, friend!",
-            exampleTranslation: "Goodbye, friend!",
-            alphabetImage: undefined,
-            activities: [],
-          },
-        ],
-        xpReward: 200,
-      },
-      {
-        id: "unit3",
-        title: "Advanced",
-        level: "Advanced" as "Advanced",
-        progress: 0,
-        totalLessons: 10,
-        completedLessons: 0,
-        icon: "🏆",
-        color: "#FFC107",
-        lessons: [
-          {
-            id: "l3",
-            phrase: "Congratulations",
-            meaning: "An expression of praise",
-            audio: undefined,
-            pronunciation: "con-gra-tu-la-tions",
-            example: "Congratulations on your achievement!",
-            exampleTranslation: "Congratulations on your achievement!",
-            alphabetImage: undefined,
-            activities: [],
-          },
-        ],
-        xpReward: 300,
-      },
-    ],
-  };
-  // Dummy progressStats
-  const progressStats = {
-    totalXP: 1200,
-    streakDays: 5,
-    completedUnits: 1,
-    inProgressUnits: 1,
-    totalUnits: 3,
-    milestones: [
-      { id: "m1", title: "Start", progress: 100, color: "#4CAF50", icon: "🚀" },
-      { id: "m2", title: "Basics", progress: 50, color: "#2196F3", icon: "📘" },
-      {
-        id: "m3",
-        title: "Advanced",
-        progress: 0,
-        color: "#FFC107",
-        icon: "🏆",
-      },
-    ],
-  };
-  // Removed unused loading and error variables
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ userId: user?.id }),
+          }
+        );
+
+        const data = await response.json();
+        setUnits(data.data);
+      } catch (error) {
+        console.error("Error fetching units:", error);
+      }
+    };
+    fetchUnits();
+  }, [state.selectedLevel, user?.id]);
+
+  const mappedUnits = mapUnitsToUi(units);
+
+  // Aggregate progress stats for ProgressTracker (computed via helper)
+  const progressStats = computeProgressStats(mappedUnits as any, units);
 
   return (
     <ThemedView style={styles.container}>
@@ -111,7 +50,7 @@ export const LessonsTab: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
       >
         <ProgressTracker stats={progressStats} />
-        <UnitsList units={lessonsData.units} onUnitPress={() => {}} />
+        <UnitsList units={mappedUnits as any} onUnitPress={() => {}} />
         <View style={styles.bottomPadding} />
       </ScrollView>
     </ThemedView>

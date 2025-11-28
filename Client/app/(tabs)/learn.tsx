@@ -6,7 +6,6 @@ import { StoriesTab } from "@/components/learn/StoriesTab";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
-// import { useRouter } from "expo-router";
 import React from "react";
 import { Platform, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";

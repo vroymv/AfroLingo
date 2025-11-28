@@ -48,12 +48,7 @@ export default function ActivityRenderer({
       );
     case "alphabet":
       return (
-        <AlphabetActivity
-          activity={activity}
-          alphabetImage={lessonMeta.alphabetImage}
-          audio={lessonMeta.audio}
-          onComplete={onActivityComplete}
-        />
+        <AlphabetActivity activity={activity} onComplete={onActivityComplete} />
       );
     case "flashcard":
       return (

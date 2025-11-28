@@ -7,6 +7,4 @@ export { default as healthRouter } from "./health";
 export { default as usersRouter } from "./users";
 export { default as onboardingRouter } from "./onboarding";
 export { default as lessonsRouter } from "./lesson";
-
-// Add more routes as they are created:
-// export { default as unitsRouter } from "./units";
+export { default as unitsRouter } from "./units";

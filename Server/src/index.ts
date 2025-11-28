@@ -2,7 +2,12 @@ import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { connectDB } from "./config/database";
-import { healthRouter, usersRouter, onboardingRouter } from "./routes";
+import {
+  healthRouter,
+  usersRouter,
+  onboardingRouter,
+  unitsRouter,
+} from "./routes";
 
 dotenv.config();
 
@@ -17,6 +22,7 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 app.use("/health", healthRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/onboarding", onboardingRouter);
+app.use("/api/units", unitsRouter);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {

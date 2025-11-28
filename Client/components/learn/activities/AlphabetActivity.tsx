@@ -1,6 +1,6 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { Activity } from "@/data/lessons";
+import { Activity } from "@/types/lessonProgressContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import React, { useState } from "react";
@@ -26,25 +26,16 @@ const formatTime = (seconds: number): string => {
 
 interface AlphabetActivityProps {
   activity: Activity;
-  alphabetImage?: string;
-  audio?: string;
   onComplete: () => void;
 }
 
 export default function AlphabetActivity({
   activity,
-  alphabetImage,
-  audio,
   onComplete,
 }: AlphabetActivityProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Resolve audio file path - if audio is a local path, require it
-  const audioSource = audio
-    ? audio.startsWith("/assets/")
-      ? require("@/assets/audio/swahili-alphabet.mp3")
-      : audio
-    : null;
+  const audioSource = require("@/assets/audio/swahili-alphabet.mp3");
 
   // Create audio player with the audio source
   const player = useAudioPlayer(audioSource);
@@ -66,92 +57,76 @@ export default function AlphabetActivity({
     <ThemedView style={styles.container}>
       <View style={styles.content}>
         <ThemedText type="title" style={styles.title}>
-          {activity.question || "The Swahili Alphabet"}
+          {"The Swahili Alphabet"}
         </ThemedText>
 
         <ThemedText style={styles.instructionText}>
           👆 Tap the image below to view it fullscreen
         </ThemedText>
 
-        {alphabetImage && (
-          <View style={styles.imageContainer}>
-            <TouchableOpacity
-              style={styles.imageWrapper}
-              onPress={() => setIsFullscreen(true)}
-              activeOpacity={0.95}
-            >
-              <Image
-                source={require("@/assets/images/Swahili-alphabet.png")}
-                style={styles.alphabetImage}
-                resizeMode="contain"
-              />
-              <View style={styles.expandButton}>
-                <Ionicons name="expand" size={20} color="white" />
-                <ThemedText style={styles.expandText}>
-                  Tap to enlarge
-                </ThemedText>
-              </View>
-            </TouchableOpacity>
-          </View>
-        )}
+        <View style={styles.imageContainer}>
+          <TouchableOpacity
+            style={styles.imageWrapper}
+            onPress={() => setIsFullscreen(true)}
+            activeOpacity={0.95}
+          >
+            <Image
+              source={require("@/assets/images/Swahili-alphabet.png")}
+              style={styles.alphabetImage}
+              resizeMode="contain"
+            />
+            <View style={styles.expandButton}>
+              <Ionicons name="expand" size={20} color="white" />
+              <ThemedText style={styles.expandText}>Tap to enlarge</ThemedText>
+            </View>
+          </TouchableOpacity>
+        </View>
 
-        {audio ? (
-          <View style={styles.audioSection}>
-            <ThemedText style={styles.audioInstructionText}>
-              🔊 Listen to the pronunciation
-            </ThemedText>
-            <TouchableOpacity
-              style={[
-                styles.audioButton,
-                status.playing && styles.audioButtonActive,
-              ]}
-              onPress={handlePlayPause}
-              disabled={status.isBuffering}
-            >
-              {status.isBuffering ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Ionicons
-                  name={status.playing ? "pause-circle" : "play-circle"}
-                  size={48}
-                  color="white"
-                />
-              )}
-              <ThemedText style={styles.audioButtonText}>
-                {status.playing
-                  ? "Pause Pronunciation"
-                  : "Play Alphabet Pronunciation"}
-              </ThemedText>
-            </TouchableOpacity>
-            {status.duration > 0 && (
-              <View style={styles.progressContainer}>
-                <View style={styles.progressBar}>
-                  <View
-                    style={[
-                      styles.progressFill,
-                      {
-                        width: `${
-                          (status.currentTime / status.duration) * 100
-                        }%`,
-                      },
-                    ]}
-                  />
-                </View>
-                <ThemedText style={styles.timeText}>
-                  {formatTime(status.currentTime)} /{" "}
-                  {formatTime(status.duration)}
-                </ThemedText>
-              </View>
+        <View style={styles.audioSection}>
+          <ThemedText style={styles.audioInstructionText}>
+            🔊 Listen to the pronunciation
+          </ThemedText>
+          <TouchableOpacity
+            style={[
+              styles.audioButton,
+              status.playing && styles.audioButtonActive,
+            ]}
+            onPress={handlePlayPause}
+            disabled={status.isBuffering}
+          >
+            {status.isBuffering ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Ionicons
+                name={status.playing ? "pause-circle" : "play-circle"}
+                size={48}
+                color="white"
+              />
             )}
-          </View>
-        ) : (
-          <View style={styles.noAudioContainer}>
-            <Ionicons name="volume-mute" size={32} color="#999" />
-            <ThemedText style={styles.noAudioText}>
-              Audio pronunciation coming soon!
+            <ThemedText style={styles.audioButtonText}>
+              {status.playing
+                ? "Pause Pronunciation"
+                : "Play Alphabet Pronunciation"}
             </ThemedText>
-          </View>
-        )}
+          </TouchableOpacity>
+          {status.duration > 0 && (
+            <View style={styles.progressContainer}>
+              <View style={styles.progressBar}>
+                <View
+                  style={[
+                    styles.progressFill,
+                    {
+                      width: `${(status.currentTime / status.duration) * 100}%`,
+                    },
+                  ]}
+                />
+              </View>
+              <ThemedText style={styles.timeText}>
+                {formatTime(status.currentTime)} / {formatTime(status.duration)}
+              </ThemedText>
+            </View>
+          )}
+        </View>
 
         <ThemedText style={styles.description}>
           Listen carefully to learn how each letter is pronounced in Swahili.
@@ -159,7 +134,12 @@ export default function AlphabetActivity({
         </ThemedText>
       </View>
 
-      <TouchableOpacity style={styles.continueButton} onPress={onComplete}>
+      <TouchableOpacity
+        style={styles.continueButton}
+        onPress={() => {
+          console.log("Continue pressed");
+        }}
+      >
         <ThemedText style={styles.continueButtonText}>Continue</ThemedText>
         <Ionicons name="arrow-forward" size={20} color="white" />
       </TouchableOpacity>

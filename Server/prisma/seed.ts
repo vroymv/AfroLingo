@@ -43,7 +43,7 @@ async function main() {
     data: {
       externalId: "unit-1",
       title: "Beginning - The Alphabet",
-      level: "Absolute Beginner",
+      level: "absolute-beginner",
       icon: "🔤",
       color: "#4CAF50",
       xpReward: 50,
@@ -103,14 +103,14 @@ async function main() {
       xpEarned: 10,
     },
   });
-  console.log("✅ Activity Progress created\n");
+  console.log("Activity Progress created\n");
 
-  console.log("🎉 Seeding completed successfully!");
+  console.log("Seeding completed successfully!");
 }
 
 main()
   .catch((e) => {
-    console.error("❌ Error during seeding:", e);
+    console.error(" Error during seeding:", e);
     process.exit(1);
   })
   .finally(async () => {

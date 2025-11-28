@@ -11,7 +11,6 @@ interface IntroductionActivityProps {
 }
 
 export default function IntroductionActivity({
-  activity,
   onComplete,
 }: IntroductionActivityProps) {
   return (
@@ -23,7 +22,9 @@ export default function IntroductionActivity({
         <ThemedText type="title" style={styles.title}>
           Welcome! 👋
         </ThemedText>
-        <ThemedText style={styles.question}>{activity.question}</ThemedText>
+        <ThemedText
+          style={styles.question}
+        >{`Let's learn how to talk about days, months, and seasons in Swahili!`}</ThemedText>
         <View style={styles.tipContainer}>
           <Ionicons name="bulb-outline" size={20} color="#FFB800" />
           <ThemedText style={styles.description}>

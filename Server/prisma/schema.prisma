@@ -48,7 +48,7 @@ model Unit {
   id           String   @id @default(uuid())
   externalId   String   @unique // e.g., "unit-1" from JSON
   title        String
-  level        String // e.g., "Absolute Beginner", "Beginner"
+  level        String // e.g., "absolute-beginner", "beginner"
   icon         String // Emoji icon
   color        String // Hex color code
   xpReward     Int
@@ -73,22 +73,13 @@ model Activity {
   id          String  @id @default(uuid())
   externalId  String  @unique // e.g., "activity-alphabet-1" from JSON
   unitId      String
-  type        String // e.g., "introduction", "alphabet", "multiple-choice", etc.
-  question    String  @db.Text
-  description String? @db.Text
-  audio       String? // Path to audio file
+  type        String // high-level category, e.g., "multiple-choice", "dictation"
+  // Metadata-only: identifier for the client-side component to render this activity
+  componentKey String @default("generic-activity") // e.g., "learn/alphabet/AlphabetActivity" or "learn/mcq/MultipleChoice"
+  // Reference to external content (JSON key, CMS ID, file path, etc.)
+  contentRef   String? // e.g., "activity-alphabet-1" in JSON, or "s3://.../activity.json"
   order       Int     @default(0) // For ordering activities within a lesson
   isActive    Boolean @default(true)
-
-  // Activity-specific fields (stored as JSON for flexibility)
-  options       Json? // For multiple-choice: array of options
-  correctAnswer Json? // For multiple-choice: index or value
-  explanation   String? @db.Text
-  items         Json? // For vocabulary tables, spelling completion, etc.
-  pairs         Json? // For matching activities
-  conversation  Json? // For conversation practice
-  dialogue      Json? // For dialogue activities
-  alphabetImage String? // For alphabet activities
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -102,6 +93,7 @@ model Activity {
   @@index([unitId])
   @@index([order])
   @@index([type])
+  @@index([componentKey])
   @@map("activities")
 }
 

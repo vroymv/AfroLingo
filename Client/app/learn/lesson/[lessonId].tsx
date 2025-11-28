@@ -4,8 +4,6 @@ import LessonHeader from "@/components/learn/lesson/LessonHeader";
 import LessonTitleCard from "@/components/learn/lesson/LessonTitleCard";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-// Placeholder for lesson progress context
-// Placeholder for lesson progress actions (remove useUserProgress)
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
@@ -14,7 +12,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function LessonPlayerScreen() {
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
   const router = useRouter();
-  // Placeholder for lesson completion action
   const recordLessonComplete = (lessonId: string, xp: number) => {
     // TODO: Implement lesson completion logic
     // This is a placeholder for awarding XP and marking lesson complete
