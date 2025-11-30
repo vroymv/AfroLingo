@@ -39,6 +39,9 @@ export const LessonsTab: React.FC = () => {
 
   const mappedUnits = mapUnitsToUi(units);
 
+  console.log("Mapped Units:", mappedUnits);
+  console.log("Raw Units:", units);
+
   // Aggregate progress stats for ProgressTracker (computed via helper)
   const progressStats = computeProgressStats(mappedUnits as any, units);
 
