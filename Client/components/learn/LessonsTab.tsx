@@ -50,7 +50,7 @@ export const LessonsTab: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
       >
         <ProgressTracker stats={progressStats} />
-        <UnitsList units={mappedUnits as any} onUnitPress={() => {}} />
+        <UnitsList units={mappedUnits as any} />
         <View style={styles.bottomPadding} />
       </ScrollView>
     </ThemedView>

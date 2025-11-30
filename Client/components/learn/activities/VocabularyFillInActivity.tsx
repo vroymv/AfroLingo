@@ -338,6 +338,9 @@ export default function VocabularyFillInActivity({
   );
 }
 
+// Identifier used for dynamic activity rendering
+export const componentKey = "vocabulary-fill-in";
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

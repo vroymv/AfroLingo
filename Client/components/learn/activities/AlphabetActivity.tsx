@@ -61,7 +61,7 @@ export default function AlphabetActivity({
         </ThemedText>
 
         <ThemedText style={styles.instructionText}>
-          👆 Tap the image below to view it fullscreen
+          Tap the image below to view it fullscreen
         </ThemedText>
 
         <View style={styles.imageContainer}>
@@ -84,7 +84,7 @@ export default function AlphabetActivity({
 
         <View style={styles.audioSection}>
           <ThemedText style={styles.audioInstructionText}>
-            🔊 Listen to the pronunciation
+            Listen to the pronunciation
           </ThemedText>
           <TouchableOpacity
             style={[
@@ -134,12 +134,7 @@ export default function AlphabetActivity({
         </ThemedText>
       </View>
 
-      <TouchableOpacity
-        style={styles.continueButton}
-        onPress={() => {
-          console.log("Continue pressed");
-        }}
-      >
+      <TouchableOpacity style={styles.continueButton} onPress={onComplete}>
         <ThemedText style={styles.continueButtonText}>Continue</ThemedText>
         <Ionicons name="arrow-forward" size={20} color="white" />
       </TouchableOpacity>
@@ -187,6 +182,9 @@ export default function AlphabetActivity({
     </ThemedView>
   );
 }
+
+// Identifier used for dynamic activity rendering
+export const componentKey = "alphabet";
 
 const styles = StyleSheet.create({
   container: {

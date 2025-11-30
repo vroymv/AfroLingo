@@ -1,17 +1,27 @@
-import AlphabetActivity from "@/components/learn/activities/AlphabetActivity";
-import AlphabetVocabularyTableActivity from "@/components/learn/activities/AlphabetVocabularyTableActivity";
+import AlphabetActivity, {
+  componentKey as alphabetKey,
+} from "@/components/learn/activities/AlphabetActivity";
+import AlphabetVocabularyTableActivity, {
+  componentKey as alphabetVocabularyTableKey,
+} from "@/components/learn/activities/AlphabetVocabularyTableActivity";
 import ConversationPracticeActivity from "@/components/learn/activities/ConversationPracticeActivity";
 import DialogueActivity from "@/components/learn/activities/DialogueActivity";
 import FlashcardActivity from "@/components/learn/activities/FlashcardActivity";
-import IntroductionActivity from "@/components/learn/activities/IntroductionActivity";
-import ListeningDictationActivity from "@/components/learn/activities/ListeningDictationActivity";
+import AlphabetIntroductionActivity, {
+  componentKey as introductionKey,
+} from "@/components/learn/activities/AlphabetIntroductionActivity";
+import ListeningDictationActivity, {
+  componentKey as listeningDictationKey,
+} from "@/components/learn/activities/ListeningDictationActivity";
 import MatchingActivity from "@/components/learn/activities/MatchingActivity";
 import MultipleChoiceActivity from "@/components/learn/activities/MultipleChoiceActivity";
 import NumbersListeningActivity from "@/components/learn/activities/NumbersListeningActivity";
 import NumbersTableActivity from "@/components/learn/activities/NumbersTableActivity";
 import NumbersTranslationActivity from "@/components/learn/activities/NumbersTranslationActivity";
 import SpellingCompletionActivity from "@/components/learn/activities/SpellingCompletionActivity";
-import VocabularyFillInActivity from "@/components/learn/activities/VocabularyFillInActivity";
+import VocabularyFillInActivity, {
+  componentKey as vocabularyFillInKey,
+} from "@/components/learn/activities/VocabularyFillInActivity";
 import VocabularyTableActivity from "@/components/learn/activities/VocabularyTableActivity";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -38,112 +48,51 @@ export default function ActivityRenderer({
   lessonMeta,
   onActivityComplete,
 }: ActivityRendererProps) {
-  switch (activity.type) {
-    case "introduction":
-      return (
-        <IntroductionActivity
-          activity={activity}
-          onComplete={onActivityComplete}
-        />
-      );
-    case "alphabet":
-      return (
-        <AlphabetActivity activity={activity} onComplete={onActivityComplete} />
-      );
-    case "flashcard":
-      return (
-        <FlashcardActivity
-          activity={activity}
-          phrase={lessonMeta.phrase}
-          meaning={lessonMeta.meaning}
-          onComplete={onActivityComplete}
-        />
-      );
-    case "multiple-choice":
-      return (
-        <MultipleChoiceActivity
-          activity={activity}
-          onComplete={onActivityComplete}
-        />
-      );
-    case "listening-dictation":
-      return (
-        <ListeningDictationActivity
-          activity={activity}
-          onComplete={onActivityComplete}
-        />
-      );
-    case "vocabulary-fill-in":
-      return (
-        <VocabularyFillInActivity
-          activity={activity}
-          onComplete={onActivityComplete}
-        />
-      );
-    case "alphabet-vocabulary-table":
-      return (
-        <AlphabetVocabularyTableActivity
-          activity={activity}
-          onComplete={onActivityComplete}
-        />
-      );
-    case "numbers-table":
-      return (
-        <NumbersTableActivity
-          activity={activity}
-          onComplete={onActivityComplete}
-        />
-      );
-    case "numbers-listening":
-      return (
-        <NumbersListeningActivity
-          activity={activity}
-          onComplete={onActivityComplete}
-        />
-      );
-    case "numbers-translation":
-      return (
-        <NumbersTranslationActivity
-          activity={activity}
-          onComplete={onActivityComplete}
-        />
-      );
-    case "vocabulary-table":
-      return (
-        <VocabularyTableActivity
-          activity={activity}
-          onComplete={onActivityComplete}
-        />
-      );
-    case "matching":
-      return (
-        <MatchingActivity activity={activity} onComplete={onActivityComplete} />
-      );
-    case "spelling-completion":
-      return (
-        <SpellingCompletionActivity
-          activity={activity}
-          onComplete={onActivityComplete}
-        />
-      );
-    case "conversation-practice":
-      return (
-        <ConversationPracticeActivity
-          activity={activity}
-          onComplete={onActivityComplete}
-        />
-      );
-    case "dialogue":
-      return (
-        <DialogueActivity activity={activity} onComplete={onActivityComplete} />
-      );
-    default:
-      return (
-        <ThemedView style={styles.center}>
-          <ThemedText>Unknown activity type: {activity.type}</ThemedText>
-        </ThemedView>
-      );
+  // Registry keyed by componentKey or fallback to activity.type
+  const registry: Record<string, React.ComponentType<any>> = {
+    [introductionKey]: AlphabetIntroductionActivity,
+    [alphabetKey]: AlphabetActivity,
+    flashcard: FlashcardActivity,
+    "multiple-choice": MultipleChoiceActivity,
+    [listeningDictationKey]: ListeningDictationActivity,
+    [vocabularyFillInKey]: VocabularyFillInActivity,
+    [alphabetVocabularyTableKey]: AlphabetVocabularyTableActivity,
+    "numbers-table": NumbersTableActivity,
+    "numbers-listening": NumbersListeningActivity,
+    "numbers-translation": NumbersTranslationActivity,
+    "vocabulary-table": VocabularyTableActivity,
+    matching: MatchingActivity,
+    "spelling-completion": SpellingCompletionActivity,
+    "conversation-practice": ConversationPracticeActivity,
+    dialogue: DialogueActivity,
+  };
+
+  // Support newly added componentKey coming from backend seed. Extend type locally.
+  const extended = activity as Activity & { componentKey?: string };
+  const key = extended.componentKey || extended.type;
+  const Component = registry[key];
+
+  if (!Component) {
+    return (
+      <ThemedView style={styles.center}>
+        <ThemedText>Unknown activity component: {key}</ThemedText>
+      </ThemedView>
+    );
   }
+
+  // Special prop handling for flashcard activity
+  if (key === "flashcard") {
+    return (
+      <FlashcardActivity
+        activity={activity}
+        phrase={lessonMeta.phrase}
+        meaning={lessonMeta.meaning}
+        onComplete={onActivityComplete}
+      />
+    );
+  }
+
+  return <Component activity={extended} onComplete={onActivityComplete} />;
 }
 
 const styles = StyleSheet.create({

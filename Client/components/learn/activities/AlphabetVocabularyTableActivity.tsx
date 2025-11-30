@@ -302,6 +302,9 @@ export default function AlphabetVocabularyTableActivity({
   );
 }
 
+// Identifier used for dynamic activity rendering
+export const componentKey = "alphabet-vocabulary-table";
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

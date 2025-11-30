@@ -209,6 +209,9 @@ export default function ListeningDictationActivity({
   );
 }
 
+// Identifier used for dynamic activity rendering
+export const componentKey = "listening-dictation";
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

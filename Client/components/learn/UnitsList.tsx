@@ -3,32 +3,37 @@ import { Unit } from "@/data/lessons";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import { UnitCard } from "./UnitCard";
+import { useRouter } from "expo-router";
 
 interface UnitsListProps {
   units: Unit[];
-  onUnitPress: (unit: Unit) => void;
 }
 
-export const UnitsList = React.memo<UnitsListProps>(
-  ({ units, onUnitPress }) => {
-    return (
-      <View style={styles.unitsSection}>
-        <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-          Learning Units
-        </ThemedText>
+export const UnitsList = React.memo<UnitsListProps>(({ units }) => {
+  const router = useRouter();
+  const handleUnitPress = (unit: Unit) => {
+    router.push({
+      pathname: "/learn/lesson/[unitId]",
+      params: { unitId: unit.id },
+    });
+  };
+  return (
+    <View style={styles.unitsSection}>
+      <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
+        Learning Units
+      </ThemedText>
 
-        {units.map((unit) => (
-          <UnitCard
-            key={unit.id}
-            unit={unit}
-            onPress={() => onUnitPress(unit)}
-            onActionPress={() => onUnitPress(unit)}
-          />
-        ))}
-      </View>
-    );
-  }
-);
+      {units.map((unit) => (
+        <UnitCard
+          key={unit.id}
+          unit={unit}
+          onPress={() => handleUnitPress(unit)}
+          onActionPress={() => handleUnitPress(unit)}
+        />
+      ))}
+    </View>
+  );
+});
 
 UnitsList.displayName = "UnitsList";
 

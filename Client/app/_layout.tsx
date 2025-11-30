@@ -42,7 +42,7 @@ function AppNavigator() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen
-        name="learn/lesson/[lessonId]"
+        name="learn/lesson/[unitId]"
         options={{ headerShown: true }}
       />
     </Stack>

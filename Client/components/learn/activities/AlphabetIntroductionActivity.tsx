@@ -10,26 +10,26 @@ interface IntroductionActivityProps {
   onComplete: () => void;
 }
 
-export default function IntroductionActivity({
+export default function AlphabetIntroductionActivity({
   onComplete,
 }: IntroductionActivityProps) {
   return (
     <ThemedView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.iconContainer}>
-          <Ionicons name="hand-right" size={64} color="#4A90E2" />
+          <Ionicons name="language" size={64} color="#4A90E2" />
         </View>
         <ThemedText type="title" style={styles.title}>
-          Welcome! 👋
+          Swahili Alphabet Introduction
         </ThemedText>
-        <ThemedText
-          style={styles.question}
-        >{`Let's learn how to talk about days, months, and seasons in Swahili!`}</ThemedText>
+        <ThemedText style={styles.question}>
+          {`Let's explore the Swahili alphabet! You'll learn the letters, their sounds, and how they're used in everyday words.`}
+        </ThemedText>
         <View style={styles.tipContainer}>
           <Ionicons name="bulb-outline" size={20} color="#FFB800" />
           <ThemedText style={styles.description}>
-            Tap &ldquo;Let&apos;s Go&rdquo; when you&apos;re ready to start
-            learning
+            Tap &ldquo;Let&apos;s Go&rdquo; to begin your journey into the
+            Swahili alphabet.
           </ThemedText>
         </View>
       </View>
@@ -43,6 +43,9 @@ export default function IntroductionActivity({
     </ThemedView>
   );
 }
+
+// Identifier used for dynamic activity rendering
+export const componentKey = "introduction";
 
 const styles = StyleSheet.create({
   container: {
