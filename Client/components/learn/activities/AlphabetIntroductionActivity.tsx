@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { useLessonRuntime } from "@/contexts/LessonRuntimeContext";
+import { updateUserProgress } from "@/services/userprogress";
 
 interface IntroductionActivityProps {
   activity: Activity;
@@ -16,6 +17,13 @@ export default function AlphabetIntroductionActivity({
 }: IntroductionActivityProps) {
   const { userId, unitId, currentActivityNumber, totalActivities } =
     useLessonRuntime();
+
+  await updateUserProgress({
+    userId,
+    unitId,
+    currentActivityNumber,
+    totalActivities,
+  });
 
   return (
     <ThemedView style={styles.container}>
