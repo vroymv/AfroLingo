@@ -13,6 +13,8 @@ import {
   View,
 } from "react-native";
 
+const swahiliAlphabetAudio = require("@/assets/audio/swahili-alphabet.mp3");
+
 interface VocabularyItem {
   id: string;
   image: string;
@@ -96,11 +98,7 @@ export default function VocabularyFillInActivity({
   const [correctItems, setCorrectItems] = useState<Set<string>>(new Set());
 
   // Audio source for vocabulary pronunciation
-  const audioSource = activity.audio
-    ? activity.audio.startsWith("/assets/")
-      ? require("@/assets/audio/swahili-alphabet.mp3")
-      : activity.audio
-    : null;
+  const audioSource = swahiliAlphabetAudio;
 
   const player = useAudioPlayer(audioSource);
   const status = useAudioPlayerStatus(player);

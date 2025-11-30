@@ -12,6 +12,8 @@ import {
   View,
 } from "react-native";
 
+const swahiliAlphabetAudio = require("@/assets/audio/swahili-alphabet.mp3");
+
 interface ListeningDictationActivityProps {
   activity: Activity;
   onComplete: () => void;
@@ -29,12 +31,7 @@ export default function ListeningDictationActivity({
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
 
-  // Audio source for the alphabet letters
-  const audioSource = activity.audio
-    ? activity.audio.startsWith("/assets/")
-      ? require("@/assets/audio/swahili-alphabet.mp3")
-      : activity.audio
-    : null;
+  const audioSource = swahiliAlphabetAudio;
 
   const player = useAudioPlayer(audioSource);
   const status = useAudioPlayerStatus(player);
