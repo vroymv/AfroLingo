@@ -2,7 +2,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Activity } from "@/data/lessons";
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
+import React, { useEffect } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { useLessonRuntime } from "@/contexts/LessonRuntimeContext";
 import { updateUserProgress } from "@/services/userprogress";
@@ -18,12 +18,16 @@ export default function AlphabetIntroductionActivity({
   const { userId, unitId, currentActivityNumber, totalActivities } =
     useLessonRuntime();
 
-  await updateUserProgress({
-    userId,
-    unitId,
-    currentActivityNumber,
-    totalActivities,
-  });
+  // Report progress on mount (and when identifiers change)
+  useEffect(() => {
+    if (!userId) return; // Skip if user not authenticated yet
+    updateUserProgress({
+      userId,
+      unitId,
+      currentActivityNumber,
+      totalActivities,
+    }).catch((e) => console.warn("Failed to send progress", e));
+  }, [userId, unitId, currentActivityNumber, totalActivities]);
 
   return (
     <ThemedView style={styles.container}>

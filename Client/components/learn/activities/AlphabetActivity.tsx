@@ -1,9 +1,11 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useLessonRuntime } from "@/contexts/LessonRuntimeContext";
+import { updateUserProgress } from "@/services/userprogress";
 import { Activity } from "@/types/lessonProgressContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -52,6 +54,20 @@ export default function AlphabetActivity({
       player.play();
     }
   };
+
+  const { userId, unitId, currentActivityNumber, totalActivities } =
+    useLessonRuntime();
+
+  // Report progress on mount (and when identifiers change)
+  useEffect(() => {
+    if (!userId) return; // Skip if user not authenticated yet
+    updateUserProgress({
+      userId,
+      unitId,
+      currentActivityNumber,
+      totalActivities,
+    }).catch((e) => console.warn("Failed to send progress", e));
+  }, [userId, unitId, currentActivityNumber, totalActivities]);
 
   return (
     <ThemedView style={styles.container}>
