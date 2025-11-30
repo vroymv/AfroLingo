@@ -4,6 +4,7 @@ import { Activity } from "@/data/lessons";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { useLessonRuntime } from "@/contexts/LessonRuntimeContext";
 
 interface IntroductionActivityProps {
   activity: Activity;
@@ -13,6 +14,9 @@ interface IntroductionActivityProps {
 export default function AlphabetIntroductionActivity({
   onComplete,
 }: IntroductionActivityProps) {
+  const { userId, unitId, currentActivityNumber, totalActivities } =
+    useLessonRuntime();
+
   return (
     <ThemedView style={styles.container}>
       <View style={styles.content}>

@@ -9,12 +9,15 @@ import React, { useEffect, useMemo } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { Activity } from "@/data/lessons";
+import { useAuth } from "@/contexts/AuthContext";
+import { LessonRuntimeProvider } from "@/contexts/LessonRuntimeContext";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 export default function LessonPlayerScreen() {
   const { unitId } = useLocalSearchParams<{ unitId: string }>();
   const router = useRouter();
+  const { user } = useAuth();
 
   // Server returns a single unit with activities
   const [unit, setUnit] = React.useState<any | null>(null);
@@ -160,22 +163,40 @@ export default function LessonPlayerScreen() {
 
         {/* Activity Content */}
         {!lessonCompleted && currentActivity && (
-          <View style={styles.body}>
-            <ActivityRenderer
-              activity={currentActivity}
-              lessonMeta={meta}
-              onActivityComplete={handleActivityComplete}
-            />
-          </View>
+          <LessonRuntimeProvider
+            value={{
+              userId: user?.id ?? null,
+              unitId: String(unitId),
+              currentActivityNumber,
+              totalActivities,
+            }}
+          >
+            <View style={styles.body}>
+              <ActivityRenderer
+                activity={currentActivity}
+                lessonMeta={meta}
+                onActivityComplete={handleActivityComplete}
+              />
+            </View>
+          </LessonRuntimeProvider>
         )}
 
         {/* Completion Footer */}
         {lessonCompleted && (
-          <LessonCompletionCard
-            xpEarned={unit?.xpReward || 15}
-            onBackToLearn={handleBackToLearn}
-            onNextLesson={handleNextLesson}
-          />
+          <LessonRuntimeProvider
+            value={{
+              userId: user?.id ?? null,
+              unitId: String(unitId),
+              currentActivityNumber,
+              totalActivities,
+            }}
+          >
+            <LessonCompletionCard
+              xpEarned={unit?.xpReward || 15}
+              onBackToLearn={handleBackToLearn}
+              onNextLesson={handleNextLesson}
+            />
+          </LessonRuntimeProvider>
         )}
       </ScrollView>
     </SafeAreaView>
