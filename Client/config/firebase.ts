@@ -30,6 +30,7 @@ if (getApps().length === 0) {
   auth = initializeAuth(app, {
     persistence: getReactNativePersistence(ReactNativeAsyncStorage),
   });
+  storage = getStorage(app);
 } else {
   app = getApp();
   auth = getAuth(app);

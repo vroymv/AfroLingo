@@ -31,9 +31,19 @@ export async function uploadProfileImage(
   onProgress?: (progress: UploadProgress) => void
 ): Promise<UploadResult> {
   try {
-    // Fetch the image from the local URI
-    const response = await fetch(uri);
-    const blob = await response.blob();
+    // Convert URI to blob using XMLHttpRequest for React Native compatibility
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.onload = function () {
+        resolve(xhr.response);
+      };
+      xhr.onerror = function () {
+        reject(new Error("Failed to read image file"));
+      };
+      xhr.responseType = "blob";
+      xhr.open("GET", uri, true);
+      xhr.send(null);
+    });
 
     // Create a unique filename with timestamp
     const timestamp = Date.now();
@@ -99,8 +109,19 @@ export async function validateImage(
   maxSizeMB: number = 5
 ): Promise<boolean> {
   try {
-    const response = await fetch(uri);
-    const blob = await response.blob();
+    // Convert URI to blob using XMLHttpRequest for React Native compatibility
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.onload = function () {
+        resolve(xhr.response);
+      };
+      xhr.onerror = function () {
+        reject(new Error("Failed to read image file"));
+      };
+      xhr.responseType = "blob";
+      xhr.open("GET", uri, true);
+      xhr.send(null);
+    });
 
     // Check file size
     const fileSizeMB = blob.size / (1024 * 1024);

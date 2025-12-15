@@ -68,7 +68,6 @@ export default function ImagePickerComponent({
       // Validate image
       try {
         await validateImage(imageUri);
-        console.log("Image validated successfully", imageUri);
       } catch (error) {
         Alert.alert(
           "Invalid Image",
