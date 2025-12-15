@@ -10,7 +10,11 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.vroy-mv.AfroLingo"
+      "bundleIdentifier": "com.vroy-mv.AfroLingo",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "AfroLingo needs access to your photo library so you can choose a profile picture.",
+        "NSPhotoLibraryAddUsageDescription": "AfroLingo needs permission to save your selected profile picture."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -33,6 +37,12 @@
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "AfroLingo needs access to your photo library so you can choose a profile picture."
         }
       ],
       "expo-audio",

@@ -40,7 +40,7 @@ export default function ProfileScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.contentContainer}
         >
-          <EmailVerificationBanner />
+          {/* <EmailVerificationBanner /> */}
           <ProfileHeader />
           <LearningStats />
           <WeeklyGoals />

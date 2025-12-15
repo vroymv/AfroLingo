@@ -1,5 +1,5 @@
 // Reusable Image Picker Component
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   View,
   TouchableOpacity,
@@ -24,19 +24,24 @@ export default function ImagePickerComponent({
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  const requestPermissions = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
+  const radius = Math.round(size / 2);
+
+  const requestPermissions = useCallback(async () => {
+    const { status, canAskAgain } =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== ImagePicker.PermissionStatus.GRANTED) {
       Alert.alert(
         "Permission Required",
-        "Please grant camera roll permissions to upload a profile picture."
+        canAskAgain
+          ? "Please grant photo library permissions to upload a profile picture."
+          : "Photo library permission is disabled. Enable it in Settings to upload a profile picture."
       );
       return false;
     }
     return true;
-  };
+  }, []);
 
-  const pickImage = async () => {
+  const pickImage = useCallback(async () => {
     try {
       // Request permissions
       const hasPermission = await requestPermissions();
@@ -44,45 +49,45 @@ export default function ImagePickerComponent({
 
       // Launch image picker
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: "images",
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
       });
 
-      if (!result.canceled && result.assets[0]) {
-        const imageUri = result.assets[0].uri;
+      if (result.canceled) return;
 
-        // Validate image
-        try {
-          await validateImage(imageUri);
-        } catch (error) {
-          Alert.alert(
-            "Invalid Image",
-            error instanceof Error
-              ? error.message
-              : "Please select a valid image"
-          );
-          return;
-        }
-
-        // Upload image
-        setUploading(true);
-        setUploadProgress(0);
-
-        const uploadResult = await uploadProfileImage(
-          imageUri,
-          userId,
-          (progress) => {
-            setUploadProgress(progress.progress);
-          }
-        );
-
-        // Notify parent component
-        onImageUploaded(uploadResult.downloadURL);
-
-        Alert.alert("Success", "Profile picture updated successfully!");
+      const firstAsset = result.assets?.[0];
+      if (!firstAsset?.uri) {
+        Alert.alert("No Image Selected", "Please select an image to continue.");
+        return;
       }
+
+      const imageUri = firstAsset.uri;
+
+      // Validate image
+      try {
+        await validateImage(imageUri);
+      } catch (error) {
+        Alert.alert(
+          "Invalid Image",
+          error instanceof Error ? error.message : "Please select a valid image"
+        );
+        return;
+      }
+
+      // Upload image
+      setUploading(true);
+      setUploadProgress(0);
+
+      const uploadResult = await uploadProfileImage(imageUri, userId, (p) => {
+        setUploadProgress(p.progress);
+      });
+
+      // Notify parent component
+      onImageUploaded(uploadResult.downloadURL);
+
+      Alert.alert("Success", "Profile picture updated successfully!");
     } catch (error) {
       console.error("Error picking image:", error);
       Alert.alert("Upload Failed", "Failed to upload image. Please try again.");
@@ -90,7 +95,7 @@ export default function ImagePickerComponent({
       setUploading(false);
       setUploadProgress(0);
     }
-  };
+  }, [requestPermissions, userId, onImageUploaded]);
 
   return (
     <TouchableOpacity
@@ -104,16 +109,24 @@ export default function ImagePickerComponent({
         ) : currentImageUrl ? (
           <Image
             source={{ uri: currentImageUrl }}
-            style={[styles.image, { width: size, height: size }]}
+            style={[
+              styles.image,
+              { width: size, height: size, borderRadius: radius },
+            ]}
           />
         ) : (
-          <View style={[styles.placeholder, { width: size, height: size }]}>
+          <View
+            style={[
+              styles.placeholder,
+              { width: size, height: size, borderRadius: radius },
+            ]}
+          >
             <ThemedText style={styles.placeholderText}>👤</ThemedText>
           </View>
         )}
 
         {uploading && (
-          <View style={styles.uploadingOverlay}>
+          <View style={[styles.uploadingOverlay, { borderRadius: radius }]}>
             <ActivityIndicator size="large" color="#fff" />
             <ThemedText style={styles.progressText}>
               {Math.round(uploadProgress)}%
@@ -139,7 +152,6 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
   placeholder: {
-    borderRadius: 50,
     backgroundColor: "#E0E0E0",
     justifyContent: "center",
     alignItems: "center",
@@ -154,7 +166,6 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: "rgba(0, 0, 0, 0.6)",
-    borderRadius: 50,
     justifyContent: "center",
     alignItems: "center",
   },
