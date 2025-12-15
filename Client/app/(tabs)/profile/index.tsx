@@ -21,7 +21,16 @@ export default function ProfileScreen() {
   const { user } = useAuth();
   const [drawerVisible, setDrawerVisible] = React.useState(false);
 
-  console.log("Authenticated user:", user);
+  // Show loading state if user is not loaded yet
+  if (!user) {
+    return (
+      <SafeAreaView style={{ flex: 1 }}>
+        <ThemedView style={styles.container}>
+          <ThemedText style={styles.loadingText}>Loading profile...</ThemedText>
+        </ThemedView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -41,11 +50,11 @@ export default function ProfileScreen() {
           contentContainerStyle={styles.contentContainer}
         >
           {/* <EmailVerificationBanner /> */}
-          <ProfileHeader />
-          <LearningStats />
-          <WeeklyGoals />
-          <Achievements />
-          <LanguageProgress />
+          <ProfileHeader user={user} />
+          <LearningStats user={user} />
+          <WeeklyGoals user={user} />
+          <Achievements user={user} />
+          <LanguageProgress user={user} />
         </ScrollView>
         {/* Settings Drawer */}
         <SettingsDrawer
@@ -85,5 +94,11 @@ const styles = StyleSheet.create({
     paddingLeft: 20,
     paddingRight: 20,
     paddingBottom: 40,
+  },
+  loadingText: {
+    flex: 1,
+    textAlign: "center",
+    marginTop: 100,
+    fontSize: 16,
   },
 });

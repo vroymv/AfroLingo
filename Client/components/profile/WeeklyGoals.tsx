@@ -3,12 +3,37 @@ import { ThemedView } from "@/components/ThemedView";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { User } from "@/types/AuthContext";
 
-export default function WeeklyGoals() {
+interface WeeklyGoalsProps {
+  user: User;
+}
+
+export default function WeeklyGoals({ user }: WeeklyGoalsProps) {
+  // Calculate dynamic progress based on days active
+  const daysSinceJoined = Math.floor(
+    (Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24)
+  );
+  const weekProgress = daysSinceJoined % 7;
   const goals = [
-    { label: "Complete 5 lessons", current: 3, total: 5, icon: "🎯" },
-    { label: "Practice 30 minutes daily", current: 5, total: 7, icon: "⏰" },
-    { label: "Master 20 new words", current: 14, total: 20, icon: "📝" },
+    {
+      label: "Complete 5 lessons",
+      current: Math.min(weekProgress, 5),
+      total: 5,
+      icon: "🎯",
+    },
+    {
+      label: "Practice 30 minutes daily",
+      current: Math.min(weekProgress, 7),
+      total: 7,
+      icon: "⏰",
+    },
+    {
+      label: "Master 20 new words",
+      current: Math.min(weekProgress * 2, 20),
+      total: 20,
+      icon: "📝",
+    },
   ];
 
   return (

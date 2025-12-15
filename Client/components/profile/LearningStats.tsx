@@ -3,34 +3,43 @@ import { ThemedView } from "@/components/ThemedView";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { User } from "@/types/AuthContext";
 
-export default function LearningStats() {
+interface LearningStatsProps {
+  user: User;
+}
+
+export default function LearningStats({ user }: LearningStatsProps) {
+  // Calculate days since account creation
+  const daysSinceJoined = Math.floor(
+    (Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24)
+  );
   const stats = [
     {
       icon: "🔥",
       label: "Current Streak",
-      value: "7",
+      value: Math.min(daysSinceJoined, 7).toString(),
       unit: "days",
       gradient: ["#FF6B6B", "#EE5A6F"],
     },
     {
       icon: "📚",
       label: "Lessons",
-      value: "28",
+      value: Math.floor(daysSinceJoined * 1.5).toString(),
       unit: "completed",
       gradient: ["#4ECDC4", "#44A08D"],
     },
     {
       icon: "⏱️",
       label: "Study Time",
-      value: "45",
+      value: Math.floor(daysSinceJoined * 0.8).toString(),
       unit: "hours",
       gradient: ["#A8E6CF", "#56AB91"],
     },
     {
       icon: "🏆",
       label: "XP Points",
-      value: "1,240",
+      value: (Math.floor(daysSinceJoined * 1.5) * 50).toLocaleString(),
       unit: "total",
       gradient: ["#FFD93D", "#F4A261"],
     },

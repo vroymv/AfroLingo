@@ -1,12 +1,17 @@
 import { ThemedText } from "@/components/ThemedText";
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { Image, StyleSheet, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { User } from "@/types/AuthContext";
 import { useAuth } from "@/contexts/AuthContext";
 import ImagePickerComponent from "@/components/ui/ImagePicker";
 
-export default function ProfileHeader() {
-  const { user, updateProfile } = useAuth();
+interface ProfileHeaderProps {
+  user: User;
+}
+
+export default function ProfileHeader({ user }: ProfileHeaderProps) {
+  const { updateProfile } = useAuth();
 
   const handleImageUploaded = async (url: string) => {
     try {
@@ -37,17 +42,39 @@ export default function ProfileHeader() {
                 size={92}
                 showEditBadge={true}
               >
-                <View style={styles.avatar}>
-                  <ThemedText style={styles.avatarEmoji}>👤</ThemedText>
-                </View>
+                {user?.avatar ? (
+                  <Image
+                    source={{ uri: user.avatar }}
+                    style={styles.avatarImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View style={styles.avatar}>
+                    <ThemedText style={styles.avatarEmoji}>👤</ThemedText>
+                  </View>
+                )}
               </ImagePickerComponent>
             </LinearGradient>
           </View>
-          <ThemedText style={styles.name}>{user?.name || "User"}</ThemedText>
+          <ThemedText style={styles.name}>{user.name || "User"}</ThemedText>
           <View style={styles.levelBadge}>
             <ThemedText style={styles.levelText}>🌟 Beginner</ThemedText>
           </View>
           <ThemedText style={styles.language}>Learning Yoruba</ThemedText>
+          <ThemedText style={styles.memberSince}>
+            Member since{" "}
+            {new Date(user.createdAt).toLocaleDateString("en-US", {
+              month: "short",
+              year: "numeric",
+            })}
+          </ThemedText>
+          {!user.emailVerified && (
+            <View style={styles.verificationBadge}>
+              <ThemedText style={styles.verificationText}>
+                ⚠️ Email not verified
+              </ThemedText>
+            </View>
+          )}
         </View>
       </LinearGradient>
     </View>
@@ -92,6 +119,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     justifyContent: "center",
     alignItems: "center",
+  },
+  avatarImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 46,
+    backgroundColor: "#FFF",
   },
   avatarEmoji: {
     fontSize: 48,
@@ -138,5 +171,22 @@ const styles = StyleSheet.create({
   language: {
     fontSize: 16,
     color: "rgba(255, 255, 255, 0.9)",
+  },
+  memberSince: {
+    fontSize: 13,
+    color: "rgba(255, 255, 255, 0.7)",
+    marginTop: 4,
+  },
+  verificationBadge: {
+    backgroundColor: "rgba(255, 152, 0, 0.3)",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  verificationText: {
+    fontSize: 12,
+    color: "#FFF",
+    fontWeight: "500",
   },
 });

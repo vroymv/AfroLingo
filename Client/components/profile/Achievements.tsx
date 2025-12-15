@@ -3,38 +3,50 @@ import { ThemedView } from "@/components/ThemedView";
 import React from "react";
 import { StyleSheet, View, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { User } from "@/types/AuthContext";
 
-export default function Achievements() {
+interface AchievementsProps {
+  user: User;
+}
+
+export default function Achievements({ user }: AchievementsProps) {
+  // Calculate achievements based on user data
+  const daysSinceJoined = Math.floor(
+    (Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24)
+  );
+  const lessonsCompleted = Math.floor(daysSinceJoined * 1.5);
+  const xpEarned = lessonsCompleted * 50;
+  const currentStreak = Math.min(daysSinceJoined, 7);
   const achievements = [
     {
       emoji: "🥇",
       name: "First Week",
       description: "Completed your first week",
-      unlocked: true,
+      unlocked: daysSinceJoined >= 7,
     },
     {
       emoji: "📖",
       name: "Bookworm",
       description: "Finished 25 lessons",
-      unlocked: true,
+      unlocked: lessonsCompleted >= 25,
     },
     {
       emoji: "🔥",
       name: "7-Day Streak",
       description: "7 days in a row",
-      unlocked: true,
+      unlocked: currentStreak >= 7,
     },
     {
       emoji: "🎯",
       name: "Goal Crusher",
       description: "Hit all weekly goals",
-      unlocked: true,
+      unlocked: daysSinceJoined >= 7,
     },
     {
       emoji: "🌟",
       name: "Rising Star",
       description: "Earn 1000 XP",
-      unlocked: true,
+      unlocked: xpEarned >= 1000,
     },
     {
       emoji: "💎",

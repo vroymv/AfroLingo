@@ -104,9 +104,8 @@ export default function ImagePickerComponent({
       activeOpacity={0.8}
     >
       <View style={[styles.container, { width: size, height: size }]}>
-        {children ? (
-          children
-        ) : currentImageUrl ? (
+        {typeof currentImageUrl === "string" &&
+        currentImageUrl.trim().length > 0 ? (
           <Image
             source={{ uri: currentImageUrl }}
             style={[
@@ -124,6 +123,8 @@ export default function ImagePickerComponent({
             <ThemedText style={styles.placeholderText}>👤</ThemedText>
           </View>
         )}
+
+        {children && <View style={styles.childrenOverlay}>{children}</View>}
 
         {uploading && (
           <View style={[styles.uploadingOverlay, { borderRadius: radius }]}>
@@ -150,6 +151,13 @@ const styles = StyleSheet.create({
   },
   image: {
     borderRadius: 50,
+  },
+  childrenOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   placeholder: {
     backgroundColor: "#E0E0E0",

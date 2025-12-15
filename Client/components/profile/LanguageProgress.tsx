@@ -3,30 +3,40 @@ import { ThemedView } from "@/components/ThemedView";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { User } from "@/types/AuthContext";
 
-export default function LanguageProgress() {
+interface LanguageProgressProps {
+  user: User;
+}
+
+export default function LanguageProgress({ user }: LanguageProgressProps) {
+  // Calculate progress based on days active
+  const daysSinceJoined = Math.floor(
+    (Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24)
+  );
+  const baseProgress = Math.min(Math.floor(daysSinceJoined * 1.5), 100);
   const skills = [
     {
       name: "Speaking",
-      percentage: 40,
+      percentage: Math.min(baseProgress, 60),
       icon: "🗣️",
       color: ["#FF6B6B", "#EE5A6F"],
     },
     {
       name: "Listening",
-      percentage: 55,
+      percentage: Math.min(Math.floor(baseProgress * 1.2), 75),
       icon: "👂",
       color: ["#4ECDC4", "#44A08D"],
     },
     {
       name: "Reading",
-      percentage: 35,
+      percentage: Math.min(Math.floor(baseProgress * 0.8), 50),
       icon: "📖",
       color: ["#A8E6CF", "#56AB91"],
     },
     {
       name: "Writing",
-      percentage: 30,
+      percentage: Math.min(Math.floor(baseProgress * 0.7), 45),
       icon: "✍️",
       color: ["#FFD93D", "#F4A261"],
     },
@@ -80,14 +90,14 @@ export default function LanguageProgress() {
             <ThemedText style={styles.overallLabel}>
               Overall Proficiency
             </ThemedText>
-            <ThemedText style={styles.overallValue}>40%</ThemedText>
+            <ThemedText style={styles.overallValue}>{baseProgress}%</ThemedText>
           </View>
           <View style={styles.overallBarBackground}>
             <LinearGradient
               colors={["#4A90E2", "#357ABD", "#2C5F99"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={[styles.overallBarFill, { width: "40%" }]}
+              style={[styles.overallBarFill, { width: `${baseProgress}%` }]}
             />
           </View>
         </View>
