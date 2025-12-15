@@ -1,8 +1,10 @@
 import { ThemedView } from "@/components/ThemedView";
+import { ThemedText } from "@/components/ThemedText";
 import EmailVerificationBanner from "@/components/auth/EmailVerificationBanner";
 import React from "react";
 import {
   ScrollView,
+  RefreshControl,
   StyleSheet,
   StatusBar,
   TouchableOpacity,
@@ -20,6 +22,18 @@ import { Ionicons } from "@expo/vector-icons";
 export default function ProfileScreen() {
   const { user } = useAuth();
   const [drawerVisible, setDrawerVisible] = React.useState(false);
+  const [refreshing, setRefreshing] = React.useState(false);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    try {
+      // If you later add profile stats from an API, re-fetch them here.
+      // For now, this provides the expected pull-to-refresh UX.
+      await new Promise((resolve) => setTimeout(resolve, 400));
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
 
   // Show loading state if user is not loaded yet
   if (!user) {
@@ -48,6 +62,9 @@ export default function ProfileScreen() {
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.contentContainer}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         >
           {/* <EmailVerificationBanner /> */}
           <ProfileHeader user={user} />

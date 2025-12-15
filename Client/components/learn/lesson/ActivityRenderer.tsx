@@ -67,6 +67,8 @@ export default function ActivityRenderer({
     dialogue: DialogueActivity,
   };
 
+  console.log("ActivityRenderer rendering activity:", activity);
+
   // Support newly added componentKey coming from backend seed. Extend type locally.
   const extended = activity as Activity & { componentKey?: string };
   const key = extended.componentKey || extended.type;

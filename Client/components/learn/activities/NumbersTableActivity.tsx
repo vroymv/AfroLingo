@@ -11,6 +11,9 @@ import {
   View,
 } from "react-native";
 
+// Identifier used for dynamic activity rendering
+export const componentKey = "numbers-table";
+
 interface NumbersTableActivityProps {
   activity: Activity;
   onComplete: () => void;
@@ -22,110 +25,97 @@ interface NumberItem {
   pronunciation?: string;
 }
 
-// Numbers data based on the activity question
-const getNumbersData = (question: string): NumberItem[] => {
-  if (question.includes("1-20")) {
-    return [
-      { number: "1", swahili: "moja", pronunciation: "MO-jah" },
-      { number: "2", swahili: "mbili", pronunciation: "m-BEE-lee" },
-      { number: "3", swahili: "tatu", pronunciation: "TAH-too" },
-      { number: "4", swahili: "nne", pronunciation: "n-NEH" },
-      { number: "5", swahili: "tano", pronunciation: "TAH-no" },
-      { number: "6", swahili: "sita", pronunciation: "SEE-tah" },
-      { number: "7", swahili: "saba", pronunciation: "SAH-bah" },
-      { number: "8", swahili: "nane", pronunciation: "NAH-neh" },
-      { number: "9", swahili: "tisa", pronunciation: "TEE-sah" },
-      { number: "10", swahili: "kumi", pronunciation: "KOO-mee" },
-      {
-        number: "11",
-        swahili: "kumi na moja",
-        pronunciation: "KOO-mee nah MO-jah",
-      },
-      {
-        number: "12",
-        swahili: "kumi na mbili",
-        pronunciation: "KOO-mee nah m-BEE-lee",
-      },
-      {
-        number: "13",
-        swahili: "kumi na tatu",
-        pronunciation: "KOO-mee nah TAH-too",
-      },
-      {
-        number: "14",
-        swahili: "kumi na nne",
-        pronunciation: "KOO-mee nah n-NEH",
-      },
-      {
-        number: "15",
-        swahili: "kumi na tano",
-        pronunciation: "KOO-mee nah TAH-no",
-      },
-      {
-        number: "16",
-        swahili: "kumi na sita",
-        pronunciation: "KOO-mee nah SEE-tah",
-      },
-      {
-        number: "17",
-        swahili: "kumi na saba",
-        pronunciation: "KOO-mee nah SAH-bah",
-      },
-      {
-        number: "18",
-        swahili: "kumi na nane",
-        pronunciation: "KOO-mee nah NAH-neh",
-      },
-      {
-        number: "19",
-        swahili: "kumi na tisa",
-        pronunciation: "KOO-mee nah TEE-sah",
-      },
-      { number: "20", swahili: "ishirini", pronunciation: "ee-shee-REE-nee" },
-    ];
-  } else if (question.includes("Tens")) {
-    return [
-      {
-        number: "30",
-        swahili: "thelathini",
-        pronunciation: "theh-lah-THEE-nee",
-      },
-      { number: "40", swahili: "arobaini", pronunciation: "ah-ro-bah-EE-nee" },
-      { number: "50", swahili: "hamsini", pronunciation: "hahm-SEE-nee" },
-      { number: "60", swahili: "sitini", pronunciation: "see-TEE-nee" },
-      { number: "70", swahili: "sabini", pronunciation: "sah-BEE-nee" },
-      { number: "80", swahili: "themanini", pronunciation: "theh-mah-NEE-nee" },
-      { number: "90", swahili: "tisini", pronunciation: "tee-SEE-nee" },
-      {
-        number: "100",
-        swahili: "mia (moja)",
-        pronunciation: "MEE-ah (MO-jah)",
-      },
-    ];
-  } else if (question.includes("Hundreds")) {
-    return [
-      {
-        number: "100",
-        swahili: "mia (moja)",
-        pronunciation: "MEE-ah (MO-jah)",
-      },
-      {
-        number: "200",
-        swahili: "mia mbili",
-        pronunciation: "MEE-ah m-BEE-lee",
-      },
-      { number: "300", swahili: "mia tatu", pronunciation: "MEE-ah TAH-too" },
-      { number: "400", swahili: "mia nne", pronunciation: "MEE-ah n-NEH" },
-      { number: "500", swahili: "mia tano", pronunciation: "MEE-ah TAH-no" },
-      {
-        number: "1000",
-        swahili: "elfu (moja)",
-        pronunciation: "EL-foo (MO-jah)",
-      },
-    ];
-  }
-  return [];
-};
+// All Swahili numbers data
+const ALL_NUMBERS_DATA: NumberItem[] = [
+  // 1-20
+  { number: "1", swahili: "moja", pronunciation: "MO-jah" },
+  { number: "2", swahili: "mbili", pronunciation: "m-BEE-lee" },
+  { number: "3", swahili: "tatu", pronunciation: "TAH-too" },
+  { number: "4", swahili: "nne", pronunciation: "n-NEH" },
+  { number: "5", swahili: "tano", pronunciation: "TAH-no" },
+  { number: "6", swahili: "sita", pronunciation: "SEE-tah" },
+  { number: "7", swahili: "saba", pronunciation: "SAH-bah" },
+  { number: "8", swahili: "nane", pronunciation: "NAH-neh" },
+  { number: "9", swahili: "tisa", pronunciation: "TEE-sah" },
+  { number: "10", swahili: "kumi", pronunciation: "KOO-mee" },
+  {
+    number: "11",
+    swahili: "kumi na moja",
+    pronunciation: "KOO-mee nah MO-jah",
+  },
+  {
+    number: "12",
+    swahili: "kumi na mbili",
+    pronunciation: "KOO-mee nah m-BEE-lee",
+  },
+  {
+    number: "13",
+    swahili: "kumi na tatu",
+    pronunciation: "KOO-mee nah TAH-too",
+  },
+  {
+    number: "14",
+    swahili: "kumi na nne",
+    pronunciation: "KOO-mee nah n-NEH",
+  },
+  {
+    number: "15",
+    swahili: "kumi na tano",
+    pronunciation: "KOO-mee nah TAH-no",
+  },
+  {
+    number: "16",
+    swahili: "kumi na sita",
+    pronunciation: "KOO-mee nah SEE-tah",
+  },
+  {
+    number: "17",
+    swahili: "kumi na saba",
+    pronunciation: "KOO-mee nah SAH-bah",
+  },
+  {
+    number: "18",
+    swahili: "kumi na nane",
+    pronunciation: "KOO-mee nah NAH-neh",
+  },
+  {
+    number: "19",
+    swahili: "kumi na tisa",
+    pronunciation: "KOO-mee nah TEE-sah",
+  },
+  { number: "20", swahili: "ishirini", pronunciation: "ee-shee-REE-nee" },
+  // Tens (30-100)
+  {
+    number: "30",
+    swahili: "thelathini",
+    pronunciation: "theh-lah-THEE-nee",
+  },
+  { number: "40", swahili: "arobaini", pronunciation: "ah-ro-bah-EE-nee" },
+  { number: "50", swahili: "hamsini", pronunciation: "hahm-SEE-nee" },
+  { number: "60", swahili: "sitini", pronunciation: "see-TEE-nee" },
+  { number: "70", swahili: "sabini", pronunciation: "sah-BEE-nee" },
+  { number: "80", swahili: "themanini", pronunciation: "theh-mah-NEE-nee" },
+  { number: "90", swahili: "tisini", pronunciation: "tee-SEE-nee" },
+  {
+    number: "100",
+    swahili: "mia (moja)",
+    pronunciation: "MEE-ah (MO-jah)",
+  },
+  // Hundreds and thousands
+  {
+    number: "200",
+    swahili: "mia mbili",
+    pronunciation: "MEE-ah m-BEE-lee",
+  },
+  { number: "300", swahili: "mia tatu", pronunciation: "MEE-ah TAH-too" },
+  { number: "400", swahili: "mia nne", pronunciation: "MEE-ah n-NEH" },
+  { number: "500", swahili: "mia tano", pronunciation: "MEE-ah TAH-no" },
+  {
+    number: "1000",
+    swahili: "elfu (moja)",
+    pronunciation: "EL-foo (MO-jah)",
+  },
+];
 
 // Row component
 function NumberRow({ item }: { item: NumberItem }) {
@@ -152,7 +142,6 @@ export default function NumbersTableActivity({
   onComplete,
 }: NumbersTableActivityProps) {
   const [isPlayingAll, setIsPlayingAll] = useState(false);
-  const numbersData = getNumbersData(activity.question || "");
 
   const handlePlayAll = () => {
     // Placeholder for audio playback of all numbers
@@ -165,7 +154,9 @@ export default function NumbersTableActivity({
     <ThemedView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <ThemedText style={styles.title}>{activity.question}</ThemedText>
+        <ThemedText style={styles.title}>
+          {activity.question || "Swahili Numbers"}
+        </ThemedText>
         <ThemedText style={styles.description}>
           {activity.description || "Learn to count in Swahili"}
         </ThemedText>
@@ -205,7 +196,7 @@ export default function NumbersTableActivity({
           </View>
 
           {/* Table Rows */}
-          {numbersData.map((item) => (
+          {ALL_NUMBERS_DATA.map((item) => (
             <NumberRow key={item.number} item={item} />
           ))}
         </View>

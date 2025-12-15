@@ -11,6 +11,9 @@ import {
   View,
 } from "react-native";
 
+// Identifier used for dynamic activity rendering
+export const componentKey = "numbers-translation";
+
 interface NumbersTranslationActivityProps {
   activity: Activity;
   onComplete: () => void;

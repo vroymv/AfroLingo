@@ -4,6 +4,9 @@ import { Activity } from "@/data/lessons";
 import React, { useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 
+// Identifier used for dynamic activity rendering
+export const componentKey = "multiple-choice";
+
 interface MultipleChoiceActivityProps {
   activity: Activity;
   onComplete: () => void;

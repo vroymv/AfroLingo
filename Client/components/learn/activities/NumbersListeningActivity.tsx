@@ -12,6 +12,9 @@ import {
   View,
 } from "react-native";
 
+// Identifier used for dynamic activity rendering
+export const componentKey = "numbers-listening";
+
 interface NumbersListeningActivityProps {
   activity: Activity;
   onComplete: () => void;

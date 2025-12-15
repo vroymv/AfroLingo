@@ -1653,3 +1653,129 @@
         }
       ]
     }
+
+    {
+  "id": "main-path",
+  "name": "African Languages Journey",
+  "units": [
+    {
+      "id": "unit-1",
+      "title": "Beginning - The Alphabet",
+      "level": "Absolute Beginner",
+      "icon": "🔤",
+      "color": "#4CAF50",
+      "phrase": "The Swahili Alphabet",
+      "meaning": "Learn the foundation of the language",
+      "pronunciation": "ah-leh-fah-beh-tee",
+      "alphabetImage": "/assets/images/Swahili-alphabet.png",
+      "audio": "/assets/audio/swahili-alphabet.mp3",
+      "activities": [
+        {
+          "id": "activity-alphabet-1",
+          "type": "introduction",
+          "question": "Welcome! Let's start your journey by learning the Swahili alphabet."
+        },
+        {
+          "id": "activity-alphabet-2",
+          "type": "alphabet",
+          "question": "The Swahili Alphabet"
+        },
+        {
+          "id": "activity-alphabet-3",
+          "type": "listening-dictation",
+          "question": "Listening Exercise: Write What You Hear",
+          "audio": "/assets/audio/alphabet-dictation.mp3"
+        },
+        {
+          "id": "activity-alphabet-4",
+          "type": "vocabulary-fill-in",
+          "question": "Complete the Vocabulary Words",
+          "audio": "/assets/audio/vocabulary-items.mp3"
+        },
+        {
+          "id": "activity-alphabet-5",
+          "type": "alphabet-vocabulary-table",
+          "question": "Alphabet with Example Words",
+          "description": "Learn words that start with each letter"
+        }
+      ]
+    },
+    {
+      "id": "unit-2",
+      "title": "Numbers - Counting in Swahili",
+      "level": "Absolute Beginner",
+      "completedLessons": 0,
+      "icon": "🔢",
+      "color": "#2196F3",
+      "phrase": "Counting in Swahili",
+      "meaning": "Learn to count from 1 to 1000",
+      "pronunciation": "he-sa-bu",
+      "audio": "/assets/audio/swahili-counting.mp3",
+      "activities": [
+        {
+          "id": "activity-counting-1",
+          "type": "introduction",
+          "question": "Let's learn to count in Swahili! Numbers are essential for everyday conversations."
+        },
+        {
+          "id": "activity-counting-2",
+          "type": "numbers-table",
+          "question": "Numbers 1-20",
+          "description": "Learn to count from one to twenty",
+          "audio": "/assets/audio/numbers-1-20.mp3"
+        },
+        {
+          "id": "activity-counting-3",
+          "type": "numbers-table",
+          "question": "Tens (30-100)",
+          "description": "Learn to count by tens",
+          "audio": "/assets/audio/numbers-tens.mp3"
+        },
+        {
+          "id": "activity-counting-4",
+          "type": "numbers-table",
+          "question": "Hundreds and Thousands",
+          "description": "Learn larger numbers",
+          "audio": "/assets/audio/numbers-hundreds.mp3"
+        },
+        {
+          "id": "activity-counting-5",
+          "type": "multiple-choice",
+          "question": "What is 'tano' in English?",
+          "options": ["Three", "Four", "Five", "Six"],
+          "correctAnswer": 2,
+          "explanation": "Tano means five in Swahili"
+        },
+        {
+          "id": "activity-counting-6",
+          "type": "multiple-choice",
+          "question": "How do you say '15' in Swahili?",
+          "options": ["kumi na tano", "kumi na nne", "ishirini", "thelathini"],
+          "correctAnswer": 0,
+          "explanation": "15 is 'kumi na tano' (ten and five)"
+        },
+        {
+          "id": "activity-counting-7",
+          "type": "multiple-choice",
+          "question": "What is 'hamsini'?",
+          "options": ["30", "40", "50", "60"],
+          "correctAnswer": 2,
+          "explanation": "Hamsini means fifty"
+        },
+        {
+          "id": "activity-counting-8",
+          "type": "numbers-listening",
+          "question": "Numbers Listening Exercise",
+          "description": "Listen and write the 10 numbers you hear",
+          "audio": "/assets/audio/numbers-listening-exercise.mp3"
+        },
+        {
+          "id": "activity-counting-9",
+          "type": "numbers-translation",
+          "question": "Translate Numbers to Figures",
+          "description": "Convert Swahili numbers into numeric form"
+        }
+      ]
+    }
+  ]
+}

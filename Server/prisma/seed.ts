@@ -1,109 +1,110 @@
 import { PrismaClient } from "@prisma/client";
 
+import { UNIT_2_NUMBERS_SW } from "./seed-data/unit-2";
+
 const prisma = new PrismaClient();
 
-const ASSETS = {
-  images: {
-    alphabet:
-      "https://firebasestorage.googleapis.com/v0/b/afrolingo-e7ef3.firebasestorage.app/o/alphabet%2FSwahili-alphabet.png?alt=media&token=b875c95d-9a67-48de-ac06-19f428118183",
-  },
-  audio:
-    "https://firebasestorage.googleapis.com/v0/b/afrolingo-e7ef3.firebasestorage.app/o/audio%2Fswahili-alphabet.mp3?alt=media&token=a51382c7-fa18-4c21-9c29-d858ede081d2",
-};
-
 async function main() {
-  console.log("🧹 Cleaning up existing data...");
-  await prisma.userMistake.deleteMany();
-  await prisma.userDailyActivity.deleteMany();
-  await prisma.activityProgress.deleteMany();
-  await prisma.userProgress.deleteMany();
-  await prisma.activity.deleteMany();
-  await prisma.unit.deleteMany();
-  await prisma.user.deleteMany();
-  console.log("✅ Cleanup complete\n");
+  console.log("🌱 Seeding (non-destructive)...\n");
 
-  console.log("📚 Seeding Users...");
-  const user = await prisma.user.create({
-    data: {
-      email: "test@example.com",
-      name: "Test User",
-      selectedLanguage: "sw",
-      selectedLevel: "absolute-beginner",
-      placementTestScore: 85,
-      learningReasons: ["culture", "travel"],
-      timeCommitment: "15min",
-      onboardingCompleted: true,
-      onboardingCompletedAt: new Date(),
+  console.log("📚 Resolving User...");
+  const userId = "tFgOgdOSSZaUkvPKlarhwx25rVZ2";
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    throw new Error(
+      `Seed aborted: expected existing user id '${userId}' (Roy) not found.`
+    );
+  }
+  console.log(`✅ Using existing user: ${user.email}`);
+
+  console.log("📚 Seeding Unit 2: Numbers...");
+  const unit = await prisma.unit.upsert({
+    where: { externalId: UNIT_2_NUMBERS_SW.externalId },
+    create: {
+      externalId: UNIT_2_NUMBERS_SW.externalId,
+      title: UNIT_2_NUMBERS_SW.title,
+      level: UNIT_2_NUMBERS_SW.level,
+      icon: UNIT_2_NUMBERS_SW.icon,
+      color: UNIT_2_NUMBERS_SW.color,
+      xpReward: UNIT_2_NUMBERS_SW.xpReward,
+      order: UNIT_2_NUMBERS_SW.order,
+      isActive: UNIT_2_NUMBERS_SW.isActive,
     },
-  });
-  console.log("✅ User created\n");
-
-  console.log("📚 Seeding Unit 1: Alphabet...");
-  const unit = await prisma.unit.create({
-    data: {
-      externalId: "unit-1",
-      title: "Beginning - The Alphabet",
-      level: "absolute-beginner",
-      icon: "🔤",
-      color: "#4CAF50",
-      xpReward: 50,
-      order: 1,
-      isActive: true,
-      activities: {
-        create: [
-          {
-            externalId: "activity-alphabet-1",
-            type: "introduction",
-            question:
-              "Welcome! Let's start your journey by learning the Swahili alphabet.",
-            order: 1,
-          },
-          {
-            externalId: "activity-alphabet-2",
-            type: "alphabet",
-            question: "The Swahili Alphabet",
-            alphabetImage: ASSETS.images.alphabet,
-            order: 2,
-          },
-          {
-            externalId: "activity-alphabet-3",
-            type: "listening-dictation",
-            question: "Listening Exercise: Write What You Hear",
-            audio: ASSETS.audio,
-            order: 3,
-          },
-        ],
-      },
+    update: {
+      title: UNIT_2_NUMBERS_SW.title,
+      level: UNIT_2_NUMBERS_SW.level,
+      icon: UNIT_2_NUMBERS_SW.icon,
+      color: UNIT_2_NUMBERS_SW.color,
+      xpReward: UNIT_2_NUMBERS_SW.xpReward,
+      order: UNIT_2_NUMBERS_SW.order,
+      isActive: UNIT_2_NUMBERS_SW.isActive,
     },
     include: {
       activities: true,
     },
   });
-  console.log("✅ Unit 1 created\n");
+
+  for (const activity of UNIT_2_NUMBERS_SW.activities) {
+    await prisma.activity.upsert({
+      where: { externalId: activity.externalId },
+      create: {
+        externalId: activity.externalId,
+        unitId: unit.id,
+        type: activity.type,
+        componentKey: activity.componentKey ?? "generic-activity",
+        contentRef: activity.contentRef ?? activity.externalId,
+        order: activity.order,
+        isActive: true,
+      },
+      update: {
+        unitId: unit.id,
+        type: activity.type,
+        componentKey: activity.componentKey ?? "generic-activity",
+        contentRef: activity.contentRef ?? activity.externalId,
+        order: activity.order,
+        isActive: true,
+      },
+    });
+  }
+
+  const unitWithActivities = await prisma.unit.findUnique({
+    where: { id: unit.id },
+    include: { activities: true },
+  });
+  const activities = unitWithActivities?.activities ?? [];
+  console.log("✅ Unit 2 created\n");
 
   console.log("📚 Seeding User Progress...");
-  await prisma.userProgress.create({
-    data: {
+  await prisma.userProgress.upsert({
+    where: { userId_unitId: { userId: user.id, unitId: unit.id } },
+    create: {
       userId: user.id,
       unitId: unit.id,
-      progress: 50,
-      completedActivities: 2,
-      xpEarned: 25,
+      progress: 0,
+      completedActivities: 0,
+      xpEarned: 0,
     },
+    update: {},
   });
   console.log("✅ User Progress created\n");
 
   console.log("📚 Seeding Activity Progress...");
-  await prisma.activityProgress.create({
-    data: {
-      userId: user.id,
-      activityId: unit.activities[0].id, // Accessing activities directly from the included data
-      isCompleted: true,
-      isCorrect: true,
-      xpEarned: 10,
-    },
-  });
-  console.log("Activity Progress created\n");
+  const firstActivity = activities.sort((a, b) => a.order - b.order)[0];
+  if (firstActivity) {
+    await prisma.activityProgress.upsert({
+      where: {
+        userId_activityId: { userId: user.id, activityId: firstActivity.id },
+      },
+      create: {
+        userId: user.id,
+        activityId: firstActivity.id,
+        isCompleted: false,
+        xpEarned: 0,
+      },
+      update: {},
+    });
+  }
+  console.log("✅ Activity Progress created\n");
 
   console.log("Seeding completed successfully!");
 }
@@ -111,7 +112,7 @@ async function main() {
 main()
   .catch((e) => {
     console.error(" Error during seeding:", e);
-    process.exit(1);
+    throw e;
   })
   .finally(async () => {
     await prisma.$disconnect();
