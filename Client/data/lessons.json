@@ -30,27 +30,15 @@
         },
         {
           "id": "activity-counting-3",
-          "type": "multiple-choice",
-          "question": "What is 'tano' in English?",
-          "options": ["Three", "Four", "Five", "Six"],
-          "correctAnswer": 2,
-          "explanation": "Tano means five in Swahili"
+          "type": "multiple-choice"
         },
         {
           "id": "activity-counting-4",
-          "type": "multiple-choice",
-          "question": "How do you say '15' in Swahili?",
-          "options": ["kumi na tano", "kumi na nne", "ishirini", "thelathini"],
-          "correctAnswer": 0,
-          "explanation": "15 is 'kumi na tano' (ten and five)"
+          "type": "multiple-choice"
         },
         {
           "id": "activity-counting-5",
-          "type": "multiple-choice",
-          "question": "What is 'hamsini'?",
-          "options": ["30", "40", "50", "60"],
-          "correctAnswer": 2,
-          "explanation": "Hamsini means fifty"
+          "type": "multiple-choice"
         },
         {
           "id": "activity-counting-6",

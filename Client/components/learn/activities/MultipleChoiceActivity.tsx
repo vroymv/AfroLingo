@@ -1,6 +1,5 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { getActivityContent } from "@/data/activity-content";
 import { Activity } from "@/data/lessons";
 import React, { useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
@@ -20,16 +19,19 @@ export default function MultipleChoiceActivity({
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
 
-  const content = getActivityContent(activity.id);
+  console.log("MultipleChoiceActivity activity:", activity); // --- IGNORE ---
 
-  const question = content?.question ?? activity.question;
-  const options: string[] = Array.isArray(content?.options)
-    ? content.options
+  const question = activity.question;
+  const options: string[] = Array.isArray(activity.options)
+    ? activity.options
     : [];
-  const correctAnswerIndexRaw =
-    content?.correctAnswer ?? activity.correctAnswer;
+  const correctAnswerRaw = activity.correctAnswer;
   const correctAnswerIndex =
-    typeof correctAnswerIndexRaw === "number" ? correctAnswerIndexRaw : -1;
+    typeof correctAnswerRaw === "number"
+      ? correctAnswerRaw
+      : typeof correctAnswerRaw === "string"
+      ? options.indexOf(correctAnswerRaw)
+      : -1;
 
   const handleOptionSelect = (index: number) => {
     if (!showResult) {
@@ -126,9 +128,9 @@ export default function MultipleChoiceActivity({
                 The correct answer is: {options[correctAnswerIndex]}
               </ThemedText>
             )}
-            {(content?.explanation ?? activity.explanation) && (
+            {activity.explanation && (
               <ThemedText style={styles.explanationText}>
-                {content?.explanation ?? activity.explanation}
+                {activity.explanation}
               </ThemedText>
             )}
           </View>

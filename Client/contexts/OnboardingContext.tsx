@@ -83,7 +83,6 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
         const response = await fetch(`${API_BASE_URL}/onboarding/${user.id}`);
         if (!response.ok) throw new Error("Failed to fetch onboarding state");
         const result = await response.json();
-        console.log("Fetched onboarding state:", result);
         if (result.success && result.data) {
           // Compose onboarding state from API response
           dispatch({
