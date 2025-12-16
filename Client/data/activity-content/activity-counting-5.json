@@ -1,0 +1,8 @@
+{
+  "id": "activity-counting-5",
+  "type": "multiple-choice",
+  "question": "What is 'hamsini'?",
+  "options": ["30", "40", "50", "60"],
+  "correctAnswer": 2,
+  "explanation": "Hamsini means fifty"
+}

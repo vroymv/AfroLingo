@@ -1,5 +1,6 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { getActivityContent } from "@/data/activity-content";
 import { Activity } from "@/data/lessons";
 import React, { useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
@@ -19,13 +20,16 @@ export default function MultipleChoiceActivity({
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
 
-  if (!activity.options || activity.correctAnswer === undefined) {
-    return (
-      <ThemedView style={styles.container}>
-        <ThemedText>Invalid multiple choice activity</ThemedText>
-      </ThemedView>
-    );
-  }
+  const content = getActivityContent(activity.id);
+
+  const question = content?.question ?? activity.question;
+  const options: string[] = Array.isArray(content?.options)
+    ? content.options
+    : [];
+  const correctAnswerIndexRaw =
+    content?.correctAnswer ?? activity.correctAnswer;
+  const correctAnswerIndex =
+    typeof correctAnswerIndexRaw === "number" ? correctAnswerIndexRaw : -1;
 
   const handleOptionSelect = (index: number) => {
     if (!showResult) {
@@ -41,19 +45,36 @@ export default function MultipleChoiceActivity({
     }
   };
 
-  const isCorrect = selectedAnswer === activity.correctAnswer;
+  const isCorrect =
+    selectedAnswer !== null && selectedAnswer === correctAnswerIndex;
+
+  if (!question || options.length === 0 || correctAnswerIndex < 0) {
+    return (
+      <ThemedView style={styles.errorContainer}>
+        <ThemedText style={styles.errorText}>
+          Activity content missing
+        </ThemedText>
+        <ThemedText style={styles.errorSubtext}>
+          This activity can’t be displayed right now.
+        </ThemedText>
+        <TouchableOpacity style={styles.continueButton} onPress={onComplete}>
+          <ThemedText style={styles.continueButtonText}>Continue</ThemedText>
+        </TouchableOpacity>
+      </ThemedView>
+    );
+  }
 
   return (
     <ThemedView style={styles.container}>
       <View style={styles.content}>
-        <ThemedText style={styles.question}>{activity.question}</ThemedText>
+        <ThemedText style={styles.question}>{question}</ThemedText>
 
         <View style={styles.optionsContainer}>
-          {activity.options.map((option, index) => {
+          {options.map((option, index) => {
             let optionStyle: any = styles.option;
 
             if (showResult) {
-              if (index === activity.correctAnswer) {
+              if (index === correctAnswerIndex) {
                 optionStyle = [styles.option, styles.correctOption];
               } else if (index === selectedAnswer && !isCorrect) {
                 optionStyle = [styles.option, styles.incorrectOption];
@@ -73,7 +94,7 @@ export default function MultipleChoiceActivity({
                   style={[
                     styles.optionText,
                     showResult &&
-                      index === activity.correctAnswer &&
+                      index === correctAnswerIndex &&
                       styles.correctText,
                     showResult &&
                       index === selectedAnswer &&
@@ -100,9 +121,14 @@ export default function MultipleChoiceActivity({
             >
               {isCorrect ? "✅ Correct!" : "❌ Incorrect"}
             </ThemedText>
-            {activity.explanation && (
+            {!isCorrect && (
+              <ThemedText style={styles.correctAnswerText}>
+                The correct answer is: {options[correctAnswerIndex]}
+              </ThemedText>
+            )}
+            {(content?.explanation ?? activity.explanation) && (
               <ThemedText style={styles.explanationText}>
-                {activity.explanation}
+                {content?.explanation ?? activity.explanation}
               </ThemedText>
             )}
           </View>
@@ -199,6 +225,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#4A90E2",
   },
+  correctAnswerText: {
+    fontSize: 15,
+    fontWeight: "600",
+    textAlign: "center",
+    color: "#4CAF50",
+    marginBottom: 8,
+  },
   submitButton: {
     backgroundColor: "#4A90E2",
     padding: 16,
@@ -209,6 +242,36 @@ const styles = StyleSheet.create({
     backgroundColor: "#CCC",
   },
   submitButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  errorText: {
+    fontSize: 18,
+    fontWeight: "600",
+    textAlign: "center",
+    marginBottom: 12,
+    color: "#F44336",
+  },
+  errorSubtext: {
+    fontSize: 14,
+    textAlign: "center",
+    marginBottom: 24,
+    opacity: 0.7,
+  },
+  continueButton: {
+    backgroundColor: "#4A90E2",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  continueButtonText: {
     color: "white",
     fontSize: 16,
     fontWeight: "600",

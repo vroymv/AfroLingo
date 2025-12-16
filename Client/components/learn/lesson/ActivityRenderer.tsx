@@ -29,6 +29,7 @@ import VocabularyTableActivity from "@/components/learn/activities/VocabularyTab
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Activity } from "@/data/lessons";
+import { mergeActivityWithContent } from "@/data/activity-content";
 import React from "react";
 import { StyleSheet } from "react-native";
 
@@ -71,11 +72,14 @@ export default function ActivityRenderer({
     dialogue: DialogueActivity,
   };
 
-  console.log("ActivityRenderer rendering activity:", activity);
+  // Merge activity with local content if available
+  const mergedActivity = mergeActivityWithContent(activity);
+
+  console.log("ActivityRenderer rendering activity:", mergedActivity);
   console.log("Lesson meta:", lessonMeta);
 
   // Support newly added componentKey coming from backend seed. Extend type locally.
-  const extended = activity as Activity & { componentKey?: string };
+  const extended = mergedActivity as Activity & { componentKey?: string };
   const key = extended.componentKey || extended.type;
   const Component = registry[key];
 
@@ -91,7 +95,7 @@ export default function ActivityRenderer({
   if (key === "flashcard") {
     return (
       <FlashcardActivity
-        activity={activity}
+        activity={mergedActivity}
         phrase={lessonMeta.phrase}
         meaning={lessonMeta.meaning}
         onComplete={onActivityComplete}
