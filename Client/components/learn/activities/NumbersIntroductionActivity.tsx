@@ -7,14 +7,14 @@ import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { useLessonRuntime } from "@/contexts/LessonRuntimeContext";
 import { updateUserProgress } from "@/services/userprogress";
 
-interface IntroductionActivityProps {
+interface NumbersIntroductionActivityProps {
   activity: Activity;
   onComplete: () => void;
 }
 
-export default function AlphabetIntroductionActivity({
+export default function NumbersIntroductionActivity({
   onComplete,
-}: IntroductionActivityProps) {
+}: NumbersIntroductionActivityProps) {
   const { userId, unitId, currentActivityNumber, totalActivities } =
     useLessonRuntime();
 
@@ -33,19 +33,18 @@ export default function AlphabetIntroductionActivity({
     <ThemedView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.iconContainer}>
-          <Ionicons name="language" size={64} color="#4A90E2" />
+          <Ionicons name="calculator" size={64} color="#4A90E2" />
         </View>
         <ThemedText type="title" style={styles.title}>
-          Swahili Alphabet Introduction
+          Swahili Numbers Introduction
         </ThemedText>
         <ThemedText style={styles.question}>
-          {`Let's explore the Swahili alphabet! You'll learn the letters, their sounds, and how they're used in everyday words.`}
+          {`Let's learn Swahili numbers! You'll discover how to count from 1 to 100 and beyond, essential for everyday conversations.`}
         </ThemedText>
         <View style={styles.tipContainer}>
           <Ionicons name="bulb-outline" size={20} color="#FFB800" />
           <ThemedText style={styles.description}>
-            Tap &ldquo;Let&apos;s Go&rdquo; to begin your journey into the
-            Swahili alphabet.
+            Tap &ldquo;Let&apos;s Go&rdquo; to start counting in Swahili.
           </ThemedText>
         </View>
       </View>
@@ -61,7 +60,7 @@ export default function AlphabetIntroductionActivity({
 }
 
 // Identifier used for dynamic activity rendering
-export const componentKey = "alphabet-introduction";
+export const componentKey = "numbers-introduction";
 
 const styles = StyleSheet.create({
   container: {
@@ -99,37 +98,31 @@ const styles = StyleSheet.create({
   tipContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
     backgroundColor: "#FFF9E6",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    padding: 16,
     borderRadius: 12,
-    marginTop: 16,
+    gap: 12,
+    maxWidth: "90%",
   },
   description: {
     fontSize: 14,
-    color: "#666",
+    lineHeight: 20,
     flex: 1,
   },
   continueButton: {
     backgroundColor: "#4A90E2",
-    paddingVertical: 18,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    alignItems: "center",
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "center",
-    gap: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 12,
     marginHorizontal: 20,
-    shadowColor: "#4A90E2",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    gap: 8,
   },
   continueButtonText: {
     color: "white",
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: "600",
   },
 });

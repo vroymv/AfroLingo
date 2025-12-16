@@ -15,6 +15,9 @@ import ListeningDictationActivity, {
 } from "@/components/learn/activities/ListeningDictationActivity";
 import MatchingActivity from "@/components/learn/activities/MatchingActivity";
 import MultipleChoiceActivity from "@/components/learn/activities/MultipleChoiceActivity";
+import NumbersIntroductionActivity, {
+  componentKey as numbersIntroductionKey,
+} from "@/components/learn/activities/NumbersIntroductionActivity";
 import NumbersListeningActivity from "@/components/learn/activities/NumbersListeningActivity";
 import NumbersTableActivity from "@/components/learn/activities/NumbersTableActivity";
 import NumbersTranslationActivity from "@/components/learn/activities/NumbersTranslationActivity";
@@ -57,6 +60,7 @@ export default function ActivityRenderer({
     [listeningDictationKey]: ListeningDictationActivity,
     [vocabularyFillInKey]: VocabularyFillInActivity,
     [alphabetVocabularyTableKey]: AlphabetVocabularyTableActivity,
+    [numbersIntroductionKey]: NumbersIntroductionActivity,
     "numbers-table": NumbersTableActivity,
     "numbers-listening": NumbersListeningActivity,
     "numbers-translation": NumbersTranslationActivity,
@@ -68,6 +72,7 @@ export default function ActivityRenderer({
   };
 
   console.log("ActivityRenderer rendering activity:", activity);
+  console.log("Lesson meta:", lessonMeta);
 
   // Support newly added componentKey coming from backend seed. Extend type locally.
   const extended = activity as Activity & { componentKey?: string };

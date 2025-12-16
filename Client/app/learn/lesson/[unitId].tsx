@@ -76,6 +76,8 @@ export default function LessonPlayerScreen() {
   const currentActivityNumber = currentActivityIndex + 1;
   const currentActivity = activities[currentActivityIndex];
 
+  console.log("Activities count:", activities.length);
+
   const lessonCompleted = currentActivityIndex >= activities.length;
 
   const recordLessonComplete = (id: string, xp: number) => {

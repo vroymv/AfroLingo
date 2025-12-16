@@ -10,6 +10,7 @@ export interface Activity {
     | "vocabulary-fill-in"
     | "vocabulary-table"
     | "alphabet-vocabulary-table"
+    | "numbers-introduction"
     | "numbers-table"
     | "numbers-listening"
     | "numbers-translation"
