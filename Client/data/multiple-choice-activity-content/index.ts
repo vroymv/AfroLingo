@@ -1,17 +1,38 @@
 // Multiple Choice Activity Content Loader
 // Groups multiple choice activities by their parent activity ID
 
-import activityCounting3 from "./activity-counting-3.json";
-import activityCounting4 from "./activity-counting-4.json";
-import activityCounting5 from "./activity-counting-5.json";
+const activityCounting3 = {
+  id: "activity-counting-3",
+  type: "multiple-choice",
+  question: "What is 'tano' in English?",
+  options: ["Three", "Four", "Five", "Six"],
+  correctAnswer: 2,
+  explanation: "Tano means five in Swahili",
+};
+
+const activityCounting4 = {
+  id: "activity-counting-4",
+  type: "multiple-choice",
+  question: "How do you say '15' in Swahili?",
+  options: ["kumi na tano", "kumi na nne", "ishirini", "thelathini"],
+  correctAnswer: 0,
+  explanation: "15 is 'kumi na tano' (ten and five)",
+};
+
+const activityCounting5 = {
+  id: "activity-counting-5",
+  type: "multiple-choice",
+  question: "What is 'hamsini'?",
+  options: ["30", "40", "50", "60"],
+  correctAnswer: 2,
+  explanation: "Hamsini means fifty",
+};
 
 // Map activity IDs to their grouped content
 export const multipleChoiceActivityMap: Record<string, any[]> = {
-  "6685769b-634a-4272-81fb-78e8fe8b6c5e": [
-    activityCounting3,
-    activityCounting4,
-    activityCounting5,
-  ],
+  "6685769b-634a-4272-81fb-78e8fe8b6c5e": [activityCounting3],
+  "0776b018-17b7-4707-9327-1da43cc56970": [activityCounting4],
+  "cba0a4c1-b074-471e-9927-d5ade63f14b0": [activityCounting5],
 };
 
 /**

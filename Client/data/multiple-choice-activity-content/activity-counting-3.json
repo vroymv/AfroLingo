@@ -1,8 +1,0 @@
-{
-  "id": "activity-counting-3",
-  "type": "multiple-choice",
-  "question": "What is 'tano' in English?",
-  "options": ["Three", "Four", "Five", "Six"],
-  "correctAnswer": 2,
-  "explanation": "Tano means five in Swahili"
-}

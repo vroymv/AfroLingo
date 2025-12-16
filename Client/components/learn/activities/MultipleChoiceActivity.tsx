@@ -1,8 +1,10 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Activity } from "@/data/lessons";
-import React, { useState } from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { getMultipleChoiceActivities } from "@/data/multiple-choice-activity-content";
+import React, { useEffect, useState } from "react";
+import { TouchableOpacity, View } from "react-native";
+import { styles } from "./MultipleChoiceActivity.styles";
 
 // Identifier used for dynamic activity rendering
 export const componentKey = "multiple-choice";
@@ -21,11 +23,21 @@ export default function MultipleChoiceActivity({
 
   console.log("MultipleChoiceActivity activity:", activity); // --- IGNORE ---
 
-  const question = activity.question;
-  const options: string[] = Array.isArray(activity.options)
-    ? activity.options
+  // Get multiple choice activities and use the first one
+  const activities = getMultipleChoiceActivities(activity.id);
+  const currentActivity = activities.length > 0 ? activities[0] : activity;
+
+  // Reset state when the activity changes so previous answers don't persist
+  useEffect(() => {
+    setSelectedAnswer(null);
+    setShowResult(false);
+  }, [activity.id]);
+
+  const question = currentActivity.question;
+  const options: string[] = Array.isArray(currentActivity.options)
+    ? currentActivity.options
     : [];
-  const correctAnswerRaw = activity.correctAnswer;
+  const correctAnswerRaw = currentActivity.correctAnswer;
   const correctAnswerIndex =
     typeof correctAnswerRaw === "number"
       ? correctAnswerRaw
@@ -128,9 +140,9 @@ export default function MultipleChoiceActivity({
                 The correct answer is: {options[correctAnswerIndex]}
               </ThemedText>
             )}
-            {activity.explanation && (
+            {currentActivity.explanation && (
               <ThemedText style={styles.explanationText}>
-                {activity.explanation}
+                {currentActivity.explanation}
               </ThemedText>
             )}
           </View>
@@ -152,130 +164,3 @@ export default function MultipleChoiceActivity({
     </ThemedView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "space-between",
-    padding: 24,
-  },
-  content: {
-    justifyContent: "center",
-    marginBottom: 24,
-  },
-  question: {
-    fontSize: 18,
-    textAlign: "center",
-    marginBottom: 32,
-    lineHeight: 24,
-  },
-  optionsContainer: {
-    gap: 12,
-    marginBottom: 24,
-  },
-  option: {
-    backgroundColor: "#F8F9FA",
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "transparent",
-  },
-  selectedOption: {
-    borderColor: "#4A90E2",
-    backgroundColor: "rgba(74, 144, 226, 0.1)",
-  },
-  correctOption: {
-    borderColor: "#4CAF50",
-    backgroundColor: "rgba(76, 175, 80, 0.1)",
-  },
-  incorrectOption: {
-    borderColor: "#F44336",
-    backgroundColor: "rgba(244, 67, 54, 0.1)",
-  },
-  optionText: {
-    fontSize: 16,
-    textAlign: "center",
-  },
-  correctText: {
-    color: "#4CAF50",
-    fontWeight: "600",
-  },
-  incorrectText: {
-    color: "#F44336",
-    fontWeight: "600",
-  },
-  resultContainer: {
-    backgroundColor: "rgba(74, 144, 226, 0.1)",
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  resultText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  correctResultText: {
-    color: "#4CAF50",
-  },
-  incorrectResultText: {
-    color: "#F44336",
-  },
-  explanationText: {
-    fontSize: 14,
-    textAlign: "center",
-    color: "#4A90E2",
-  },
-  correctAnswerText: {
-    fontSize: 15,
-    fontWeight: "600",
-    textAlign: "center",
-    color: "#4CAF50",
-    marginBottom: 8,
-  },
-  submitButton: {
-    backgroundColor: "#4A90E2",
-    padding: 16,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  disabledButton: {
-    backgroundColor: "#CCC",
-  },
-  submitButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-  errorText: {
-    fontSize: 18,
-    fontWeight: "600",
-    textAlign: "center",
-    marginBottom: 12,
-    color: "#F44336",
-  },
-  errorSubtext: {
-    fontSize: 14,
-    textAlign: "center",
-    marginBottom: 24,
-    opacity: 0.7,
-  },
-  continueButton: {
-    backgroundColor: "#4A90E2",
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-  },
-  continueButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-});

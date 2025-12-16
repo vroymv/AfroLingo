@@ -1,8 +1,0 @@
-{
-  "id": "activity-counting-4",
-  "type": "multiple-choice",
-  "question": "How do you say '15' in Swahili?",
-  "options": ["kumi na tano", "kumi na nne", "ishirini", "thelathini"],
-  "correctAnswer": 0,
-  "explanation": "15 is 'kumi na tano' (ten and five)"
-}
