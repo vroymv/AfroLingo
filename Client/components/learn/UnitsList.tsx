@@ -12,7 +12,6 @@ interface UnitsListProps {
 export const UnitsList = React.memo<UnitsListProps>(({ units }) => {
   const router = useRouter();
   const handleUnitPress = (unit: Unit) => {
-    console.log(`Navigating to unit: ${unit.title}, ID: ${unit.id} `);
     router.push({
       pathname: "/learn/lesson/[unitId]",
       params: { unitId: unit.id },

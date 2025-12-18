@@ -20,15 +20,25 @@ export const mapUnitsToUi = (units: any[]): Unit[] => {
     const up = selectUserProgress(u?.userProgress);
 
     const totalLessons: number =
-      up.totalLessons ??
-      u.totalLessons ??
-      (Array.isArray(u?.lessons) ? u.lessons.length : 0);
+      typeof up.totalLessons === "number"
+        ? up.totalLessons
+        : typeof u.totalLessons === "number"
+        ? u.totalLessons
+        : typeof up.totalActivities === "number"
+        ? up.totalActivities
+        : Array.isArray(u?.activities)
+        ? u.activities.length
+        : Array.isArray(u?.lessons)
+        ? u.lessons.length
+        : 0;
 
     const completedLessonsExplicit: number | undefined =
       typeof up.completedLessons === "number"
         ? up.completedLessons
         : typeof up.lessonsCompleted === "number"
         ? up.lessonsCompleted
+        : typeof up.completedActivities === "number"
+        ? up.completedActivities
         : undefined;
 
     const explicitProgress: number | undefined =

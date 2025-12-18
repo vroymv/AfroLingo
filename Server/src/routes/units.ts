@@ -39,6 +39,13 @@ router.post("/level/:level", async (req: Request, res: Response) => {
             userId: userId,
           },
         },
+        activities: true,
+        // Only this user's mistakes for this unit
+        mistakes: {
+          where: {
+            userId: userId,
+          },
+        },
       },
     });
 

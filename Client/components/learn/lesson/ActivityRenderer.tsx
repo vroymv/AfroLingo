@@ -1,26 +1,26 @@
 import AlphabetActivity, {
   componentKey as alphabetKey,
-} from "@/components/learn/activities/AlphabetActivity";
+} from "@/components/learn/activities/unit1/AlphabetActivity";
 import AlphabetVocabularyTableActivity, {
   componentKey as alphabetVocabularyTableKey,
-} from "@/components/learn/activities/AlphabetVocabularyTableActivity";
+} from "@/components/learn/activities/unit1/AlphabetVocabularyTableActivity";
 import ConversationPracticeActivity from "@/components/learn/activities/ConversationPracticeActivity";
 import DialogueActivity from "@/components/learn/activities/DialogueActivity";
 import FlashcardActivity from "@/components/learn/activities/FlashcardActivity";
 import AlphabetIntroductionActivity, {
   componentKey as introductionKey,
-} from "@/components/learn/activities/AlphabetIntroductionActivity";
+} from "@/components/learn/activities/unit1/AlphabetIntroductionActivity";
 import ListeningDictationActivity, {
   componentKey as listeningDictationKey,
 } from "@/components/learn/activities/ListeningDictationActivity";
 import MatchingActivity from "@/components/learn/activities/MatchingActivity";
-import MultipleChoiceActivity from "@/components/learn/activities/MultipleChoiceActivity";
+import MultipleChoiceActivity from "@/components/learn/activities/unit2/MultipleChoiceActivity";
 import NumbersIntroductionActivity, {
   componentKey as numbersIntroductionKey,
-} from "@/components/learn/activities/NumbersIntroductionActivity";
-import NumbersListeningActivity from "@/components/learn/activities/NumbersListeningActivity";
-import NumbersTableActivity from "@/components/learn/activities/NumbersTableActivity";
-import NumbersTranslationActivity from "@/components/learn/activities/NumbersTranslationActivity";
+} from "@/components/learn/activities/unit2/NumbersIntroductionActivity";
+import NumbersListeningActivity from "@/components/learn/activities/unit2/NumbersListeningActivity";
+import NumbersTableActivity from "@/components/learn/activities/unit2/NumbersTableActivity";
+import NumbersTranslationActivity from "@/components/learn/activities/unit2/NumbersTranslationActivity";
 import SpellingCompletionActivity from "@/components/learn/activities/SpellingCompletionActivity";
 import VocabularyFillInActivity, {
   componentKey as vocabularyFillInKey,

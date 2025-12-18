@@ -36,6 +36,7 @@ export const LessonsTab: React.FC = () => {
       );
 
       const data = await response.json();
+      console.log("Fetch Units Responsee:", data);
       setUnits(data.data);
     } catch (error) {
       console.error("Error fetching units:", error);
