@@ -7,8 +7,8 @@ import {
   usersRouter,
   onboardingRouter,
   unitsRouter,
-  activityRouter,
   userProgressRouter,
+  xpRouter,
 } from "./routes";
 
 dotenv.config();
@@ -25,8 +25,8 @@ app.use("/health", healthRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/onboarding", onboardingRouter);
 app.use("/api/units", unitsRouter);
-app.use("/api/activity", activityRouter);
 app.use("/api/userprogress", userProgressRouter);
+app.use("/api/xp", xpRouter);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {

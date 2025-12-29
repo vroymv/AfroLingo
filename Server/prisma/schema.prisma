@@ -20,7 +20,7 @@ model User {
   name  String
 
   // Profile image
-  profileImageUrl String? // URL to user's profile image
+  profileImageUrl       String? // URL to user's profile image
   // Onboarding selections
   selectedLanguage      String? // e.g., "sw", "zu", "ln", "xh"
   selectedLevel         String? // e.g., "absolute-beginner", "beginner", "refresher"
@@ -31,6 +31,14 @@ model User {
   onboardingCompletedAt DateTime?
   currentOnboardingStep String? // Tracks the last onboarding step completed
 
+  // Daily goal configuration & streaks
+  dailyXpGoal       Int       @default(30) // Target XP per day
+  dailyLessonGoal   Int? // Optional: target lessons per day
+  timezone          String? // IANA timezone, e.g. "Africa/Nairobi"
+  currentStreakDays Int       @default(0)
+  longestStreakDays Int       @default(0)
+  lastStreakDate    DateTime? @db.Date
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -39,23 +47,24 @@ model User {
   activityProgress ActivityProgress[]
   dailyActivity    UserDailyActivity[]
   mistakes         UserMistake[]
+  xpTransactions   XpTransaction[]
 
   @@map("users")
 }
 
 // Unit model - Represents a learning unit (e.g., "The Alphabet", "Numbers")
 model Unit {
-  id           String   @id @default(uuid())
-  externalId   String   @unique // e.g., "unit-1" from JSON
-  title        String
-  level        String // e.g., "absolute-beginner", "beginner"
-  icon         String // Emoji icon
-  color        String // Hex color code
-  xpReward     Int
-  order        Int      @default(0) // For ordering units
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id         String   @id @default(uuid())
+  externalId String   @unique // e.g., "unit-1" from JSON
+  title      String
+  level      String // e.g., "absolute-beginner", "beginner"
+  icon       String // Emoji icon
+  color      String // Hex color code
+  xpReward   Int // XP awarded for completing this unit
+  order      Int      @default(0) // For ordering units
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   // Relations
   userProgress UserProgress[]
@@ -67,19 +76,18 @@ model Unit {
   @@map("units")
 }
 
-
 // Activity model - Represents an activity within a lesson
 model Activity {
-  id          String  @id @default(uuid())
-  externalId  String  @unique // e.g., "activity-alphabet-1" from JSON
-  unitId      String
-  type        String // high-level category, e.g., "multiple-choice", "dictation"
+  id           String  @id @default(uuid())
+  externalId   String  @unique // e.g., "activity-alphabet-1" from JSON
+  unitId       String
+  type         String // high-level category, e.g., "multiple-choice", "dictation"
   // Metadata-only: identifier for the client-side component to render this activity
-  componentKey String @default("generic-activity") // e.g., "learn/alphabet/AlphabetActivity" or "learn/mcq/MultipleChoice"
+  componentKey String  @default("generic-activity") // e.g., "learn/alphabet/AlphabetActivity" or "learn/mcq/MultipleChoice"
   // Reference to external content (JSON key, CMS ID, file path, etc.)
   contentRef   String? // e.g., "activity-alphabet-1" in JSON, or "s3://.../activity.json"
-  order       Int     @default(0) // For ordering activities within a lesson
-  isActive    Boolean @default(true)
+  order        Int     @default(0) // For ordering activities within a lesson
+  isActive     Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -99,15 +107,14 @@ model Activity {
 
 // User progress for units
 model UserProgress {
-  id               String    @id @default(uuid())
-  userId           String
-  unitId           String
-  progress         Int       @default(0) // 0-100
-  completedActivities Int    @default(0)
-  xpEarned         Int       @default(0)
-  startedAt        DateTime  @default(now())
-  completedAt      DateTime?
-  lastAccessedAt   DateTime  @default(now())
+  id                  String    @id @default(uuid())
+  userId              String
+  unitId              String
+  progress            Int       @default(0) // 0-100
+  completedActivities Int       @default(0)
+  startedAt           DateTime  @default(now())
+  completedAt         DateTime?
+  lastAccessedAt      DateTime  @default(now())
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -123,10 +130,9 @@ model UserProgress {
 
 // User progress for individual activities
 model ActivityProgress {
-  id               String  @id @default(uuid())
-  userId           String
-  activityId       String
-  // Removed lessonProgressId
+  id         String @id @default(uuid())
+  userId     String
+  activityId String
 
   // Completion status
   isCompleted Boolean  @default(false)
@@ -179,6 +185,11 @@ model UserDailyActivity {
   timeSpent           Int @default(0) // Time in seconds
   xpEarned            Int @default(0)
 
+  // Daily goal snapshot
+  goalXp      Int?
+  goalLessons Int?
+  metGoal     Boolean @default(false)
+
   // Streak calculation
   isStreakDay Boolean @default(true) // Did user meet minimum criteria for streak
 
@@ -228,4 +239,21 @@ model UserMistake {
   @@index([isMastered])
   @@index([createdAt])
   @@map("user_mistakes")
+}
+
+// XP Transaction model - Ledger for all XP changes
+model XpTransaction {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  amount         Int // can be positive or negative
+  sourceType     String   @map("source_type") // e.g. 'lesson_complete', 'quiz_attempt', 'streak_bonus'
+  sourceId       String   @map("source_id") // ID of the originating entity (lessonId, attemptId, date, etc.)
+  idempotencyKey String   @map("idempotency_key") // prevents duplicate awards on retries
+  metadata       Json? // optional context: lang, difficulty, time spent, etc.
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("xp_transactions")
 }

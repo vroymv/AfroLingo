@@ -31,11 +31,13 @@ export default function LessonPlayerScreen() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`${API_BASE_URL}/activity`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ unitId }),
-        });
+        if (!API_BASE_URL) {
+          throw new Error(
+            "API base URL is not configured. Set EXPO_PUBLIC_API_BASE_URL in env."
+          );
+        }
+
+        const response = await fetch(`${API_BASE_URL}/units/${unitId}`);
         const data = await response.json();
         if (!response.ok || !data.success) {
           throw new Error(data.message || "Failed to fetch unit");

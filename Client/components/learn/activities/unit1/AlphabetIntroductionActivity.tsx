@@ -6,6 +6,7 @@ import React, { useEffect } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { useLessonRuntime } from "@/contexts/LessonRuntimeContext";
 import { updateUserProgress } from "@/services/userprogress";
+import { previewAwardXP } from "@/services/xp";
 
 interface IntroductionActivityProps {
   activity: Activity;
@@ -29,6 +30,30 @@ export default function AlphabetIntroductionActivity({
     }).catch((e) => console.warn("Failed to send progress", e));
   }, [userId, unitId, currentActivityNumber, totalActivities]);
 
+  const handlePress = async () => {
+    if (userId) {
+      const result = await previewAwardXP({
+        userId,
+        amount: 10,
+        sourceType: "activity_completion",
+        sourceId: `alphabet-intro-${unitId}-${currentActivityNumber}`,
+        metadata: {
+          unitId,
+          currentActivityNumber,
+          totalActivities,
+          screen: "AlphabetIntroductionActivity",
+          note: "Temporary XP preview (logs only) from Let's Go button",
+        },
+      });
+
+      if (!result.success) {
+        console.warn("XP preview failed", result.message);
+      }
+    }
+
+    onComplete();
+  };
+
   return (
     <ThemedView style={styles.container}>
       <View style={styles.content}>
@@ -49,8 +74,7 @@ export default function AlphabetIntroductionActivity({
           </ThemedText>
         </View>
       </View>
-
-      <TouchableOpacity style={styles.continueButton} onPress={onComplete}>
+      <TouchableOpacity style={styles.continueButton} onPress={handlePress}>
         <ThemedText style={styles.continueButtonText}>
           Let&apos;s Go!
         </ThemedText>
