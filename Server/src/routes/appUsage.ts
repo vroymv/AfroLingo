@@ -38,11 +38,12 @@ router.post("/open", async (req: Request, res: Response) => {
   try {
     const { userId } = appUsageEventSchema.parse(req.body);
     const now = new Date();
-    const { todayKey, todayDate } = await getUserLocalTodayDate(userId, now);
+    const { todayKey, todayDate, dailyXpGoal, dailyLessonGoal } =
+      await getUserLocalTodayDate(userId, now);
 
     const existing = await prisma.userDailyActivity.findUnique({
       where: { userId_date: { userId, date: todayDate } },
-      select: { firstAppOpenedAt: true },
+      select: { firstAppOpenedAt: true, goalXp: true, goalLessons: true },
     });
 
     if (!existing) {
@@ -53,6 +54,8 @@ router.post("/open", async (req: Request, res: Response) => {
           firstAppOpenedAt: now,
           lastAppOpenedAt: now,
           appOpensCount: 1,
+          goalXp: dailyXpGoal,
+          goalLessons: dailyLessonGoal,
         },
       });
     } else {
@@ -62,6 +65,8 @@ router.post("/open", async (req: Request, res: Response) => {
           firstAppOpenedAt: existing.firstAppOpenedAt ?? now,
           lastAppOpenedAt: now,
           appOpensCount: { increment: 1 },
+          goalXp: existing.goalXp ?? dailyXpGoal ?? undefined,
+          goalLessons: existing.goalLessons ?? dailyLessonGoal ?? undefined,
         },
       });
     }
@@ -141,7 +146,12 @@ router.post("/close", async (req: Request, res: Response) => {
         }),
         prisma.userDailyActivity.findUnique({
           where: { userId_date: { userId, date: todayDate } },
-          select: { xpEarned: true, isStreakDay: true },
+          select: {
+            xpEarned: true,
+            isStreakDay: true,
+            goalXp: true,
+            goalLessons: true,
+          },
         }),
       ]);
 
@@ -174,8 +184,8 @@ router.post("/close", async (req: Request, res: Response) => {
         activitiesCompleted,
         xpEarned: nextXpEarned,
         isStreakDay: nextIsStreakDay,
-        goalXp: dailyXpGoal,
-        goalLessons: dailyLessonGoal,
+        goalXp: existing?.goalXp ?? dailyXpGoal ?? undefined,
+        goalLessons: existing?.goalLessons ?? dailyLessonGoal ?? undefined,
       },
     });
 

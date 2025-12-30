@@ -13,6 +13,15 @@ export interface ProgressTrackerLiveStats {
   todayXpEarned?: number;
   todayIsStreakDay?: boolean;
   streakThreshold?: number;
+
+  // Daily goal + today counters
+  dailyXpGoal?: number | null;
+  dailyLessonGoal?: number | null;
+  todayGoalXp?: number | null;
+  todayGoalLessons?: number | null;
+  todayMetGoal?: boolean;
+  todayActivitiesCompleted?: number;
+  todayUnitsCompleted?: number;
 }
 
 export async function getProgressTrackerStats(userId: string): Promise<{

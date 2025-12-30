@@ -1,5 +1,9 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useAuth } from "@/contexts/AuthContext";
+import { getProgressTrackerStats } from "@/services/progressTracker";
+import { useFocusEffect } from "@react-navigation/native";
+import React, { useCallback, useMemo, useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 
 interface DailyGoalCardProps {
@@ -9,13 +13,67 @@ interface DailyGoalCardProps {
 export default function DailyGoalCard({
   onContinueLesson,
 }: DailyGoalCardProps) {
+  const { user } = useAuth();
+  const [live, setLive] = useState({
+    streakDays: 0,
+    todayXpEarned: 0,
+    dailyXpGoal: 0,
+    todayLessonsCompleted: 0,
+    dailyLessonGoal: 0,
+  });
+
+  const fetchLive = useCallback(async () => {
+    if (!user?.id) return;
+
+    const result = await getProgressTrackerStats(user.id);
+    if (!result.success) return;
+
+    const goalXp =
+      result.data?.todayGoalXp ?? result.data?.dailyXpGoal ?? live.dailyXpGoal;
+    const goalLessons =
+      result.data?.todayGoalLessons ??
+      result.data?.dailyLessonGoal ??
+      live.dailyLessonGoal;
+
+    setLive({
+      streakDays: result.data?.streakDays ?? 0,
+      todayXpEarned: result.data?.todayXpEarned ?? 0,
+      dailyXpGoal: typeof goalXp === "number" ? goalXp : 0,
+      todayLessonsCompleted: result.data?.todayActivitiesCompleted ?? 0,
+      dailyLessonGoal: typeof goalLessons === "number" ? goalLessons : 0,
+    });
+  }, [user?.id, live.dailyLessonGoal, live.dailyXpGoal]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchLive();
+    }, [fetchLive])
+  );
+
+  const progressPercent = useMemo(() => {
+    if (!live.dailyXpGoal || live.dailyXpGoal <= 0) return 0;
+    return Math.min(
+      100,
+      Math.round((live.todayXpEarned / live.dailyXpGoal) * 100)
+    );
+  }, [live.dailyXpGoal, live.todayXpEarned]);
+
+  const ringRotation = useMemo(() => {
+    return `${Math.round((progressPercent / 100) * 360)}deg`;
+  }, [progressPercent]);
+
+  const xpRemaining = useMemo(() => {
+    if (!live.dailyXpGoal || live.dailyXpGoal <= 0) return 0;
+    return Math.max(0, live.dailyXpGoal - live.todayXpEarned);
+  }, [live.dailyXpGoal, live.todayXpEarned]);
+
   return (
     <ThemedView style={styles.dailyGoalCard}>
       <View style={styles.goalHeader}>
         <ThemedText type="subtitle">Daily Goal Tracker</ThemedText>
         <View style={styles.streakBadge}>
           <ThemedText style={styles.streakIcon}>🔥</ThemedText>
-          <ThemedText style={styles.streakNumber}>7</ThemedText>
+          <ThemedText style={styles.streakNumber}>{live.streakDays}</ThemedText>
         </View>
       </View>
 
@@ -24,20 +82,25 @@ export default function DailyGoalCard({
           <View
             style={[
               styles.progressRingFill,
-              { transform: [{ rotate: "234deg" }] },
+              { transform: [{ rotate: ringRotation }] },
             ]}
           />
           <View style={styles.progressRingInner}>
-            <ThemedText style={styles.progressPercentage}>65%</ThemedText>
+            <ThemedText style={styles.progressPercentage}>
+              {progressPercent}%
+            </ThemedText>
             <ThemedText style={styles.progressLabel}>Daily Goal</ThemedText>
           </View>
         </View>
         <View style={styles.goalDetails}>
           <ThemedText style={styles.goalText}>
-            2 of 3 lessons completed today
+            {live.dailyLessonGoal > 0
+              ? `${live.todayLessonsCompleted} of ${live.dailyLessonGoal} lessons completed today`
+              : `${live.todayLessonsCompleted} lessons completed today`}
           </ThemedText>
           <ThemedText style={styles.xpText}>
-            +45 XP earned • 15 XP to goal
+            +{live.todayXpEarned} XP earned
+            {live.dailyXpGoal > 0 ? ` • ${xpRemaining} XP to goal` : ""}
           </ThemedText>
         </View>
       </View>

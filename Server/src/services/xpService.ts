@@ -92,6 +92,7 @@ export async function awardXP(params: AwardXPParams): Promise<{
         tx,
         userId,
         xpDelta: amount,
+        sourceType,
       });
     }
 
@@ -118,13 +119,16 @@ async function applyStreakFromPositiveXp(params: {
   tx: Prisma.TransactionClient;
   userId: string;
   xpDelta: number;
+  sourceType: XPSourceType;
 }): Promise<void> {
-  const { tx, userId, xpDelta } = params;
+  const { tx, userId, xpDelta, sourceType } = params;
 
   const user = await tx.user.findUnique({
     where: { id: userId },
     select: {
       timezone: true,
+      dailyXpGoal: true,
+      dailyLessonGoal: true,
       currentStreakDays: true,
       longestStreakDays: true,
       lastStreakDate: true,
@@ -143,12 +147,21 @@ async function applyStreakFromPositiveXp(params: {
         date: todayDate,
       },
     },
-    select: { xpEarned: true, isStreakDay: true },
+    select: {
+      xpEarned: true,
+      isStreakDay: true,
+      goalXp: true,
+      goalLessons: true,
+    },
   });
 
   const previousXpEarned = existingDaily?.xpEarned ?? 0;
   const nextXpEarned = previousXpEarned + xpDelta;
   const nextIsStreakDay = nextXpEarned >= STREAK_XP_THRESHOLD;
+
+  const shouldIncrementActivities = sourceType === "activity_completion";
+  const shouldIncrementUnits =
+    sourceType === "unit_completion" || sourceType === "lesson_completion";
 
   if (!existingDaily) {
     await tx.userDailyActivity.create({
@@ -157,9 +170,29 @@ async function applyStreakFromPositiveXp(params: {
         date: todayDate,
         xpEarned: xpDelta,
         isStreakDay: nextIsStreakDay,
+        goalXp: user.dailyXpGoal,
+        goalLessons: user.dailyLessonGoal,
+        activitiesCompleted: shouldIncrementActivities ? 1 : 0,
+        unitsCompleted: shouldIncrementUnits ? 1 : 0,
       },
     });
   } else {
+    const updateData: Prisma.UserDailyActivityUpdateInput = {
+      xpEarned: { increment: xpDelta },
+      isStreakDay: nextIsStreakDay,
+      goalXp: existingDaily.goalXp ?? user.dailyXpGoal,
+      goalLessons:
+        existingDaily.goalLessons ?? user.dailyLessonGoal ?? undefined,
+    };
+
+    if (shouldIncrementActivities) {
+      updateData.activitiesCompleted = { increment: 1 };
+    }
+
+    if (shouldIncrementUnits) {
+      updateData.unitsCompleted = { increment: 1 };
+    }
+
     await tx.userDailyActivity.update({
       where: {
         userId_date: {
@@ -167,10 +200,7 @@ async function applyStreakFromPositiveXp(params: {
           date: todayDate,
         },
       },
-      data: {
-        xpEarned: { increment: xpDelta },
-        isStreakDay: nextIsStreakDay,
-      },
+      data: updateData,
     });
   }
 

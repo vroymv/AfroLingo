@@ -26,6 +26,8 @@ router.get("/:userId", async (req: Request, res: Response) => {
         where: { id: userId },
         select: {
           timezone: true,
+          dailyXpGoal: true,
+          dailyLessonGoal: true,
           currentStreakDays: true,
           longestStreakDays: true,
           lastStreakDate: true,
@@ -46,7 +48,15 @@ router.get("/:userId", async (req: Request, res: Response) => {
           date: todayDate,
         },
       },
-      select: { xpEarned: true, isStreakDay: true },
+      select: {
+        xpEarned: true,
+        isStreakDay: true,
+        metGoal: true,
+        goalXp: true,
+        goalLessons: true,
+        activitiesCompleted: true,
+        unitsCompleted: true,
+      },
     });
 
     return res.status(200).json({
@@ -63,6 +73,14 @@ router.get("/:userId", async (req: Request, res: Response) => {
         todayXpEarned: todayDaily?.xpEarned ?? 0,
         todayIsStreakDay: todayDaily?.isStreakDay ?? false,
         streakThreshold,
+        dailyXpGoal: user?.dailyXpGoal ?? null,
+        dailyLessonGoal: user?.dailyLessonGoal ?? null,
+        todayGoalXp: todayDaily?.goalXp ?? user?.dailyXpGoal ?? null,
+        todayGoalLessons:
+          todayDaily?.goalLessons ?? user?.dailyLessonGoal ?? null,
+        todayMetGoal: todayDaily?.metGoal ?? false,
+        todayActivitiesCompleted: todayDaily?.activitiesCompleted ?? 0,
+        todayUnitsCompleted: todayDaily?.unitsCompleted ?? 0,
         completedActivities: progressAgg._sum.completedActivities ?? 0,
       },
     });
