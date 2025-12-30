@@ -12,7 +12,7 @@ import AlphabetIntroductionActivity, {
 } from "@/components/learn/activities/unit1/AlphabetIntroductionActivity";
 import ListeningDictationActivity, {
   componentKey as listeningDictationKey,
-} from "@/components/learn/activities/ListeningDictationActivity";
+} from "@/components/learn/activities/unit1/ListeningDictationActivity";
 import MatchingActivity from "@/components/learn/activities/MatchingActivity";
 import MultipleChoiceActivity from "@/components/learn/activities/unit2/MultipleChoiceActivity";
 import NumbersIntroductionActivity, {
@@ -24,7 +24,7 @@ import NumbersTranslationActivity from "@/components/learn/activities/unit2/Numb
 import SpellingCompletionActivity from "@/components/learn/activities/SpellingCompletionActivity";
 import VocabularyFillInActivity, {
   componentKey as vocabularyFillInKey,
-} from "@/components/learn/activities/VocabularyFillInActivity";
+} from "@/components/learn/activities/unit1/VocabularyFillInActivity";
 import VocabularyTableActivity from "@/components/learn/activities/VocabularyTableActivity";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";

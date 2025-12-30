@@ -3,6 +3,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { useLessonRuntime } from "@/contexts/LessonRuntimeContext";
 import { Activity } from "@/data/lessons";
 import { updateUserProgress } from "@/services/userprogress";
+import { awardXP } from "@/services/xp";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
@@ -205,15 +206,40 @@ const alphabetData: AlphabetItem[] = [
 // Row component with its own audio player
 function AlphabetRow({ item }: { item: AlphabetItem }) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [hasAwardedXP, setHasAwardedXP] = useState(false);
+  const { userId, unitId, currentActivityNumber } = useLessonRuntime();
 
   // Note: Audio files will need to be added to /assets/audio/alphabet/
   // Format: {letter}-{word}.mp3 (e.g., a-asante.mp3)
 
-  const handlePlayAudio = () => {
+  const handlePlayAudio = async () => {
     // Placeholder for audio playback
     setIsPlaying(true);
     setTimeout(() => setIsPlaying(false), 1000);
     console.log(`Playing audio for: ${item.word}`);
+
+    if (userId && !hasAwardedXP) {
+      const result = await awardXP({
+        userId,
+        amount: 5,
+        sourceType: "activity_completion",
+        sourceId: `alphabet-vocab-audio-${unitId}-${currentActivityNumber}-${item.letter}`,
+        metadata: {
+          unitId,
+          currentActivityNumber,
+          letter: item.letter,
+          word: item.word,
+          screen: "AlphabetVocabularyTableActivity",
+          reason: "audio_listened",
+        },
+      });
+
+      if (!result.success) {
+        console.warn("XP award for audio failed", result.message);
+      } else {
+        setHasAwardedXP(true);
+      }
+    }
   };
 
   return (
@@ -310,7 +336,32 @@ export default function AlphabetVocabularyTableActivity({
 
       {/* Complete Button */}
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.completeButton} onPress={onComplete}>
+        <TouchableOpacity
+          style={styles.completeButton}
+          onPress={async () => {
+            if (userId) {
+              const result = await awardXP({
+                userId,
+                amount: 10,
+                sourceType: "activity_completion",
+                sourceId: `alphabet-vocab-complete-${unitId}-${currentActivityNumber}`,
+                metadata: {
+                  unitId,
+                  currentActivityNumber,
+                  totalActivities,
+                  screen: "AlphabetVocabularyTableActivity",
+                  reason: "activity_completed",
+                },
+              });
+
+              if (!result.success) {
+                console.warn("XP award for completion failed", result.message);
+              }
+            }
+
+            onComplete();
+          }}
+        >
           <Text style={styles.completeButtonText}>Complete Activity</Text>
         </TouchableOpacity>
       </View>

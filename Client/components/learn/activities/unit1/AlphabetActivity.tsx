@@ -2,6 +2,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useLessonRuntime } from "@/contexts/LessonRuntimeContext";
 import { updateUserProgress } from "@/services/userprogress";
+import { awardXP } from "@/services/xp";
 import { Activity } from "@/types/lessonProgressContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
@@ -36,6 +37,7 @@ export default function AlphabetActivity({
   onComplete,
 }: AlphabetActivityProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [audioXPAwarded, setAudioXPAwarded] = useState(false);
 
   const audioSource = require("@/assets/audio/swahili-alphabet.mp3");
 
@@ -68,6 +70,43 @@ export default function AlphabetActivity({
       totalActivities,
     }).catch((e) => console.warn("Failed to send progress", e));
   }, [userId, unitId, currentActivityNumber, totalActivities]);
+
+  // Award XP once when the audio has been listened to fully
+  useEffect(() => {
+    if (!userId || audioXPAwarded) return;
+
+    if (status.duration > 0 && status.currentTime >= status.duration - 1) {
+      (async () => {
+        const result = await awardXP({
+          userId,
+          amount: 5,
+          sourceType: "activity_completion",
+          sourceId: `alphabet-audio-${unitId}-${currentActivityNumber}`,
+          metadata: {
+            unitId,
+            currentActivityNumber,
+            totalActivities,
+            screen: "AlphabetActivity",
+            reason: "audio_listened",
+          },
+        });
+
+        if (!result.success) {
+          console.warn("XP award for audio failed", result.message);
+        } else {
+          setAudioXPAwarded(true);
+        }
+      })();
+    }
+  }, [
+    userId,
+    unitId,
+    currentActivityNumber,
+    totalActivities,
+    status.currentTime,
+    status.duration,
+    audioXPAwarded,
+  ]);
 
   return (
     <ThemedView style={styles.container}>
@@ -150,7 +189,32 @@ export default function AlphabetActivity({
         </ThemedText>
       </View>
 
-      <TouchableOpacity style={styles.continueButton} onPress={onComplete}>
+      <TouchableOpacity
+        style={styles.continueButton}
+        onPress={async () => {
+          if (userId) {
+            const result = await awardXP({
+              userId,
+              amount: 10,
+              sourceType: "activity_completion",
+              sourceId: `alphabet-complete-${unitId}-${currentActivityNumber}`,
+              metadata: {
+                unitId,
+                currentActivityNumber,
+                totalActivities,
+                screen: "AlphabetActivity",
+                reason: "activity_completed",
+              },
+            });
+
+            if (!result.success) {
+              console.warn("XP award for completion failed", result.message);
+            }
+          }
+
+          onComplete();
+        }}
+      >
         <ThemedText style={styles.continueButtonText}>Continue</ThemedText>
         <Ionicons name="arrow-forward" size={20} color="white" />
       </TouchableOpacity>
