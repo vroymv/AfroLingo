@@ -3,6 +3,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { useLessonRuntime } from "@/contexts/LessonRuntimeContext";
 import { Activity } from "@/data/lessons";
 import { updateUserProgress } from "@/services/userprogress";
+import { awardXP } from "@/services/xp";
 import { Ionicons } from "@expo/vector-icons";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import React, { useEffect, useState } from "react";
@@ -38,6 +39,8 @@ export default function VocabularyFillInActivity({
 }: VocabularyFillInActivityProps) {
   const { userId, unitId, currentActivityNumber, totalActivities } =
     useLessonRuntime();
+
+  const [completionXPAwarded, setCompletionXPAwarded] = useState(false);
 
   // Report progress on mount (and when identifiers change)
   useEffect(() => {
@@ -149,7 +152,7 @@ export default function VocabularyFillInActivity({
     });
   };
 
-  const checkAnswers = () => {
+  const checkAnswers = async () => {
     const correct = new Set<string>();
 
     vocabularyItems.forEach((item) => {
@@ -169,6 +172,33 @@ export default function VocabularyFillInActivity({
 
     // If all correct, complete the activity
     if (correct.size === vocabularyItems.length) {
+      if (userId && !completionXPAwarded) {
+        const result = await awardXP({
+          userId,
+          amount: 20,
+          sourceType: "activity_completion",
+          sourceId: `vocab-fill-in-complete-${unitId}-${currentActivityNumber}`,
+          metadata: {
+            unitId,
+            currentActivityNumber,
+            totalActivities,
+            screen: "VocabularyFillInActivity",
+            reason: "activity_completed",
+            items: vocabularyItems.map((item) => ({
+              id: item.id,
+              word: item.word,
+              blanks: item.blanks,
+            })),
+          },
+        });
+
+        if (!result.success) {
+          console.warn("XP award for completion failed", result.message);
+        } else {
+          setCompletionXPAwarded(true);
+        }
+      }
+
       setTimeout(() => {
         onComplete();
       }, 1500);

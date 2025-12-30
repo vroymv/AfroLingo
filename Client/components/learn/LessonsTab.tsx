@@ -5,7 +5,8 @@ import { UnitsList } from "./UnitsList";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { computeProgressStats, mapUnitsToUi } from "@/services/lessonTap";
+import { mapUnitsToUi, computeMilestones } from "@/services/lessonTap";
+import { getProgressTrackerStats } from "@/services/progressTracker";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
@@ -14,6 +15,11 @@ export const LessonsTab: React.FC = () => {
   const { user } = useAuth();
   const [units, setUnits] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [liveStats, setLiveStats] = useState({
+    totalXP: 0,
+    streakDays: 0,
+    completedActivities: 0,
+  });
 
   const fetchUnits = useCallback(async () => {
     if (!API_BASE_URL) {
@@ -42,20 +48,51 @@ export const LessonsTab: React.FC = () => {
     }
   }, [state.selectedLevel, user?.id]);
 
+  const fetchProgressTracker = useCallback(async () => {
+    if (!user?.id) return;
+
+    const result = await getProgressTrackerStats(user.id);
+    if (!result.success) {
+      console.warn("Failed to fetch progress tracker stats", result.message);
+      return;
+    }
+
+    setLiveStats({
+      totalXP: result.data?.totalXP ?? 0,
+      streakDays: result.data?.streakDays ?? 0,
+      completedActivities: result.data?.completedActivities ?? 0,
+    });
+  }, [user?.id]);
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchUnits();
+    await Promise.all([fetchUnits(), fetchProgressTracker()]);
     setRefreshing(false);
-  }, [fetchUnits]);
+  }, [fetchUnits, fetchProgressTracker]);
 
   useEffect(() => {
     fetchUnits();
-  }, [fetchUnits]);
+    fetchProgressTracker();
+  }, [fetchUnits, fetchProgressTracker]);
 
   const mappedUnits = mapUnitsToUi(units);
 
-  // Aggregate progress stats for ProgressTracker (computed via helper)
-  const progressStats = computeProgressStats(mappedUnits as any, units);
+  const completedUnits = mappedUnits.filter((u) => u.progress === 100).length;
+  const inProgressUnits = mappedUnits.filter(
+    (u) => u.progress > 0 && u.progress < 100
+  ).length;
+  const totalUnits = mappedUnits.length;
+  const milestones = computeMilestones(mappedUnits as any);
+
+  const progressStats = {
+    totalXP: liveStats.totalXP,
+    streakDays: liveStats.streakDays,
+    completedActivities: liveStats.completedActivities,
+    completedUnits,
+    inProgressUnits,
+    totalUnits,
+    milestones,
+  };
 
   return (
     <ThemedView style={styles.container}>

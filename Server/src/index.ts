@@ -9,6 +9,7 @@ import {
   unitsRouter,
   userProgressRouter,
   xpRouter,
+  progressTrackerRouter,
 } from "./routes";
 
 dotenv.config();
@@ -27,6 +28,7 @@ app.use("/api/onboarding", onboardingRouter);
 app.use("/api/units", unitsRouter);
 app.use("/api/userprogress", userProgressRouter);
 app.use("/api/xp", xpRouter);
+app.use("/api/progress-tracker", progressTrackerRouter);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {

@@ -22,6 +22,7 @@ interface ProgressMilestone {
 interface ProgressTrackerStats {
   totalXP: number;
   streakDays: number;
+  completedActivities: number;
   completedUnits: number;
   inProgressUnits: number;
   totalUnits: number;
@@ -36,6 +37,7 @@ export const ProgressTracker = React.memo<ProgressTrackerProps>(({ stats }) => {
   const {
     totalXP,
     streakDays,
+    completedActivities,
     completedUnits,
     inProgressUnits,
     totalUnits,
@@ -72,10 +74,10 @@ export const ProgressTracker = React.memo<ProgressTrackerProps>(({ stats }) => {
         </View>
         <View style={styles.statItem}>
           <ThemedText type="defaultSemiBold" style={styles.statNumber}>
-            {completedUnits}
+            {completedActivities}
           </ThemedText>
           <ThemedText type="default" style={styles.statLabel}>
-            Completed
+            Activities
           </ThemedText>
         </View>
       </View>

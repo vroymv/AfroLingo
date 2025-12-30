@@ -3,6 +3,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { useLessonRuntime } from "@/contexts/LessonRuntimeContext";
 import { Activity } from "@/data/lessons";
 import { updateUserProgress } from "@/services/userprogress";
+import { awardXP } from "@/services/xp";
 import { Ionicons } from "@expo/vector-icons";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import React, { useEffect, useState } from "react";
@@ -32,6 +33,7 @@ export default function ListeningDictationActivity({
   const [isChecking, setIsChecking] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
+  const [correctXPAwarded, setCorrectXPAwarded] = useState(false);
 
   const audioSource = swahiliAlphabetAudio;
 
@@ -58,7 +60,10 @@ export default function ListeningDictationActivity({
       .replace(/[^A-Z]/g, "");
   };
 
-  const checkAnswer = () => {
+  const { userId, unitId, currentActivityNumber, totalActivities } =
+    useLessonRuntime();
+
+  const checkAnswer = async () => {
     setIsChecking(true);
     const normalized = normalizeAnswer(userAnswer);
     const correctAnswer = CORRECT_LETTERS.join("");
@@ -70,6 +75,30 @@ export default function ListeningDictationActivity({
     setIsChecking(false);
 
     if (correct) {
+      if (userId && !correctXPAwarded) {
+        const result = await awardXP({
+          userId,
+          amount: 15,
+          sourceType: "activity_completion",
+          sourceId: `listening-dictation-correct-${unitId}-${currentActivityNumber}`,
+          metadata: {
+            unitId,
+            currentActivityNumber,
+            totalActivities,
+            screen: "ListeningDictationActivity",
+            reason: "correct_answer",
+            expected: correctAnswer,
+            submitted: normalized,
+          },
+        });
+
+        if (!result.success) {
+          console.warn("XP award for correct answer failed", result.message);
+        } else {
+          setCorrectXPAwarded(true);
+        }
+      }
+
       // Short delay before calling onComplete
       setTimeout(() => {
         onComplete();
@@ -85,9 +114,6 @@ export default function ListeningDictationActivity({
     player.seekTo(0);
     player.play();
   };
-
-  const { userId, unitId, currentActivityNumber, totalActivities } =
-    useLessonRuntime();
 
   // Report progress on mount (and when identifiers change)
   useEffect(() => {
