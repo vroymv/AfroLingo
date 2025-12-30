@@ -5,11 +5,17 @@ export interface ProgressTrackerLiveStats {
   totalXP: number;
   streakDays: number;
   completedActivities: number;
+
+  // Optional extended fields (backward-compatible)
+  longestStreakDays?: number;
+  lastStreakDate?: string | null;
+  todayDate?: string; // YYYY-MM-DD (user-local)
+  todayXpEarned?: number;
+  todayIsStreakDay?: boolean;
+  streakThreshold?: number;
 }
 
-export async function getProgressTrackerStats(
-  userId: string
-): Promise<{
+export async function getProgressTrackerStats(userId: string): Promise<{
   success: boolean;
   data?: ProgressTrackerLiveStats;
   message?: string;

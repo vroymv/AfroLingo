@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
 import { prisma } from "../config/prisma";
+import { dateFromDateKey, getDateKeyInTimeZone } from "../utils/dateKey";
 
 const router = Router();
 
@@ -23,9 +24,30 @@ router.get("/:userId", async (req: Request, res: Response) => {
       }),
       prisma.user.findUnique({
         where: { id: userId },
-        select: { currentStreakDays: true },
+        select: {
+          timezone: true,
+          currentStreakDays: true,
+          longestStreakDays: true,
+          lastStreakDate: true,
+        },
       }),
     ]);
+
+    const streakThreshold = 10;
+    const todayKey = getDateKeyInTimeZone(
+      new Date(),
+      user?.timezone || undefined
+    );
+    const todayDate = dateFromDateKey(todayKey);
+    const todayDaily = await prisma.userDailyActivity.findUnique({
+      where: {
+        userId_date: {
+          userId,
+          date: todayDate,
+        },
+      },
+      select: { xpEarned: true, isStreakDay: true },
+    });
 
     return res.status(200).json({
       success: true,
@@ -33,6 +55,14 @@ router.get("/:userId", async (req: Request, res: Response) => {
         userId,
         totalXP: xpAgg._sum.amount ?? 0,
         streakDays: user?.currentStreakDays ?? 0,
+        longestStreakDays: user?.longestStreakDays ?? 0,
+        lastStreakDate: user?.lastStreakDate
+          ? user.lastStreakDate.toISOString().split("T")[0]
+          : null,
+        todayDate: todayKey,
+        todayXpEarned: todayDaily?.xpEarned ?? 0,
+        todayIsStreakDay: todayDaily?.isStreakDay ?? false,
+        streakThreshold,
         completedActivities: progressAgg._sum.completedActivities ?? 0,
       },
     });

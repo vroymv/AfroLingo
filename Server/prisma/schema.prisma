@@ -182,7 +182,12 @@ model UserDailyActivity {
   // Activity metrics
   unitsCompleted      Int @default(0)
   activitiesCompleted Int @default(0)
-  timeSpent           Int @default(0) // Time in seconds
+  // App usage (best-effort; app may terminate without sending a close event)
+  firstAppOpenedAt DateTime? // First time the app was opened on this date (server time)
+  lastAppOpenedAt  DateTime? // Most recent app open on this date (server time)
+  lastAppClosedAt  DateTime? // Most recent app close/background on this date (server time)
+  appOpensCount     Int       @default(0)
+  appClosesCount    Int       @default(0)
   xpEarned            Int @default(0)
 
   // Daily goal snapshot
@@ -191,7 +196,7 @@ model UserDailyActivity {
   metGoal     Boolean @default(false)
 
   // Streak calculation
-  isStreakDay Boolean @default(true) // Did user meet minimum criteria for streak
+  isStreakDay Boolean @default(false) // Did user meet minimum criteria for streak
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

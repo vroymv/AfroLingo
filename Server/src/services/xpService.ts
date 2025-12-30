@@ -5,6 +5,12 @@
 
 import { prisma } from "../config/prisma";
 import { XP_RULES } from "../config/xpRules";
+import type { Prisma } from "@prisma/client";
+import {
+  addDaysToDateKey,
+  dateFromDateKey,
+  getDateKeyInTimeZone,
+} from "../utils/dateKey";
 
 export type XPSourceType =
   | "activity_completion"
@@ -48,35 +54,51 @@ export async function awardXP(params: AwardXPParams): Promise<{
   // Generate idempotency key
   const idempotencyKey = `${sourceType}_${sourceId}_${userId}`;
 
-  // Check for duplicate transaction (unless skip is true)
-  if (!skipDuplicateCheck) {
-    const existingTransaction = await prisma.xpTransaction.findFirst({
-      where: { idempotencyKey },
+  // Ensure XP award + streak updates are consistent.
+  const txResult = await prisma.$transaction(async (tx) => {
+    // Check for duplicate transaction (unless skip is true)
+    if (!skipDuplicateCheck) {
+      const existingTransaction = await tx.xpTransaction.findFirst({
+        where: { idempotencyKey },
+        select: { id: true },
+      });
+
+      if (existingTransaction) {
+        return {
+          xpAwarded: 0,
+          isDuplicate: true,
+        };
+      }
+    }
+
+    // Create transaction
+    await tx.xpTransaction.create({
+      data: {
+        userId,
+        amount,
+        sourceType,
+        sourceId,
+        idempotencyKey: skipDuplicateCheck
+          ? `${idempotencyKey}_${Date.now()}`
+          : idempotencyKey,
+        metadata,
+      },
     });
 
-    if (existingTransaction) {
-      const totalXP = await getTotalXP(userId);
-      return {
-        success: true,
-        xpAwarded: 0,
-        isDuplicate: true,
-        totalXP,
-      };
+    // Update streak and daily activity ONLY for positive XP.
+    // Negative XP does not unqualify a streak day.
+    if (amount > 0) {
+      await applyStreakFromPositiveXp({
+        tx,
+        userId,
+        xpDelta: amount,
+      });
     }
-  }
 
-  // Create transaction
-  await prisma.xpTransaction.create({
-    data: {
-      userId,
-      amount,
-      sourceType,
-      sourceId,
-      idempotencyKey: skipDuplicateCheck
-        ? `${idempotencyKey}_${Date.now()}`
-        : idempotencyKey,
-      metadata,
-    },
+    return {
+      xpAwarded: amount,
+      isDuplicate: false,
+    };
   });
 
   // Get updated total
@@ -84,10 +106,99 @@ export async function awardXP(params: AwardXPParams): Promise<{
 
   return {
     success: true,
-    xpAwarded: amount,
-    isDuplicate: false,
+    xpAwarded: txResult.xpAwarded,
+    isDuplicate: txResult.isDuplicate,
     totalXP,
   };
+}
+
+const STREAK_XP_THRESHOLD = 10;
+
+async function applyStreakFromPositiveXp(params: {
+  tx: Prisma.TransactionClient;
+  userId: string;
+  xpDelta: number;
+}): Promise<void> {
+  const { tx, userId, xpDelta } = params;
+
+  const user = await tx.user.findUnique({
+    where: { id: userId },
+    select: {
+      timezone: true,
+      currentStreakDays: true,
+      longestStreakDays: true,
+      lastStreakDate: true,
+    },
+  });
+
+  if (!user) return;
+
+  const todayKey = getDateKeyInTimeZone(new Date(), user.timezone || undefined);
+  const todayDate = dateFromDateKey(todayKey);
+
+  const existingDaily = await tx.userDailyActivity.findUnique({
+    where: {
+      userId_date: {
+        userId,
+        date: todayDate,
+      },
+    },
+    select: { xpEarned: true, isStreakDay: true },
+  });
+
+  const previousXpEarned = existingDaily?.xpEarned ?? 0;
+  const nextXpEarned = previousXpEarned + xpDelta;
+  const nextIsStreakDay = nextXpEarned >= STREAK_XP_THRESHOLD;
+
+  if (!existingDaily) {
+    await tx.userDailyActivity.create({
+      data: {
+        userId,
+        date: todayDate,
+        xpEarned: xpDelta,
+        isStreakDay: nextIsStreakDay,
+      },
+    });
+  } else {
+    await tx.userDailyActivity.update({
+      where: {
+        userId_date: {
+          userId,
+          date: todayDate,
+        },
+      },
+      data: {
+        xpEarned: { increment: xpDelta },
+        isStreakDay: nextIsStreakDay,
+      },
+    });
+  }
+
+  const justQualified =
+    nextIsStreakDay && !(existingDaily?.isStreakDay ?? false);
+  if (!justQualified) return;
+
+  const lastKey = user.lastStreakDate
+    ? user.lastStreakDate.toISOString().split("T")[0]
+    : null;
+
+  if (lastKey === todayKey) {
+    return;
+  }
+
+  const yesterdayKey = addDaysToDateKey(todayKey, -1);
+  const nextCurrentStreakDays =
+    lastKey === yesterdayKey ? user.currentStreakDays + 1 : 1;
+  const nextLongest = Math.max(user.longestStreakDays, nextCurrentStreakDays);
+
+  await tx.user.update({
+    where: { id: userId },
+    data: {
+      currentStreakDays: nextCurrentStreakDays,
+      longestStreakDays: nextLongest,
+      lastStreakDate: todayDate,
+    },
+  });
 }
 
 /**

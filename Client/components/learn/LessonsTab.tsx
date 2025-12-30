@@ -19,6 +19,10 @@ export const LessonsTab: React.FC = () => {
     totalXP: 0,
     streakDays: 0,
     completedActivities: 0,
+    longestStreakDays: 0,
+    todayXpEarned: 0,
+    todayIsStreakDay: false,
+    streakThreshold: 10,
   });
 
   const fetchUnits = useCallback(async () => {
@@ -61,6 +65,10 @@ export const LessonsTab: React.FC = () => {
       totalXP: result.data?.totalXP ?? 0,
       streakDays: result.data?.streakDays ?? 0,
       completedActivities: result.data?.completedActivities ?? 0,
+      longestStreakDays: result.data?.longestStreakDays ?? 0,
+      todayXpEarned: result.data?.todayXpEarned ?? 0,
+      todayIsStreakDay: result.data?.todayIsStreakDay ?? false,
+      streakThreshold: result.data?.streakThreshold ?? 10,
     });
   }, [user?.id]);
 
@@ -88,6 +96,10 @@ export const LessonsTab: React.FC = () => {
     totalXP: liveStats.totalXP,
     streakDays: liveStats.streakDays,
     completedActivities: liveStats.completedActivities,
+    longestStreakDays: liveStats.longestStreakDays,
+    todayXpEarned: liveStats.todayXpEarned,
+    todayIsStreakDay: liveStats.todayIsStreakDay,
+    streakThreshold: liveStats.streakThreshold,
     completedUnits,
     inProgressUnits,
     totalUnits,

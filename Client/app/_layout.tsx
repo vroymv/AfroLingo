@@ -8,6 +8,7 @@ import { Stack } from "expo-router";
 import "react-native-reanimated";
 
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { AppLifecycleReporter } from "@/components/AppLifecycleReporter";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import {
   OnboardingProvider,
@@ -63,6 +64,7 @@ export default function RootLayout() {
         <ThemeProvider
           value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
         >
+          <AppLifecycleReporter />
           <AppNavigator />
         </ThemeProvider>
       </OnboardingProvider>
