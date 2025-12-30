@@ -6,7 +6,7 @@ import React, { useEffect } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { useLessonRuntime } from "@/contexts/LessonRuntimeContext";
 import { updateUserProgress } from "@/services/userprogress";
-import { previewAwardXP } from "@/services/xp";
+import { awardXP } from "@/services/xp";
 
 interface IntroductionActivityProps {
   activity: Activity;
@@ -32,7 +32,7 @@ export default function AlphabetIntroductionActivity({
 
   const handlePress = async () => {
     if (userId) {
-      const result = await previewAwardXP({
+      const result = await awardXP({
         userId,
         amount: 10,
         sourceType: "activity_completion",
@@ -42,12 +42,12 @@ export default function AlphabetIntroductionActivity({
           currentActivityNumber,
           totalActivities,
           screen: "AlphabetIntroductionActivity",
-          note: "Temporary XP preview (logs only) from Let's Go button",
+          note: "XP awarded from Let's Go button",
         },
       });
 
       if (!result.success) {
-        console.warn("XP preview failed", result.message);
+        console.warn("XP award failed", result.message);
       }
     }
 

@@ -32,45 +32,6 @@ const awardXPSchema = z.object({
   skipDuplicateCheck: z.boolean().optional(),
 });
 
-// POST /api/xp/preview - Log XP payload without touching the database
-router.post("/preview", async (req: Request, res: Response) => {
-  try {
-    const validatedData = awardXPSchema.parse(req.body);
-
-    const idempotencyKey = `${validatedData.sourceType}_${validatedData.sourceId}_${validatedData.userId}`;
-
-    console.log("[XP PREVIEW] Incoming XP award:", {
-      ...validatedData,
-      idempotencyKey,
-    });
-
-    return res.status(200).json({
-      success: true,
-      data: {
-        preview: true,
-        xpAwarded: validatedData.amount,
-        idempotencyKey,
-        message: "XP preview logged on server. No database changes were made.",
-      },
-    });
-  } catch (error) {
-    console.error("Error in XP preview:", error);
-
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation error",
-        errors: error.issues,
-      });
-    }
-
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
-  }
-});
-
 // POST /api/xp/award - Award XP to a user
 router.post("/award", async (req: Request, res: Response) => {
   try {
