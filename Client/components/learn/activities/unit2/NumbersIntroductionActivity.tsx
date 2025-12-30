@@ -6,6 +6,7 @@ import React, { useEffect } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { useLessonRuntime } from "@/contexts/LessonRuntimeContext";
 import { updateUserProgress } from "@/services/userprogress";
+import { awardXP } from "@/services/xp";
 
 interface NumbersIntroductionActivityProps {
   activity: Activity;
@@ -29,6 +30,30 @@ export default function NumbersIntroductionActivity({
     }).catch((e) => console.warn("Failed to send progress", e));
   }, [userId, unitId, currentActivityNumber, totalActivities]);
 
+  const handlePress = async () => {
+    if (userId) {
+      const result = await awardXP({
+        userId,
+        amount: 10,
+        sourceType: "activity_completion",
+        sourceId: `numbers-intro-${unitId}-${currentActivityNumber}`,
+        metadata: {
+          unitId,
+          currentActivityNumber,
+          totalActivities,
+          screen: "NumbersIntroductionActivity",
+          reason: "activity_completed",
+        },
+      });
+
+      if (!result.success) {
+        console.warn("XP award failed", result.message);
+      }
+    }
+
+    onComplete();
+  };
+
   return (
     <ThemedView style={styles.container}>
       <View style={styles.content}>
@@ -49,7 +74,7 @@ export default function NumbersIntroductionActivity({
         </View>
       </View>
 
-      <TouchableOpacity style={styles.continueButton} onPress={onComplete}>
+      <TouchableOpacity style={styles.continueButton} onPress={handlePress}>
         <ThemedText style={styles.continueButtonText}>
           Let&apos;s Go!
         </ThemedText>

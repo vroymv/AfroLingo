@@ -3,6 +3,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { Activity } from "@/data/lessons";
 import { useLessonRuntime } from "@/contexts/LessonRuntimeContext";
 import { updateUserProgress } from "@/services/userprogress";
+import { awardXP } from "@/services/xp";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
@@ -158,11 +159,39 @@ export default function NumbersTableActivity({
   }, [userId, unitId, currentActivityNumber, totalActivities]);
 
   const [isPlayingAll, setIsPlayingAll] = useState(false);
+  const [audioXPAwarded, setAudioXPAwarded] = useState(false);
+  const [completionXPAwarded, setCompletionXPAwarded] = useState(false);
 
   const handlePlayAll = () => {
     // Placeholder for audio playback of all numbers
     setIsPlayingAll(true);
-    setTimeout(() => setIsPlayingAll(false), 3000);
+    setTimeout(async () => {
+      setIsPlayingAll(false);
+
+      // Award XP once after the (placeholder) audio finishes
+      if (userId && !audioXPAwarded) {
+        const result = await awardXP({
+          userId,
+          amount: 5,
+          sourceType: "activity_completion",
+          sourceId: `numbers-table-audio-${unitId}-${currentActivityNumber}`,
+          metadata: {
+            unitId,
+            currentActivityNumber,
+            totalActivities,
+            screen: "NumbersTableActivity",
+            reason: "audio_listened",
+            note: "Play All Numbers finished (placeholder timer)",
+          },
+        });
+
+        if (!result.success) {
+          console.warn("XP award for audio failed", result.message);
+        } else {
+          setAudioXPAwarded(true);
+        }
+      }
+    }, 3000);
     console.log(`Playing all numbers audio: ${activity.audio}`);
   };
 
@@ -220,7 +249,34 @@ export default function NumbersTableActivity({
 
       {/* Complete Button */}
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.completeButton} onPress={onComplete}>
+        <TouchableOpacity
+          style={styles.completeButton}
+          onPress={async () => {
+            if (userId && !completionXPAwarded) {
+              const result = await awardXP({
+                userId,
+                amount: 10,
+                sourceType: "activity_completion",
+                sourceId: `numbers-table-complete-${unitId}-${currentActivityNumber}`,
+                metadata: {
+                  unitId,
+                  currentActivityNumber,
+                  totalActivities,
+                  screen: "NumbersTableActivity",
+                  reason: "activity_completed",
+                },
+              });
+
+              if (!result.success) {
+                console.warn("XP award for completion failed", result.message);
+              } else {
+                setCompletionXPAwarded(true);
+              }
+            }
+
+            onComplete();
+          }}
+        >
           <Text style={styles.completeButtonText}>Complete Activity</Text>
         </TouchableOpacity>
       </View>

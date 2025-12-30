@@ -2,6 +2,8 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Activity } from "@/data/lessons";
 import { getMultipleChoiceActivities } from "@/data/multiple-choice-activity-content";
+import { useLessonRuntime } from "@/contexts/LessonRuntimeContext";
+import { awardXP } from "@/services/xp";
 import React, { useEffect, useState } from "react";
 import { TouchableOpacity, View } from "react-native";
 import { styles } from "./MultipleChoiceActivity.styles";
@@ -20,6 +22,10 @@ export default function MultipleChoiceActivity({
 }: MultipleChoiceActivityProps) {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
+  const [correctXPAwarded, setCorrectXPAwarded] = useState(false);
+
+  const { userId, unitId, currentActivityNumber, totalActivities } =
+    useLessonRuntime();
 
   console.log("MultipleChoiceActivity activity:", activity); // --- IGNORE ---
 
@@ -31,6 +37,7 @@ export default function MultipleChoiceActivity({
   useEffect(() => {
     setSelectedAnswer(null);
     setShowResult(false);
+    setCorrectXPAwarded(false);
   }, [activity.id]);
 
   const question = currentActivity.question;
@@ -51,9 +58,39 @@ export default function MultipleChoiceActivity({
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (selectedAnswer !== null && !showResult) {
       setShowResult(true);
+
+      const isCorrectNow = selectedAnswer === correctAnswerIndex;
+      if (isCorrectNow && userId && !correctXPAwarded) {
+        const sourceKey = `${activity.id}:${currentActivity.id}`;
+        const result = await awardXP({
+          userId,
+          amount: 15,
+          sourceType: "activity_completion",
+          sourceId: `mcq-correct-${sourceKey}`,
+          metadata: {
+            unitId,
+            currentActivityNumber,
+            totalActivities,
+            screen: "MultipleChoiceActivity",
+            reason: "correct_answer",
+            activityId: activity.id,
+            contentId: currentActivity.id,
+            selectedAnswerIndex: selectedAnswer,
+            correctAnswerIndex,
+            selectedAnswerText: options[selectedAnswer],
+            correctAnswerText: options[correctAnswerIndex],
+          },
+        });
+
+        if (!result.success) {
+          console.warn("XP award for correct answer failed", result.message);
+        } else {
+          setCorrectXPAwarded(true);
+        }
+      }
     } else if (showResult) {
       onComplete();
     }

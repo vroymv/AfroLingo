@@ -3,6 +3,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { Activity } from "@/data/lessons";
 import { useLessonRuntime } from "@/contexts/LessonRuntimeContext";
 import { updateUserProgress } from "@/services/userprogress";
+import { awardXP } from "@/services/xp";
 import { Ionicons } from "@expo/vector-icons";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import React, { useEffect, useState } from "react";
@@ -50,6 +51,7 @@ export default function NumbersListeningActivity({
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
+  const [correctXPAwarded, setCorrectXPAwarded] = useState(false);
 
   // Audio source for the numbers
   const audioSource = activity.audio
@@ -84,7 +86,7 @@ export default function NumbersListeningActivity({
     setUserAnswers(newAnswers);
   };
 
-  const checkAnswer = () => {
+  const checkAnswer = async () => {
     setIsChecking(true);
 
     // Check each answer
@@ -104,6 +106,33 @@ export default function NumbersListeningActivity({
     setIsChecking(false);
 
     if (allCorrect) {
+      if (userId && !correctXPAwarded) {
+        const submitted = userAnswers.map((a) => normalizeAnswer(a));
+        const expected = CORRECT_NUMBERS.map((n) => normalizeAnswer(n));
+
+        const result = await awardXP({
+          userId,
+          amount: 20,
+          sourceType: "activity_completion",
+          sourceId: `numbers-listening-correct-${unitId}-${currentActivityNumber}`,
+          metadata: {
+            unitId,
+            currentActivityNumber,
+            totalActivities,
+            screen: "NumbersListeningActivity",
+            reason: "correct_answer",
+            expected,
+            submitted,
+          },
+        });
+
+        if (!result.success) {
+          console.warn("XP award for correct answer failed", result.message);
+        } else {
+          setCorrectXPAwarded(true);
+        }
+      }
+
       // Short delay before calling onComplete
       setTimeout(() => {
         onComplete();
@@ -116,6 +145,7 @@ export default function NumbersListeningActivity({
     setUserAnswers(Array(10).fill(""));
     setIsCorrect(false);
     setCorrectCount(0);
+    setCorrectXPAwarded(false);
     // Play audio again
     player.seekTo(0);
     player.play();
