@@ -3,6 +3,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { Activity } from "@/data/lessons";
 import { useLessonRuntime } from "@/contexts/LessonRuntimeContext";
 import { updateUserProgress } from "@/services/userprogress";
+import { awardXP } from "@/services/xp";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
@@ -58,6 +59,7 @@ export default function NumbersTranslationActivity({
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
+  const [correctXPAwarded, setCorrectXPAwarded] = useState(false);
 
   const normalizeAnswer = (text: string): string => {
     // Remove spaces and any non-digit characters
@@ -70,7 +72,7 @@ export default function NumbersTranslationActivity({
     setUserAnswers(newAnswers);
   };
 
-  const checkAnswer = () => {
+  const checkAnswer = async () => {
     setIsChecking(true);
 
     // Check each answer
@@ -90,6 +92,33 @@ export default function NumbersTranslationActivity({
     setIsChecking(false);
 
     if (allCorrect) {
+      if (userId && !correctXPAwarded) {
+        const submitted = userAnswers.map((a) => normalizeAnswer(a));
+        const expected = NUMBER_PAIRS.map((p) => normalizeAnswer(p.number));
+
+        const result = await awardXP({
+          userId,
+          amount: 20,
+          sourceType: "activity_completion",
+          sourceId: `numbers-translation-correct-${unitId}-${currentActivityNumber}`,
+          metadata: {
+            unitId,
+            currentActivityNumber,
+            totalActivities,
+            screen: "NumbersTranslationActivity",
+            reason: "correct_answer",
+            expected,
+            submitted,
+          },
+        });
+
+        if (!result.success) {
+          console.warn("XP award for correct answer failed", result.message);
+        } else {
+          setCorrectXPAwarded(true);
+        }
+      }
+
       // Short delay before calling onComplete
       setTimeout(() => {
         onComplete();
@@ -102,6 +131,7 @@ export default function NumbersTranslationActivity({
     setUserAnswers(Array(10).fill(""));
     setIsCorrect(false);
     setCorrectCount(0);
+    setCorrectXPAwarded(false);
   };
 
   const isAnswerFilled = userAnswers.every(
