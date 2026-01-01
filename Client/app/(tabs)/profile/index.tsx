@@ -9,6 +9,7 @@ import {
   StatusBar,
   TouchableOpacity,
   SafeAreaView,
+  Alert,
 } from "react-native";
 import { useAuth } from "@/contexts/AuthContext";
 import ProfileHeader from "@/components/profile/ProfileHeader";
@@ -18,22 +19,72 @@ import Achievements from "@/components/profile/Achievements";
 import LanguageProgress from "@/components/profile/LanguageProgress";
 import SettingsDrawer from "@/components/profile/SettingsDrawer";
 import { Ionicons } from "@expo/vector-icons";
+import {
+  fetchProfileStats,
+  fetchOnboardingData,
+  ProfileStats,
+  OnboardingData,
+} from "@/services/profile";
 
 export default function ProfileScreen() {
   const { user } = useAuth();
   const [drawerVisible, setDrawerVisible] = React.useState(false);
   const [refreshing, setRefreshing] = React.useState(false);
+  const [profileStats, setProfileStats] = React.useState<ProfileStats | null>(
+    null
+  );
+  const [onboardingData, setOnboardingData] =
+    React.useState<OnboardingData | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  const loadProfileData = React.useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      setIsLoading(true);
+      const [statsResponse, onboardingResponse] = await Promise.all([
+        fetchProfileStats(user.id),
+        fetchOnboardingData(user.id),
+      ]);
+
+      if (statsResponse.success && statsResponse.data) {
+        setProfileStats(statsResponse.data);
+      } else {
+        console.warn("Failed to fetch profile stats:", statsResponse.message);
+      }
+
+      if (onboardingResponse.success && onboardingResponse.data) {
+        setOnboardingData(onboardingResponse.data);
+      } else {
+        console.warn(
+          "Failed to fetch onboarding data:",
+          onboardingResponse.message
+        );
+      }
+    } catch (error) {
+      console.error("Error loading profile data:", error);
+      Alert.alert(
+        "Error",
+        "Failed to load profile data. Please try again later."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id]);
+
+  // Load profile data on mount
+  React.useEffect(() => {
+    loadProfileData();
+  }, [loadProfileData]);
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
     try {
-      // If you later add profile stats from an API, re-fetch them here.
-      // For now, this provides the expected pull-to-refresh UX.
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      await loadProfileData();
     } finally {
       setRefreshing(false);
     }
-  }, []);
+  }, [loadProfileData]);
 
   // Show loading state if user is not loaded yet
   if (!user) {
@@ -67,11 +118,32 @@ export default function ProfileScreen() {
           }
         >
           {/* <EmailVerificationBanner /> */}
-          <ProfileHeader user={user} />
-          <LearningStats user={user} />
-          <WeeklyGoals user={user} />
-          <Achievements user={user} />
-          <LanguageProgress user={user} />
+          <ProfileHeader
+            user={user}
+            onboardingData={onboardingData}
+            isLoading={isLoading}
+          />
+          <LearningStats
+            user={user}
+            profileStats={profileStats}
+            isLoading={isLoading}
+          />
+          <WeeklyGoals
+            user={user}
+            profileStats={profileStats}
+            isLoading={isLoading}
+          />
+          <Achievements
+            user={user}
+            profileStats={profileStats}
+            isLoading={isLoading}
+          />
+          <LanguageProgress
+            user={user}
+            profileStats={profileStats}
+            onboardingData={onboardingData}
+            isLoading={isLoading}
+          />
         </ScrollView>
         {/* Settings Drawer */}
         <SettingsDrawer

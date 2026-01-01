@@ -1,45 +1,55 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, ActivityIndicator } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { User } from "@/types/AuthContext";
+import { ProfileStats } from "@/services/profile";
 
 interface LearningStatsProps {
   user: User;
+  profileStats: ProfileStats | null;
+  isLoading?: boolean;
 }
 
-export default function LearningStats({ user }: LearningStatsProps) {
-  // Calculate days since account creation
-  const daysSinceJoined = Math.floor(
-    (Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24)
-  );
+export default function LearningStats({
+  user,
+  profileStats,
+  isLoading,
+}: LearningStatsProps) {
+  // Estimate study time based on activity completions
+  // Assuming approximately 2 minutes per activity
+  const MINUTES_PER_ACTIVITY = 2;
+  const estimatedStudyHours = profileStats
+    ? Math.floor((profileStats.completedActivities * MINUTES_PER_ACTIVITY) / 60)
+    : 0;
+
   const stats = [
     {
       icon: "🔥",
       label: "Current Streak",
-      value: Math.min(daysSinceJoined, 7).toString(),
+      value: profileStats?.streakDays?.toString() || "0",
       unit: "days",
       gradient: ["#FF6B6B", "#EE5A6F"],
     },
     {
       icon: "📚",
-      label: "Lessons",
-      value: Math.floor(daysSinceJoined * 1.5).toString(),
+      label: "Activities",
+      value: profileStats?.completedActivities?.toString() || "0",
       unit: "completed",
       gradient: ["#4ECDC4", "#44A08D"],
     },
     {
       icon: "⏱️",
       label: "Study Time",
-      value: Math.floor(daysSinceJoined * 0.8).toString(),
+      value: estimatedStudyHours.toString(),
       unit: "hours",
       gradient: ["#A8E6CF", "#56AB91"],
     },
     {
       icon: "🏆",
       label: "XP Points",
-      value: (Math.floor(daysSinceJoined * 1.5) * 50).toLocaleString(),
+      value: profileStats?.totalXP?.toLocaleString() || "0",
       unit: "total",
       gradient: ["#FFD93D", "#F4A261"],
     },
@@ -48,22 +58,28 @@ export default function LearningStats({ user }: LearningStatsProps) {
   return (
     <ThemedView style={styles.section}>
       <ThemedText style={styles.sectionTitle}>📊 Learning Stats</ThemedText>
-      <View style={styles.statsGrid}>
-        {stats.map((stat, index) => (
-          <LinearGradient
-            key={index}
-            colors={stat.gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.statCard}
-          >
-            <ThemedText style={styles.statIcon}>{stat.icon}</ThemedText>
-            <ThemedText style={styles.statValue}>{stat.value}</ThemedText>
-            <ThemedText style={styles.statUnit}>{stat.unit}</ThemedText>
-            <ThemedText style={styles.statLabel}>{stat.label}</ThemedText>
-          </LinearGradient>
-        ))}
-      </View>
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4A90E2" />
+        </View>
+      ) : (
+        <View style={styles.statsGrid}>
+          {stats.map((stat, index) => (
+            <LinearGradient
+              key={index}
+              colors={stat.gradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.statCard}
+            >
+              <ThemedText style={styles.statIcon}>{stat.icon}</ThemedText>
+              <ThemedText style={styles.statValue}>{stat.value}</ThemedText>
+              <ThemedText style={styles.statUnit}>{stat.unit}</ThemedText>
+              <ThemedText style={styles.statLabel}>{stat.label}</ThemedText>
+            </LinearGradient>
+          ))}
+        </View>
+      )}
     </ThemedView>
   );
 }
@@ -76,6 +92,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 16,
+  },
+  loadingContainer: {
+    padding: 40,
+    alignItems: "center",
+    justifyContent: "center",
   },
   statsGrid: {
     flexDirection: "row",

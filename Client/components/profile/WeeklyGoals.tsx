@@ -1,82 +1,98 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, ActivityIndicator } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { User } from "@/types/AuthContext";
+import { ProfileStats } from "@/services/profile";
 
 interface WeeklyGoalsProps {
   user: User;
+  profileStats: ProfileStats | null;
+  isLoading?: boolean;
 }
 
-export default function WeeklyGoals({ user }: WeeklyGoalsProps) {
-  // Calculate dynamic progress based on days active
-  const daysSinceJoined = Math.floor(
-    (Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24)
-  );
-  const weekProgress = daysSinceJoined % 7;
+export default function WeeklyGoals({
+  user,
+  profileStats,
+  isLoading,
+}: WeeklyGoalsProps) {
+  // Use actual goals from profile stats or defaults
+  const dailyXpGoal = profileStats?.dailyXpGoal || 30;
+  const todayXpEarned = profileStats?.todayXpEarned || 0;
+  const todayActivitiesCompleted = profileStats?.todayActivitiesCompleted || 0;
+
+  // Calculate weekly goals based on daily progress
   const goals = [
     {
-      label: "Complete 5 lessons",
-      current: Math.min(weekProgress, 5),
-      total: 5,
+      label: `Earn ${dailyXpGoal} XP today`,
+      current: todayXpEarned,
+      total: dailyXpGoal,
       icon: "🎯",
     },
     {
-      label: "Practice 30 minutes daily",
-      current: Math.min(weekProgress, 7),
-      total: 7,
+      label: "Complete 5 activities today",
+      current: Math.min(todayActivitiesCompleted, 5),
+      total: 5,
       icon: "⏰",
     },
     {
-      label: "Master 20 new words",
-      current: Math.min(weekProgress * 2, 20),
-      total: 20,
-      icon: "📝",
+      label: "Keep your streak alive",
+      current: profileStats?.todayXpEarned > 0 ? 1 : 0,
+      total: 1,
+      icon: "🔥",
     },
   ];
 
   return (
     <ThemedView style={styles.section}>
-      <ThemedText style={styles.sectionTitle}>🎯 Weekly Goals</ThemedText>
-      <View style={styles.goalsContainer}>
-        {goals.map((goal, index) => {
-          const percentage = (goal.current / goal.total) * 100;
-          return (
-            <View key={index} style={styles.goalCard}>
-              <View style={styles.goalHeader}>
-                <View style={styles.goalInfo}>
-                  <ThemedText style={styles.goalIcon}>{goal.icon}</ThemedText>
-                  <ThemedText style={styles.goalLabel}>{goal.label}</ThemedText>
+      <ThemedText style={styles.sectionTitle}>🎯 Today's Goals</ThemedText>
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4A90E2" />
+        </View>
+      ) : (
+        <View style={styles.goalsContainer}>
+          {goals.map((goal, index) => {
+            const percentage = (goal.current / goal.total) * 100;
+            return (
+              <View key={index} style={styles.goalCard}>
+                <View style={styles.goalHeader}>
+                  <View style={styles.goalInfo}>
+                    <ThemedText style={styles.goalIcon}>{goal.icon}</ThemedText>
+                    <ThemedText style={styles.goalLabel}>
+                      {goal.label}
+                    </ThemedText>
+                  </View>
+                  <View style={styles.goalProgress}>
+                    <ThemedText style={styles.goalNumbers}>
+                      {goal.current}/{goal.total}
+                    </ThemedText>
+                  </View>
                 </View>
-                <View style={styles.goalProgress}>
-                  <ThemedText style={styles.goalNumbers}>
-                    {goal.current}/{goal.total}
-                  </ThemedText>
+                <View style={styles.progressBarContainer}>
+                  <LinearGradient
+                    colors={
+                      percentage >= 100
+                        ? ["#4CAF50", "#45A049"]
+                        : ["#4A90E2", "#357ABD"]
+                    }
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={[
+                      styles.progressBarFill,
+                      { width: `${Math.min(percentage, 100)}%` },
+                    ]}
+                  />
                 </View>
+                <ThemedText style={styles.percentageText}>
+                  {Math.round(percentage)}% Complete
+                </ThemedText>
               </View>
-              <View style={styles.progressBarContainer}>
-                <LinearGradient
-                  colors={
-                    percentage >= 100
-                      ? ["#4CAF50", "#45A049"]
-                      : ["#4A90E2", "#357ABD"]
-                  }
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={[
-                    styles.progressBarFill,
-                    { width: `${Math.min(percentage, 100)}%` },
-                  ]}
-                />
-              </View>
-              <ThemedText style={styles.percentageText}>
-                {Math.round(percentage)}% Complete
-              </ThemedText>
-            </View>
-          );
-        })}
-      </View>
+            );
+          })}
+        </View>
+      )}
     </ThemedView>
   );
 }
@@ -89,6 +105,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 16,
+  },
+  loadingContainer: {
+    padding: 40,
+    alignItems: "center",
+    justifyContent: "center",
   },
   goalsContainer: {
     gap: 12,
