@@ -1,16 +1,43 @@
 import { ThemedText } from "@/components/ThemedText";
 import React from "react";
-import { Image, StyleSheet, View } from "react-native";
+import { Image, StyleSheet, View, ActivityIndicator } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { User } from "@/types/AuthContext";
 import { useAuth } from "@/contexts/AuthContext";
 import ImagePickerComponent from "@/components/ui/ImagePicker";
+import { OnboardingData } from "@/services/profile";
 
 interface ProfileHeaderProps {
   user: User;
+  onboardingData: OnboardingData | null;
+  isLoading?: boolean;
 }
 
-export default function ProfileHeader({ user }: ProfileHeaderProps) {
+// Language display names
+const LANGUAGE_NAMES: Record<string, string> = {
+  sw: "Swahili",
+  zu: "Zulu",
+  ln: "Lingala",
+  xh: "Xhosa",
+  yo: "Yoruba",
+  ig: "Igbo",
+  ha: "Hausa",
+};
+
+// Level display names
+const LEVEL_NAMES: Record<string, string> = {
+  "absolute-beginner": "Absolute Beginner",
+  beginner: "Beginner",
+  refresher: "Refresher",
+  intermediate: "Intermediate",
+  advanced: "Advanced",
+};
+
+export default function ProfileHeader({
+  user,
+  onboardingData,
+  isLoading,
+}: ProfileHeaderProps) {
   const { updateProfile } = useAuth();
 
   const handleImageUploaded = async (url: string) => {
@@ -20,6 +47,16 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
       console.error("Failed to update profile with new image:", error);
     }
   };
+
+  // Get display names for language and level
+  const languageName = onboardingData?.selectedLanguage
+    ? LANGUAGE_NAMES[onboardingData.selectedLanguage] ||
+      onboardingData.selectedLanguage
+    : null;
+
+  const levelName = onboardingData?.selectedLevel
+    ? LEVEL_NAMES[onboardingData.selectedLevel] || onboardingData.selectedLevel
+    : "Beginner";
 
   return (
     <View style={styles.container}>
@@ -58,9 +95,24 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
           </View>
           <ThemedText style={styles.name}>{user.name || "User"}</ThemedText>
           <View style={styles.levelBadge}>
-            <ThemedText style={styles.levelText}>🌟 Beginner</ThemedText>
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#FFF" />
+            ) : (
+              <ThemedText style={styles.levelText}>
+                🌟 {levelName}
+              </ThemedText>
+            )}
           </View>
-          <ThemedText style={styles.language}>Learning Yoruba</ThemedText>
+          {languageName && (
+            <ThemedText style={styles.language}>
+              Learning {languageName}
+            </ThemedText>
+          )}
+          {!languageName && !isLoading && (
+            <ThemedText style={styles.language}>
+              Complete onboarding to start learning
+            </ThemedText>
+          )}
           <ThemedText style={styles.memberSince}>
             Member since{" "}
             {new Date(user.createdAt).toLocaleDateString("en-US", {
