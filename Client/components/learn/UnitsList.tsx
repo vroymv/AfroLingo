@@ -3,32 +3,57 @@ import { Unit } from "@/data/lessons";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import { UnitCard } from "./UnitCard";
+import { useRouter } from "expo-router";
+import { useAuth } from "@/contexts/AuthContext";
+import { touchUnitAccess } from "@/services/unitAccess";
 
 interface UnitsListProps {
   units: Unit[];
-  onUnitPress: (unit: Unit) => void;
 }
 
-export const UnitsList = React.memo<UnitsListProps>(
-  ({ units, onUnitPress }) => {
-    return (
-      <View style={styles.unitsSection}>
-        <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-          Learning Units
-        </ThemedText>
+export const UnitsList = React.memo<UnitsListProps>(({ units }) => {
+  const router = useRouter();
+  const { user } = useAuth();
 
-        {units.map((unit) => (
-          <UnitCard
-            key={unit.id}
-            unit={unit}
-            onPress={() => onUnitPress(unit)}
-            onActionPress={() => onUnitPress(unit)}
-          />
-        ))}
-      </View>
-    );
-  }
-);
+  const handleUnitPress = (unit: Unit) => {
+    router.push({
+      pathname: "/learn/lesson/[unitId]",
+      params: { unitId: unit.id },
+    });
+  };
+
+  const handleUnitActionPress = async (unit: Unit) => {
+    if (user?.id) {
+      const result = await touchUnitAccess({
+        userId: user.id,
+        unitId: unit.id,
+      });
+      if (!result.success) {
+        // Best-effort; do not block navigation if the touch fails.
+        console.warn("Failed to touch unit access", result.message);
+      }
+    }
+
+    handleUnitPress(unit);
+  };
+
+  return (
+    <View style={styles.unitsSection}>
+      <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
+        Learning Units
+      </ThemedText>
+
+      {units.map((unit) => (
+        <UnitCard
+          key={unit.id}
+          unit={unit}
+          onPress={() => handleUnitPress(unit)}
+          onActionPress={() => void handleUnitActionPress(unit)}
+        />
+      ))}
+    </View>
+  );
+});
 
 UnitsList.displayName = "UnitsList";
 

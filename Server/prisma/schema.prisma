@@ -10,7 +10,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = "postgresql://neondb_owner:npg_G0Ra7FZPxLhW@ep-summer-river-adr25leo-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require"
 }
 
 // User model
@@ -19,6 +19,8 @@ model User {
   email String @unique
   name  String
 
+  // Profile image
+  profileImageUrl       String? // URL to user's profile image
   // Onboarding selections
   selectedLanguage      String? // e.g., "sw", "zu", "ln", "xh"
   selectedLevel         String? // e.g., "absolute-beginner", "beginner", "refresher"
@@ -27,120 +29,92 @@ model User {
   timeCommitment        String? // e.g., "5min", "15min", "30min"
   onboardingCompleted   Boolean   @default(false)
   onboardingCompletedAt DateTime?
+  currentOnboardingStep String? // Tracks the last onboarding step completed
+
+  // Daily goal configuration & streaks
+  dailyXpGoal       Int       @default(30) // Target XP per day
+  dailyLessonGoal   Int? // Optional: target lessons per day
+  timezone          String? // IANA timezone, e.g. "Africa/Nairobi"
+  currentStreakDays Int       @default(0)
+  longestStreakDays Int       @default(0)
+  lastStreakDate    DateTime? @db.Date
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
   progress         UserProgress[]
-  lessonProgress   LessonProgress[]
   activityProgress ActivityProgress[]
-  lessonSessions   LessonSession[]
   dailyActivity    UserDailyActivity[]
   mistakes         UserMistake[]
+  xpTransactions   XpTransaction[]
 
   @@map("users")
 }
 
 // Unit model - Represents a learning unit (e.g., "The Alphabet", "Numbers")
 model Unit {
-  id           String   @id @default(uuid())
-  externalId   String   @unique // e.g., "unit-1" from JSON
-  title        String
-  level        String // e.g., "Absolute Beginner", "Beginner"
-  icon         String // Emoji icon
-  color        String // Hex color code
-  xpReward     Int
-  totalLessons Int
-  order        Int      @default(0) // For ordering units
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id         String   @id @default(uuid())
+  externalId String   @unique // e.g., "unit-1" from JSON
+  title      String
+  level      String // e.g., "absolute-beginner", "beginner"
+  icon       String // Emoji icon
+  color      String // Hex color code
+  xpReward   Int // XP awarded for completing this unit
+  order      Int      @default(0) // For ordering units
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   // Relations
-  lessons      Lesson[]
   userProgress UserProgress[]
+  activities   Activity[]
+  mistakes     UserMistake[]
 
   @@index([externalId])
   @@index([order])
   @@map("units")
 }
 
-// Lesson model - Represents a lesson within a unit
-model Lesson {
-  id            String   @id @default(uuid())
-  externalId    String   @unique // e.g., "lesson-alphabet" from JSON
-  unitId        String
-  phrase        String
-  meaning       String
-  pronunciation String
-  alphabetImage String? // Optional path to alphabet image
-  audio         String? // Path to audio file
-  order         Int      @default(0) // For ordering lessons within a unit
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  // Relations
-  unit           Unit             @relation(fields: [unitId], references: [id], onDelete: Cascade)
-  activities     Activity[]
-  lessonProgress LessonProgress[]
-  mistakes       UserMistake[]
-
-  @@index([externalId])
-  @@index([unitId])
-  @@index([order])
-  @@map("lessons")
-}
-
 // Activity model - Represents an activity within a lesson
 model Activity {
-  id          String  @id @default(uuid())
-  externalId  String  @unique // e.g., "activity-alphabet-1" from JSON
-  lessonId    String
-  type        String // e.g., "introduction", "alphabet", "multiple-choice", etc.
-  question    String  @db.Text
-  description String? @db.Text
-  audio       String? // Path to audio file
-  order       Int     @default(0) // For ordering activities within a lesson
-  isActive    Boolean @default(true)
-
-  // Activity-specific fields (stored as JSON for flexibility)
-  options       Json? // For multiple-choice: array of options
-  correctAnswer Json? // For multiple-choice: index or value
-  explanation   String? @db.Text
-  items         Json? // For vocabulary tables, spelling completion, etc.
-  pairs         Json? // For matching activities
-  conversation  Json? // For conversation practice
-  dialogue      Json? // For dialogue activities
-  alphabetImage String? // For alphabet activities
+  id           String  @id @default(uuid())
+  externalId   String  @unique // e.g., "activity-alphabet-1" from JSON
+  unitId       String
+  type         String // high-level category, e.g., "multiple-choice", "dictation"
+  // Metadata-only: identifier for the client-side component to render this activity
+  componentKey String  @default("generic-activity") // e.g., "learn/alphabet/AlphabetActivity" or "learn/mcq/MultipleChoice"
+  // Reference to external content (JSON key, CMS ID, file path, etc.)
+  contentRef   String? // e.g., "activity-alphabet-1" in JSON, or "s3://.../activity.json"
+  order        Int     @default(0) // For ordering activities within a lesson
+  isActive     Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  lesson           Lesson             @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  unit             Unit               @relation(fields: [unitId], references: [id], onDelete: Cascade)
   activityProgress ActivityProgress[]
   mistakes         UserMistake[]
 
   @@index([externalId])
-  @@index([lessonId])
+  @@index([unitId])
   @@index([order])
   @@index([type])
+  @@index([componentKey])
   @@map("activities")
 }
 
 // User progress for units
 model UserProgress {
-  id               String    @id @default(uuid())
-  userId           String
-  unitId           String
-  progress         Int       @default(0) // 0-100
-  completedLessons Int       @default(0)
-  xpEarned         Int       @default(0)
-  startedAt        DateTime  @default(now())
-  completedAt      DateTime?
-  lastAccessedAt   DateTime  @default(now())
+  id                  String    @id @default(uuid())
+  userId              String
+  unitId              String
+  progress            Int       @default(0) // 0-100
+  completedActivities Int       @default(0)
+  startedAt           DateTime  @default(now())
+  completedAt         DateTime?
+  lastAccessedAt      DateTime  @default(now())
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -152,61 +126,13 @@ model UserProgress {
   @@map("user_progress")
 }
 
-// User progress for lessons
-model LessonProgress {
-  id       String @id @default(uuid())
-  userId   String
-  lessonId String
-
-  // Progress tracking
-  isCompleted          Boolean @default(false)
-  currentActivityIndex Int     @default(0) // Track where user left off
-  completedActivities  Int     @default(0)
-  totalActivities      Int     @default(0)
-
-  // Performance metrics
-  score          Int? // Optional score out of 100
-  accuracyRate   Float? // Percentage of correct answers
-  totalCorrect   Int    @default(0)
-  totalIncorrect Int    @default(0)
-
-  // Attempts and timing
-  attempts            Int    @default(1) // Number of times lesson was restarted
-  totalTimeSpent      Int    @default(0) // Total time in seconds across all sessions
-  averageActivityTime Float? // Average time per activity in seconds
-
-  // XP and rewards
-  xpEarned Int @default(0) // XP earned from this lesson
-
-  // Timestamps
-  startedAt               DateTime  @default(now())
-  completedAt             DateTime?
-  lastAccessedAt          DateTime  @default(now())
-  lastActivityCompletedAt DateTime? // When the last activity was completed
-
-  // Session tracking
-  currentSessionStartedAt DateTime @default(now())
-  totalSessions           Int      @default(1) // Number of different sessions
-
-  // Relations
-  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lesson   Lesson          @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  sessions LessonSession[] // Track individual learning sessions
-
-  @@unique([userId, lessonId])
-  @@index([userId])
-  @@index([lessonId])
-  @@index([isCompleted])
-  @@index([lastAccessedAt])
-  @@map("lesson_progress")
-}
+// Removed LessonProgress model
 
 // User progress for individual activities
 model ActivityProgress {
-  id               String  @id @default(uuid())
-  userId           String
-  activityId       String
-  lessonProgressId String? // Link to the lesson session
+  id         String @id @default(uuid())
+  userId     String
+  activityId String
 
   // Completion status
   isCompleted Boolean  @default(false)
@@ -241,43 +167,11 @@ model ActivityProgress {
   @@index([userId])
   @@index([activityId])
   @@index([isCompleted])
-  @@index([lessonProgressId])
   @@index([completedAt])
   @@map("activity_progress")
 }
 
-// Track individual learning sessions for a lesson
-model LessonSession {
-  id               String @id @default(uuid())
-  userId           String
-  lessonProgressId String
-
-  // Session details
-  sessionNumber      Int // Sequential session number for this lesson
-  startActivityIndex Int  @default(0) // Activity index when session started
-  endActivityIndex   Int? // Activity index when session ended
-
-  // Performance
-  activitiesCompleted Int @default(0)
-  correctAnswers      Int @default(0)
-  incorrectAnswers    Int @default(0)
-  hintsUsed           Int @default(0)
-
-  // Timing
-  timeSpent    Int       @default(0) // Time in seconds
-  startedAt    DateTime  @default(now())
-  endedAt      DateTime?
-  wasCompleted Boolean   @default(false) // Did user finish the lesson in this session
-
-  // Relations
-  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lessonProgress LessonProgress @relation(fields: [lessonProgressId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([lessonProgressId])
-  @@index([startedAt])
-  @@map("lesson_sessions")
-}
+// Removed LessonSession model
 
 // Track daily user activity and streaks
 model UserDailyActivity {
@@ -286,13 +180,23 @@ model UserDailyActivity {
   date   DateTime @db.Date // Date of activity (without time)
 
   // Activity metrics
-  lessonsCompleted    Int @default(0)
+  unitsCompleted      Int @default(0)
   activitiesCompleted Int @default(0)
-  timeSpent           Int @default(0) // Time in seconds
+  // App usage (best-effort; app may terminate without sending a close event)
+  firstAppOpenedAt DateTime? // First time the app was opened on this date (server time)
+  lastAppOpenedAt  DateTime? // Most recent app open on this date (server time)
+  lastAppClosedAt  DateTime? // Most recent app close/background on this date (server time)
+  appOpensCount     Int       @default(0)
+  appClosesCount    Int       @default(0)
   xpEarned            Int @default(0)
 
+  // Daily goal snapshot
+  goalXp      Int?
+  goalLessons Int?
+  metGoal     Boolean @default(false)
+
   // Streak calculation
-  isStreakDay Boolean @default(true) // Did user meet minimum criteria for streak
+  isStreakDay Boolean @default(false) // Did user meet minimum criteria for streak
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -312,7 +216,7 @@ model UserMistake {
   id         String @id @default(uuid())
   userId     String
   activityId String
-  lessonId   String
+  unitId     String
 
   // Mistake details
   questionText  String  @db.Text
@@ -331,13 +235,46 @@ model UserMistake {
   // Relations
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   activity Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
-  lesson   Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  unit     Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([activityId])
-  @@index([lessonId])
+  @@index([unitId])
   @@index([wasReviewed])
   @@index([isMastered])
   @@index([createdAt])
   @@map("user_mistakes")
+}
+
+// XP Transaction model - Ledger for all XP changes
+model XpTransaction {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  amount         Int // can be positive or negative
+  sourceType     String   @map("source_type") // e.g. 'lesson_complete', 'quiz_attempt', 'streak_bonus'
+  sourceId       String   @map("source_id") // ID of the originating entity (lessonId, attemptId, date, etc.)
+  idempotencyKey String   @map("idempotency_key") // prevents duplicate awards on retries
+  metadata       Json? // optional context: lang, difficulty, time spent, etc.
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("xp_transactions")
+}
+
+// Grammar tip model - Rotating daily tips per language
+model GrammarTip {
+  id        String   @id @default(uuid())
+  language  String   // e.g. "sw", "zu", "ln", "xh", or "general"
+  text      String   @db.Text
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([language])
+  @@index([isActive])
+  @@unique([language, sortOrder], name: "language_sortOrder")
+  @@map("grammar_tips")
 }

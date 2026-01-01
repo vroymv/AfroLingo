@@ -5,15 +5,16 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   OnboardingState,
   OnboardingAction,
   OnboardingContextType,
   OnboardingProviderProps,
 } from "@/types/contexts";
+import { useAuth } from "@/contexts/AuthContext";
 
-export type { OnboardingState, OnboardingAction, OnboardingContextType };
+const API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_BASE_URL || "http://localhost:3000/api";
 
 const initialState: OnboardingState = {
   isCompleted: false,
@@ -22,9 +23,8 @@ const initialState: OnboardingState = {
   selectedLevel: null,
   placementTestScore: null,
   personalization: null,
+  userId: null,
 };
-
-const ONBOARDING_STORAGE_KEY = "@afrolingo_onboarding_state";
 
 const OnboardingContext = createContext<OnboardingContextType | null>(null);
 
@@ -49,51 +49,100 @@ function onboardingReducer(
       return { ...state, isCompleted: true };
     case "RESET":
       return initialState;
+    case "SET_USER_ID":
+      return { ...state, userId: action.payload };
     default:
       return state;
   }
 }
 
 export function OnboardingProvider({ children }: OnboardingProviderProps) {
-  const [state, dispatch] = useReducer(onboardingReducer, initialState);
+  const { user } = useAuth();
+  const [state, dispatch] = useReducer(onboardingReducer, {
+    ...initialState,
+    userId: user?.id || null,
+  });
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load onboarding state from AsyncStorage on mount
+  // Set userId in state when user changes
   useEffect(() => {
-    const loadOnboardingState = async () => {
+    if (user?.id && state.userId !== user.id) {
+      dispatch({ type: "SET_USER_ID", payload: user.id });
+    }
+  }, [user?.id, state.userId]);
+
+  // Fetch onboarding state from backend when userId changes
+  useEffect(() => {
+    const fetchOnboardingState = async () => {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
       try {
-        const storedState = await AsyncStorage.getItem(ONBOARDING_STORAGE_KEY);
-        if (storedState) {
-          const parsedState = JSON.parse(storedState);
-          dispatch({ type: "LOAD_STATE", payload: parsedState });
+        const response = await fetch(`${API_BASE_URL}/onboarding/${user.id}`);
+        if (!response.ok) throw new Error("Failed to fetch onboarding state");
+        const result = await response.json();
+        if (result.success && result.data) {
+          // Compose onboarding state from API response
+          dispatch({
+            type: "LOAD_STATE",
+            payload: {
+              ...initialState,
+              ...result.data,
+              userId: user.id,
+              currentStep: 1, // Optionally set to 1 or infer from data
+            },
+          });
         }
       } catch (error) {
-        console.error("Failed to load onboarding state:", error);
+        console.error("error occurred while fetching onboarding state", error);
       } finally {
         setIsLoading(false);
       }
     };
+    fetchOnboardingState();
+  }, [user?.id]);
 
-    loadOnboardingState();
-  }, []);
-
-  // Save onboarding state to AsyncStorage whenever it changes
+  // Save onboarding data to backend when completed
   useEffect(() => {
-    if (!isLoading) {
-      const saveOnboardingState = async () => {
+    if (state.isCompleted) {
+      const saveOnboardingData = async () => {
         try {
-          await AsyncStorage.setItem(
-            ONBOARDING_STORAGE_KEY,
-            JSON.stringify(state)
+          const response = await fetch(
+            `${API_BASE_URL}/onboarding/${state.userId}`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                selectedLanguage: state.selectedLanguage,
+                selectedLevel: state.selectedLevel,
+                placementTestScore: state.placementTestScore,
+                personalization: state.personalization,
+                currentStep: state.currentStep,
+              }),
+            }
           );
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
         } catch (error) {
-          console.error("Failed to save onboarding state:", error);
+          console.error("Failed to save onboarding data:", error);
         }
       };
-
-      saveOnboardingState();
+      saveOnboardingData();
     }
-  }, [state, isLoading]);
+  }, [
+    state.isCompleted,
+    state.userId,
+    state.selectedLanguage,
+    state.selectedLevel,
+    state.placementTestScore,
+    state.personalization,
+    state.currentStep,
+  ]);
 
   return (
     <OnboardingContext.Provider value={{ state, dispatch, isLoading }}>

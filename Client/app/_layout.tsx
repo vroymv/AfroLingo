@@ -8,22 +8,19 @@ import { Stack } from "expo-router";
 import "react-native-reanimated";
 
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { AppLifecycleReporter } from "@/components/AppLifecycleReporter";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { LessonProgressProvider } from "@/contexts/LessonProgressContext";
 import {
   OnboardingProvider,
   useOnboarding,
 } from "@/contexts/OnboardingContext";
-import { UserProgressProvider } from "@/contexts/UserProgressContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
 
-// Inner component that consumes Auth/Onboarding contexts (must be inside providers)
 function AppNavigator() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { state: onboardingState, isLoading: onboardingLoading } =
     useOnboarding();
 
-  // Show loading while checking auth or onboarding state
   if (authLoading || onboardingLoading) return <LoadingScreen />;
 
   if (!isAuthenticated) {
@@ -46,14 +43,13 @@ function AppNavigator() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen
-        name="learn/lesson/[lessonId]"
+        name="learn/lesson/[unitId]"
         options={{ headerShown: true }}
       />
     </Stack>
   );
 }
 
-// Consolidated navigation & gating logic to avoid dual stacks + perpetual Redirect loop
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
@@ -65,15 +61,12 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <OnboardingProvider>
-        <UserProgressProvider>
-          <LessonProgressProvider>
-            <ThemeProvider
-              value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-            >
-              <AppNavigator />
-            </ThemeProvider>
-          </LessonProgressProvider>
-        </UserProgressProvider>
+        <ThemeProvider
+          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+        >
+          <AppLifecycleReporter />
+          <AppNavigator />
+        </ThemeProvider>
       </OnboardingProvider>
     </AuthProvider>
   );

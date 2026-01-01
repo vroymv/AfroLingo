@@ -1,84 +1,110 @@
 import { ThemedView } from "@/components/ThemedView";
-import { useLessonProgress } from "@/contexts/LessonProgressContext";
-import { Unit } from "@/data/lessons";
-import { useLessonsWithProgress } from "@/hooks/useLessonsWithProgress";
-import { useProgressStats } from "@/hooks/useProgressStats";
-import { useRouter } from "expo-router";
-import React, { useCallback } from "react";
-import {
-  AccessibilityInfo,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  View,
-} from "react-native";
-import { EmptyState, ErrorState, LoadingState } from "./LessonsStates";
+import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { ProgressTracker } from "./ProgressTracker";
 import { UnitsList } from "./UnitsList";
+import { useOnboarding } from "@/contexts/OnboardingContext";
+import { useCallback, useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { mapUnitsToUi, computeMilestones } from "@/services/lessonTap";
+import { getProgressTrackerStats } from "@/services/progressTracker";
+
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 export const LessonsTab: React.FC = () => {
-  const router = useRouter();
-  const { startLesson, activeLesson } = useLessonProgress();
-  const { data: lessonsData, loading, error } = useLessonsWithProgress();
-  const { stats: progressStats, loading: statsLoading } = useProgressStats();
+  const { state } = useOnboarding();
+  const { user } = useAuth();
+  const [units, setUnits] = useState<any[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [liveStats, setLiveStats] = useState({
+    totalXP: 0,
+    streakDays: 0,
+    completedActivities: 0,
+    longestStreakDays: 0,
+    todayXpEarned: 0,
+    todayIsStreakDay: false,
+    streakThreshold: 10,
+  });
 
-  const getNextLessonInUnit = useCallback(
-    (unit: Unit) => {
-      // If there's an active lesson in this unit, return it
-      if (
-        activeLesson &&
-        activeLesson.unitId === unit.id &&
-        !activeLesson.completed
-      ) {
-        return activeLesson.lessonId;
-      }
+  const fetchUnits = useCallback(async () => {
+    if (!API_BASE_URL) {
+      console.error(
+        "Missing EXPO_PUBLIC_API_BASE_URL; cannot fetch units from API."
+      );
+      return;
+    }
 
-      // Otherwise, find the first incomplete lesson in the unit
-      // For now, just return the first lesson since we don't have completion tracking per lesson
-      return unit.lessons[0]?.id;
-    },
-    [activeLesson]
-  );
-
-  const handleUnitPress = useCallback(
-    (unit: Unit) => {
-      const lessonId = getNextLessonInUnit(unit);
-
-      if (lessonId) {
-        // Start the lesson in context
-        startLesson(lessonId);
-        // Navigate to the lesson player
-        router.push(`/learn/lesson/${lessonId}` as any);
-
-        const lesson = unit.lessons.find((l) => l.id === lessonId);
-        if (Platform.OS === "ios") {
-          AccessibilityInfo.announceForAccessibility(
-            `Starting ${unit.title} - ${lesson?.phrase || "lesson"}`
-          );
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/units/level/${state.selectedLevel}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ userId: user?.id }),
         }
-      } else {
-        console.log("No lessons available in unit:", unit.title);
-      }
-    },
-    [router, startLesson, getNextLessonInUnit]
-  );
+      );
 
-  if (loading || statsLoading) {
-    return <LoadingState />;
-  }
+      const data = await response.json();
+      setUnits(data.data);
+    } catch (error) {
+      console.error("Error fetching units:", error);
+    }
+  }, [state.selectedLevel, user?.id]);
 
-  if (error) {
-    return <ErrorState />;
-  }
+  const fetchProgressTracker = useCallback(async () => {
+    if (!user?.id) return;
 
-  if (!lessonsData || !lessonsData.units || lessonsData.units.length === 0) {
-    return <EmptyState />;
-  }
+    const result = await getProgressTrackerStats(user.id);
+    if (!result.success) {
+      console.warn("Failed to fetch progress tracker stats", result.message);
+      return;
+    }
 
-  // Don't render ProgressTracker if stats haven't loaded yet
-  if (!progressStats) {
-    return <LoadingState />;
-  }
+    setLiveStats({
+      totalXP: result.data?.totalXP ?? 0,
+      streakDays: result.data?.streakDays ?? 0,
+      completedActivities: result.data?.completedActivities ?? 0,
+      longestStreakDays: result.data?.longestStreakDays ?? 0,
+      todayXpEarned: result.data?.todayXpEarned ?? 0,
+      todayIsStreakDay: result.data?.todayIsStreakDay ?? false,
+      streakThreshold: result.data?.streakThreshold ?? 10,
+    });
+  }, [user?.id]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([fetchUnits(), fetchProgressTracker()]);
+    setRefreshing(false);
+  }, [fetchUnits, fetchProgressTracker]);
+
+  useEffect(() => {
+    fetchUnits();
+    fetchProgressTracker();
+  }, [fetchUnits, fetchProgressTracker]);
+
+  const mappedUnits = mapUnitsToUi(units);
+
+  const completedUnits = mappedUnits.filter((u) => u.progress === 100).length;
+  const inProgressUnits = mappedUnits.filter(
+    (u) => u.progress > 0 && u.progress < 100
+  ).length;
+  const totalUnits = mappedUnits.length;
+  const milestones = computeMilestones(mappedUnits as any);
+
+  const progressStats = {
+    totalXP: liveStats.totalXP,
+    streakDays: liveStats.streakDays,
+    completedActivities: liveStats.completedActivities,
+    longestStreakDays: liveStats.longestStreakDays,
+    todayXpEarned: liveStats.todayXpEarned,
+    todayIsStreakDay: liveStats.todayIsStreakDay,
+    streakThreshold: liveStats.streakThreshold,
+    completedUnits,
+    inProgressUnits,
+    totalUnits,
+    milestones,
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -86,9 +112,12 @@ export const LessonsTab: React.FC = () => {
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
         <ProgressTracker stats={progressStats} />
-        <UnitsList units={lessonsData.units} onUnitPress={handleUnitPress} />
+        <UnitsList units={mappedUnits as any} />
         <View style={styles.bottomPadding} />
       </ScrollView>
     </ThemedView>

@@ -3,6 +3,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
@@ -10,19 +11,18 @@ import { ScrollView, StyleSheet, View } from "react-native";
 
 // Import home components
 import CommunitySection from "@/components/home/CommunitySection";
-import CulturalNuggetCard from "@/components/home/CulturalNuggetCard";
 import DailyGoalCard from "@/components/home/DailyGoalCard";
 import HeaderSection from "@/components/home/HeaderSection";
 import HeritageJourneySection from "@/components/home/HeritageJourneySection";
 import QuickActionsSection from "@/components/home/QuickActionsSection";
-import { useLessonProgress } from "@/contexts/LessonProgressContext";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { getResumeUnit } from "@/services/units";
 
 export default function HomeScreen() {
   const router = useRouter();
   const { state } = useOnboarding();
+  const { user } = useAuth();
   const colorScheme = useColorScheme();
-  const { activeLesson, startLesson, nextLessonId } = useLessonProgress();
 
   useEffect(() => {
     if (!state.isCompleted) {
@@ -40,20 +40,24 @@ export default function HomeScreen() {
     );
   }
 
-  const handleTodayLesson = () => {
-    // If already have an active (not completed) lesson, resume, else pick next lesson
-    let targetLessonId = activeLesson?.lessonId;
-    if (!targetLessonId) {
-      targetLessonId = nextLessonId();
-      if (targetLessonId) {
-        startLesson(targetLessonId);
-      }
+  const handleTodayLesson = async () => {
+    if (!user?.id) {
+      router.push("/(tabs)/learn" as any);
+      return;
     }
-    if (targetLessonId) {
-      router.push(`/learn/lesson/${targetLessonId}` as any);
-    } else {
-      console.warn("No lessons available");
+
+    const result = await getResumeUnit(user.id);
+
+    const unitId = result.success ? result.data?.unitId : undefined;
+    if (unitId) {
+      router.push({
+        pathname: "/learn/lesson/[unitId]",
+        params: { unitId },
+      });
+      return;
     }
+
+    router.push("/(tabs)/learn" as any);
   };
 
   const handleQuickAction = (action: string) => {
@@ -104,8 +108,6 @@ export default function HomeScreen() {
           selectedLevel={state.selectedLevel}
           onLessonPress={handleLessonPress}
         />
-
-        <CulturalNuggetCard selectedLanguage={state.selectedLanguage} />
 
         <View style={styles.bottomPadding} />
       </ScrollView>

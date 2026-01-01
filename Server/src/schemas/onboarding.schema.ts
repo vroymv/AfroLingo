@@ -31,6 +31,7 @@ export const onboardingDataSchema = z.object({
     })
     .nullable()
     .optional(),
+  currentStep: z.number().int().min(1).optional(),
 });
 
 export type OnboardingData = z.infer<typeof onboardingDataSchema>;

@@ -10,14 +10,25 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.vroy-mv.AfroLingo"
+      "bundleIdentifier": "com.vroy-mv.AfroLingo",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "AfroLingo needs access to your photo library so you can choose a profile picture.",
+        "NSPhotoLibraryAddUsageDescription": "AfroLingo needs permission to save your selected profile picture."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ],
+      "package": "com.vroymv.AfroLingo"
     },
     "web": {
       "bundler": "metro",
@@ -33,6 +44,12 @@
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "AfroLingo needs access to your photo library so you can choose a profile picture."
         }
       ],
       "expo-audio",

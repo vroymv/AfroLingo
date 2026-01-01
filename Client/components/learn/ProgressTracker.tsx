@@ -1,6 +1,5 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { ProgressTrackerStats } from "@/services/userProgress";
 import React from "react";
 import {
   ScrollView,
@@ -10,6 +9,33 @@ import {
   View,
 } from "react-native";
 
+// Type for milestone item
+interface ProgressMilestone {
+  id: string | number;
+  title: string;
+  icon: string;
+  color: string;
+  progress: number; // 0-100
+}
+
+// Main stats type
+interface ProgressTrackerStats {
+  totalXP: number;
+  streakDays: number;
+  completedActivities: number;
+
+  // Optional streak details
+  longestStreakDays?: number;
+  todayXpEarned?: number;
+  todayIsStreakDay?: boolean;
+  streakThreshold?: number;
+
+  completedUnits: number;
+  inProgressUnits: number;
+  totalUnits: number;
+  milestones: ProgressMilestone[];
+}
+
 interface ProgressTrackerProps {
   stats: ProgressTrackerStats;
 }
@@ -18,6 +44,11 @@ export const ProgressTracker = React.memo<ProgressTrackerProps>(({ stats }) => {
   const {
     totalXP,
     streakDays,
+    completedActivities,
+    longestStreakDays,
+    todayXpEarned,
+    todayIsStreakDay,
+    streakThreshold,
     completedUnits,
     inProgressUnits,
     totalUnits,
@@ -54,13 +85,29 @@ export const ProgressTracker = React.memo<ProgressTrackerProps>(({ stats }) => {
         </View>
         <View style={styles.statItem}>
           <ThemedText type="defaultSemiBold" style={styles.statNumber}>
-            {completedUnits}
+            {completedActivities}
           </ThemedText>
           <ThemedText type="default" style={styles.statLabel}>
-            Completed
+            Activities
           </ThemedText>
         </View>
       </View>
+
+      {/* Streak Details */}
+      {typeof longestStreakDays === "number" && longestStreakDays > 0 && (
+        <ThemedText type="default" style={styles.streakDetailText}>
+          Best streak: {longestStreakDays} days
+        </ThemedText>
+      )}
+
+      {typeof todayXpEarned === "number" &&
+        typeof streakThreshold === "number" && (
+          <ThemedText type="default" style={styles.streakDetailText}>
+            Today: {Math.min(todayXpEarned, streakThreshold)}/{streakThreshold}{" "}
+            XP
+            {todayIsStreakDay ? " • Streak day" : ""}
+          </ThemedText>
+        )}
 
       {/* Milestone Progress - Horizontally Scrollable */}
       <ScrollView
@@ -172,6 +219,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     opacity: 0.7,
     textAlign: "center",
+  },
+  streakDetailText: {
+    fontSize: 12,
+    opacity: 0.75,
+    textAlign: "center",
+    marginTop: -10,
+    marginBottom: 16,
   },
   milestoneScrollView: {
     marginBottom: 16,

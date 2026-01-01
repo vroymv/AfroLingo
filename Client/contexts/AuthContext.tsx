@@ -1,10 +1,6 @@
-import React, {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { AuthContextType, User } from "@/types/AuthContext";
+import { createContext, useContext, useState, useEffect } from "react";
+import { auth } from "@/config/firebase";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -13,412 +9,185 @@ import {
   sendEmailVerification,
   updateProfile as firebaseUpdateProfile,
   onAuthStateChanged,
-  User as FirebaseUser,
   GoogleAuthProvider,
   signInWithPopup,
-  signInWithRedirect,
+  User as FirebaseUser,
 } from "firebase/auth";
-import { auth } from "../config/firebase";
-import { Platform } from "react-native";
-import { ENV } from "../config/env";
-
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  avatar?: string;
-  createdAt: Date;
-  emailVerified?: boolean;
-}
-
-export interface AuthState {
-  user: User | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  token: string | null;
-  error: string | null;
-}
-
-interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
-  loginWithApple: () => Promise<void>;
-  logout: () => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
-  sendVerificationEmail: () => Promise<void>;
-  updateProfile: (updates: Partial<User>) => Promise<void>;
-  clearError: () => void;
-}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
-// Helper function to convert Firebase user to our User type
-const convertFirebaseUser = (firebaseUser: FirebaseUser): User => {
-  return {
+  // Convert Firebase user to our User type
+  const mapFirebaseUser = (firebaseUser: FirebaseUser): User => ({
     id: firebaseUser.uid,
     email: firebaseUser.email || "",
-    name:
-      firebaseUser.displayName || firebaseUser.email?.split("@")[0] || "User",
+    name: firebaseUser.displayName || "",
     avatar: firebaseUser.photoURL || undefined,
-    createdAt: firebaseUser.metadata.creationTime
-      ? new Date(firebaseUser.metadata.creationTime)
-      : new Date(),
+    createdAt: new Date(firebaseUser.metadata.creationTime || Date.now()),
     emailVerified: firebaseUser.emailVerified,
-  };
-};
-
-export function AuthProvider({ children }: AuthProviderProps) {
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    isLoading: true,
-    isAuthenticated: false,
-    token: null,
-    error: null,
   });
 
-  // Listen to Firebase auth state changes
+  // Listen to auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // User is signed in
-        const user = convertFirebaseUser(firebaseUser);
-        const token = await firebaseUser.getIdToken();
-
-        setState({
-          user,
-          token,
-          isAuthenticated: true,
-          isLoading: false,
-          error: null,
-        });
+        setUser(mapFirebaseUser(firebaseUser));
+        // Get ID token
+        const idToken = await firebaseUser.getIdToken();
+        setToken(idToken);
       } else {
-        // User is signed out
-        setState({
-          user: null,
-          token: null,
-          isAuthenticated: false,
-          isLoading: false,
-          error: null,
-        });
+        setUser(null);
+        setToken(null);
       }
+      setIsLoading(false);
     });
 
-    // Cleanup subscription on unmount
-    return () => unsubscribe();
+    return unsubscribe;
   }, []);
-
-  const login = async (email: string, password: string) => {
-    try {
-      setState((prev) => ({ ...prev, isLoading: true, error: null }));
-
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      const user = convertFirebaseUser(userCredential.user);
-      const token = await userCredential.user.getIdToken();
-
-      setState({
-        user,
-        token,
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-      });
-    } catch (error: any) {
-      // Determine user-friendly error message
-      let errorMessage = "Login failed. Please try again.";
-      if (error.code === "auth/user-not-found") {
-        errorMessage = "No account found with this email";
-      } else if (error.code === "auth/wrong-password") {
-        errorMessage = "Incorrect password";
-      } else if (error.code === "auth/invalid-email") {
-        errorMessage = "Invalid email address";
-      } else if (error.code === "auth/user-disabled") {
-        errorMessage = "This account has been disabled";
-      } else if (error.code === "auth/invalid-credential") {
-        errorMessage = "Invalid email or password";
-      }
-
-      // Update state with error - keep user logged out
-      setState({
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: errorMessage,
-      });
-
-      throw new Error(errorMessage);
-    }
-  };
 
   const signup = async (name: string, email: string, password: string) => {
     try {
-      setState((prev) => ({ ...prev, isLoading: true, error: null }));
-
-      // Create user account in Firebase
+      setError(null);
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
         password
       );
 
-      // Update display name in Firebase
-      await firebaseUpdateProfile(userCredential.user, {
-        displayName: name,
-      });
-
-      // Send email verification
-      try {
-        await sendEmailVerification(userCredential.user);
-        console.log("Verification email sent successfully");
-      } catch (verificationError) {
-        console.warn("Failed to send verification email:", verificationError);
-        // Don't throw here - account creation was successful
-      }
-
-      const user = convertFirebaseUser(userCredential.user);
-      const token = await userCredential.user.getIdToken();
-
-      // Send user data to your backend
-      try {
-        const response = await fetch(ENV.API_ENDPOINTS.USERS, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            firebaseUid: userCredential.user.uid,
-            email: userCredential.user.email,
-            name: name,
-            createdAt: new Date().toISOString(),
-          }),
+      // Update profile with name if provided
+      if (name && userCredential.user) {
+        await firebaseUpdateProfile(userCredential.user, {
+          displayName: name,
         });
-
-        if (!response.ok) {
-          console.warn("Failed to sync user with backend:", response.status);
-        }
-      } catch (backendError) {
-        console.warn("Backend sync error:", backendError);
       }
 
-      setState({
-        user: { ...user, name },
-        token,
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-      });
-    } catch (error: any) {
-      // Determine user-friendly error message
-      let errorMessage = "Signup failed. Please try again.";
-      if (error.code === "auth/email-already-in-use") {
-        errorMessage = "An account with this email already exists";
-      } else if (error.code === "auth/invalid-email") {
-        errorMessage = "Invalid email address";
-      } else if (error.code === "auth/weak-password") {
-        errorMessage = "Password should be at least 6 characters";
+      // Send verification email
+      if (userCredential.user) {
+        await sendEmailVerification(userCredential.user);
       }
+    } catch (err: any) {
+      setError(err.message || "Failed to sign up");
+      throw err;
+    }
+  };
 
-      // Update state with error - keep user logged out
-      setState({
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: errorMessage,
-      });
-
-      throw new Error(errorMessage);
+  const login = async (email: string, password: string) => {
+    try {
+      setError(null);
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (err: any) {
+      setError(err.message || "Failed to login");
+      throw err;
     }
   };
 
   const logout = async () => {
     try {
-      setState((prev) => ({ ...prev, isLoading: true, error: null }));
-
+      setError(null);
       await signOut(auth);
-
-      setState({
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: null,
-      });
-    } catch (error: any) {
-      const errorMessage = error.message || "Logout failed. Please try again.";
-      setState((prev) => ({ ...prev, isLoading: false, error: errorMessage }));
-      throw new Error(errorMessage);
+    } catch (err: any) {
+      setError(err.message || "Failed to logout");
+      throw err;
     }
   };
 
+  // Reset password
   const resetPassword = async (email: string) => {
     try {
+      setError(null);
       await sendPasswordResetEmail(auth, email);
-    } catch (error: any) {
-      if (error.code === "auth/user-not-found") {
-        throw new Error("No account found with this email");
-      } else if (error.code === "auth/invalid-email") {
-        throw new Error("Invalid email address");
-      } else {
-        throw new Error("Failed to send reset email. Please try again.");
-      }
+    } catch (err: any) {
+      setError(err.message || "Failed to send reset email");
+      throw err;
     }
   };
 
-  const updateProfile = async (updates: Partial<User>) => {
-    try {
-      if (!auth.currentUser) throw new Error("No user logged in");
-
-      setState((prev) => ({ ...prev, isLoading: true, error: null }));
-
-      // Update Firebase profile
-      const profileUpdates: any = {};
-      if (updates.name) profileUpdates.displayName = updates.name;
-      if (updates.avatar) profileUpdates.photoURL = updates.avatar;
-
-      await firebaseUpdateProfile(auth.currentUser, profileUpdates);
-
-      const updatedUser = { ...state.user!, ...updates };
-
-      setState((prev) => ({
-        ...prev,
-        user: updatedUser,
-        isLoading: false,
-        error: null,
-      }));
-    } catch (error: any) {
-      const errorMessage =
-        error.message || "Failed to update profile. Please try again.";
-      setState((prev) => ({ ...prev, isLoading: false, error: errorMessage }));
-      throw new Error(errorMessage);
-    }
-  };
-
-  const loginWithGoogle = async () => {
-    try {
-      setState((prev) => ({ ...prev, isLoading: true, error: null }));
-
-      const provider = new GoogleAuthProvider();
-
-      // Use popup for web, redirect for mobile
-      let userCredential;
-      if (Platform.OS === "web") {
-        userCredential = await signInWithPopup(auth, provider);
-      } else {
-        // For React Native, we'll need to implement this differently
-        // For now, use redirect which works on web
-        await signInWithRedirect(auth, provider);
-        // The result will be handled by onAuthStateChanged
-        return;
-      }
-
-      const user = convertFirebaseUser(userCredential.user);
-      const token = await userCredential.user.getIdToken();
-
-      setState({
-        user,
-        token,
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-      });
-    } catch (error: any) {
-      // Determine user-friendly error message
-      let errorMessage = "Google sign in failed. Please try again.";
-      if (error.code === "auth/popup-closed-by-user") {
-        errorMessage = "Sign in was cancelled";
-      } else if (error.code === "auth/popup-blocked") {
-        errorMessage = "Popup was blocked. Please allow popups for this site.";
-      }
-
-      // Update state with error - keep user logged out
-      setState({
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: errorMessage,
-      });
-
-      throw new Error(errorMessage);
-    }
-  };
-
-  const loginWithApple = async () => {
-    try {
-      setState((prev) => ({ ...prev, isLoading: true, error: null }));
-
-      // Apple Sign In will be implemented when you get Apple Developer account
-      // For now, show a message
-      const errorMessage =
-        "Apple Sign In requires an Apple Developer account. Coming soon!";
-
-      setState({
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: errorMessage,
-      });
-
-      throw new Error(errorMessage);
-    } catch (error) {
-      // Ensure state is properly set even if error is re-thrown
-      if (state.isLoading) {
-        setState((prev) => ({
-          ...prev,
-          isLoading: false,
-          error: error instanceof Error ? error.message : "An error occurred",
-        }));
-      }
-      throw error;
-    }
-  };
-
-  const clearError = () => {
-    setState((prev) => ({ ...prev, error: null }));
-  };
-
+  // Send verification email
   const sendVerificationEmail = async () => {
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
-        throw new Error("No user is currently signed in");
+      setError(null);
+      if (auth.currentUser) {
+        await sendEmailVerification(auth.currentUser);
       }
-
-      if (currentUser.emailVerified) {
-        throw new Error("Email is already verified");
-      }
-
-      await sendEmailVerification(currentUser);
-      console.log("Verification email sent successfully");
-    } catch (error: any) {
-      const errorMessage = error.message || "Failed to send verification email";
-      setState((prev) => ({ ...prev, error: errorMessage }));
-      throw new Error(errorMessage);
+    } catch (err: any) {
+      setError(err.message || "Failed to send verification email");
+      throw err;
     }
+  };
+
+  // Update user profile
+  const updateProfile = async (updates: Partial<User>) => {
+    try {
+      setError(null);
+      if (auth.currentUser) {
+        // Map User properties to Firebase profile properties
+        const firebaseUpdates: { displayName?: string; photoURL?: string } = {};
+        if (updates.name !== undefined)
+          firebaseUpdates.displayName = updates.name;
+        if (updates.avatar !== undefined)
+          firebaseUpdates.photoURL = updates.avatar;
+
+        if (Object.keys(firebaseUpdates).length > 0) {
+          await firebaseUpdateProfile(auth.currentUser, firebaseUpdates);
+        }
+
+        // Update local user state
+        setUser((prev) => (prev ? { ...prev, ...updates } : null));
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to update profile");
+      throw err;
+    }
+  };
+
+  // Login with Google
+  const loginWithGoogle = async () => {
+    try {
+      setError(null);
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (err: any) {
+      setError(err.message || "Failed to login with Google");
+      throw err;
+    }
+  };
+
+  // Login with Apple (placeholder - requires additional setup)
+  const loginWithApple = async () => {
+    try {
+      setError(null);
+      // Apple sign-in implementation would go here
+      throw new Error("Apple sign-in not yet implemented");
+    } catch (err: any) {
+      setError(err.message || "Failed to login with Apple");
+      throw err;
+    }
+  };
+
+  // Clear error
+  const clearError = () => {
+    setError(null);
   };
 
   const value: AuthContextType = {
-    ...state,
+    user,
+    isLoading,
+    isAuthenticated: !!user,
+    token,
+    error,
     login,
     signup,
-    loginWithGoogle,
-    loginWithApple,
     logout,
     resetPassword,
     sendVerificationEmail,
     updateProfile,
+    loginWithGoogle,
+    loginWithApple,
     clearError,
   };
 

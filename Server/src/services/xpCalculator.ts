@@ -3,6 +3,8 @@
  * Calculates XP rewards based on activity performance
  */
 
+import { XP_RULES, ActivityType } from "../config/xpRules";
+
 export interface ActivityPerformance {
   isCorrect: boolean;
   attempts: number;
@@ -11,23 +13,8 @@ export interface ActivityPerformance {
   activityType: string;
 }
 
-export const XP_RULES = {
-  PERFECT_SCORE: 10, // First try, no hints
-  GOOD_SCORE: 7, // < 3 attempts, no hints
-  COMPLETED: 5, // Completed with attempts or hints
-  HINT_PENALTY: 1, // -1 XP per hint (min 2 XP)
-  MIN_XP: 2, // Minimum XP for any completed activity
-
-  // Lesson bonuses
-  LESSON_COMPLETION: 15,
-  PERFECT_LESSON: 25, // All activities perfect
-  SPEED_BONUS: 5, // Completed faster than average
-
-  // Streak bonuses
-  STREAK_7_DAYS: 50,
-  STREAK_30_DAYS: 100,
-  STREAK_100_DAYS: 500,
-};
+// Re-export rules for backward compatibility if needed, or just for convenience
+export { XP_RULES };
 
 /**
  * Calculate XP for a single activity
@@ -57,7 +44,16 @@ export function calculateActivityXP(performance: ActivityPerformance): number {
   }
 
   // Ensure minimum XP
-  return Math.max(xp, XP_RULES.MIN_XP);
+  xp = Math.max(xp, XP_RULES.MIN_XP);
+
+  // Apply Activity Type Bonus
+  const typeKey = performance.activityType.toUpperCase() as ActivityType;
+  // @ts-ignore - we handle the undefined case with DEFAULT
+  const typeBonus = XP_RULES.ACTIVITY_TYPE_BONUS[typeKey] || XP_RULES.ACTIVITY_TYPE_BONUS.DEFAULT;
+  
+  xp += typeBonus;
+
+  return xp;
 }
 
 /**
@@ -89,13 +85,22 @@ export function calculateLessonBonusXP(
  * Calculate streak bonus XP
  */
 export function calculateStreakBonusXP(streakDays: number): number {
-  if (streakDays >= 100) {
-    return XP_RULES.STREAK_100_DAYS;
-  } else if (streakDays >= 30) {
-    return XP_RULES.STREAK_30_DAYS;
-  } else if (streakDays >= 7) {
-    return XP_RULES.STREAK_7_DAYS;
+  // Check for specific milestones
+  // We cast the keys to numbers to ensure proper comparison
+  const milestones = Object.keys(XP_RULES.STREAK_MILESTONES)
+    .map(Number)
+    .sort((a, b) => b - a); // Sort descending
+
+  for (const milestone of milestones) {
+    if (streakDays === milestone) {
+      // @ts-ignore - we know the key exists
+      return XP_RULES.STREAK_MILESTONES[milestone];
+    }
   }
+  
+  // Optional: Return daily streak bonus for non-milestone days if desired
+  // return XP_RULES.DAILY_STREAK_BONUS;
+  
   return 0;
 }
 

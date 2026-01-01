@@ -16,7 +16,6 @@ export default function EmailVerificationBanner() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? "light"];
 
-  // Don't show banner if email is verified
   if (isVerified) {
     return null;
   }
@@ -25,7 +24,7 @@ export default function EmailVerificationBanner() {
     <View style={[styles.banner, { backgroundColor: colors.tint + "20" }]}>
       <View style={styles.content}>
         <Text style={[styles.title, { color: colors.text }]}>
-          📧 Verify Your Email
+          Verify Your Email
         </Text>
         <Text style={[styles.description, { color: colors.text + "CC" }]}>
           Please verify your email address to access all features.

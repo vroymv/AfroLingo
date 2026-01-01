@@ -93,6 +93,7 @@ export interface OnboardingState {
     reasons: string[];
     timeCommitment: string;
   } | null;
+  userId: string | null;
 }
 
 export type OnboardingAction =
@@ -106,7 +107,8 @@ export type OnboardingAction =
   | { type: "SET_CURRENT_STEP"; payload: number }
   | { type: "COMPLETE_ONBOARDING" }
   | { type: "RESET" }
-  | { type: "LOAD_STATE"; payload?: OnboardingState };
+  | { type: "LOAD_STATE"; payload?: OnboardingState }
+  | { type: "SET_USER_ID"; payload: string };
 
 export interface OnboardingContextType {
   state: OnboardingState;
