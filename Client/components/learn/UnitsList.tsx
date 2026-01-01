@@ -4,6 +4,8 @@ import React from "react";
 import { StyleSheet, View } from "react-native";
 import { UnitCard } from "./UnitCard";
 import { useRouter } from "expo-router";
+import { useAuth } from "@/contexts/AuthContext";
+import { touchUnitAccess } from "@/services/unitAccess";
 
 interface UnitsListProps {
   units: Unit[];
@@ -11,11 +13,28 @@ interface UnitsListProps {
 
 export const UnitsList = React.memo<UnitsListProps>(({ units }) => {
   const router = useRouter();
+  const { user } = useAuth();
+
   const handleUnitPress = (unit: Unit) => {
     router.push({
       pathname: "/learn/lesson/[unitId]",
       params: { unitId: unit.id },
     });
+  };
+
+  const handleUnitActionPress = async (unit: Unit) => {
+    if (user?.id) {
+      const result = await touchUnitAccess({
+        userId: user.id,
+        unitId: unit.id,
+      });
+      if (!result.success) {
+        // Best-effort; do not block navigation if the touch fails.
+        console.warn("Failed to touch unit access", result.message);
+      }
+    }
+
+    handleUnitPress(unit);
   };
 
   return (
@@ -29,7 +48,7 @@ export const UnitsList = React.memo<UnitsListProps>(({ units }) => {
           key={unit.id}
           unit={unit}
           onPress={() => handleUnitPress(unit)}
-          onActionPress={() => handleUnitPress(unit)}
+          onActionPress={() => void handleUnitActionPress(unit)}
         />
       ))}
     </View>

@@ -3,6 +3,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
@@ -16,10 +17,12 @@ import HeaderSection from "@/components/home/HeaderSection";
 import HeritageJourneySection from "@/components/home/HeritageJourneySection";
 import QuickActionsSection from "@/components/home/QuickActionsSection";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { getResumeUnit } from "@/services/units";
 
 export default function HomeScreen() {
   const router = useRouter();
   const { state } = useOnboarding();
+  const { user } = useAuth();
   const colorScheme = useColorScheme();
 
   useEffect(() => {
@@ -38,9 +41,24 @@ export default function HomeScreen() {
     );
   }
 
-  const handleTodayLesson = () => {
-    // Navigate to today's lesson
-    console.log("Continuing today's lesson...");
+  const handleTodayLesson = async () => {
+    if (!user?.id) {
+      router.push("/(tabs)/learn" as any);
+      return;
+    }
+
+    const result = await getResumeUnit(user.id);
+
+    const unitId = result.success ? result.data?.unitId : undefined;
+    if (unitId) {
+      router.push({
+        pathname: "/learn/lesson/[unitId]",
+        params: { unitId },
+      });
+      return;
+    }
+
+    router.push("/(tabs)/learn" as any);
   };
 
   const handleQuickAction = (action: string) => {

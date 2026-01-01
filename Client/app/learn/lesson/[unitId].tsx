@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import type { Activity } from "@/data/lessons";
 import { useAuth } from "@/contexts/AuthContext";
 import { LessonRuntimeProvider } from "@/contexts/LessonRuntimeContext";
+import { touchUnitAccess } from "@/services/unitAccess";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
@@ -27,6 +28,12 @@ export default function LessonPlayerScreen() {
 
   useEffect(() => {
     if (!unitId) return;
+
+    // Best-effort: keep server-side lastAccessedAt meaningful for resume.
+    if (user?.id) {
+      void touchUnitAccess({ userId: user.id, unitId: String(unitId) });
+    }
+
     const fetchUnit = async () => {
       setLoading(true);
       setError(null);
@@ -51,7 +58,7 @@ export default function LessonPlayerScreen() {
       }
     };
     fetchUnit();
-  }, [unitId]);
+  }, [unitId, user?.id]);
 
   // Normalize server activities to client Activity shape (minimal)
   const activities: Activity[] = useMemo(() => {
