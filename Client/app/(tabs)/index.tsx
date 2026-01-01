@@ -11,7 +11,6 @@ import { ScrollView, StyleSheet, View } from "react-native";
 
 // Import home components
 import CommunitySection from "@/components/home/CommunitySection";
-import CulturalNuggetCard from "@/components/home/CulturalNuggetCard";
 import DailyGoalCard from "@/components/home/DailyGoalCard";
 import HeaderSection from "@/components/home/HeaderSection";
 import HeritageJourneySection from "@/components/home/HeritageJourneySection";
@@ -109,8 +108,6 @@ export default function HomeScreen() {
           selectedLevel={state.selectedLevel}
           onLessonPress={handleLessonPress}
         />
-
-        <CulturalNuggetCard selectedLanguage={state.selectedLanguage} />
 
         <View style={styles.bottomPadding} />
       </ScrollView>
