@@ -10,7 +10,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = "postgresql://neondb_owner:npg_G0Ra7FZPxLhW@ep-summer-river-adr25leo-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require"
 }
 
 // User model
@@ -261,4 +261,20 @@ model XpTransaction {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("xp_transactions")
+}
+
+// Grammar tip model - Rotating daily tips per language
+model GrammarTip {
+  id        String   @id @default(uuid())
+  language  String   // e.g. "sw", "zu", "ln", "xh", or "general"
+  text      String   @db.Text
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([language])
+  @@index([isActive])
+  @@unique([language, sortOrder], name: "language_sortOrder")
+  @@map("grammar_tips")
 }

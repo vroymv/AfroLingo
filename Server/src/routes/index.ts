@@ -12,3 +12,4 @@ export { default as userProgressRouter } from "./userprogress";
 export { default as xpRouter } from "./xp";
 export { default as progressTrackerRouter } from "./progressTracker";
 export { default as appUsageRouter } from "./appUsage";
+export { default as grammarTipsRouter } from "./grammarTips";

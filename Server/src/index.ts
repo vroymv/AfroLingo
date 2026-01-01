@@ -11,6 +11,7 @@ import {
   xpRouter,
   progressTrackerRouter,
   appUsageRouter,
+  grammarTipsRouter,
 } from "./routes";
 
 dotenv.config();
@@ -31,6 +32,7 @@ app.use("/api/userprogress", userProgressRouter);
 app.use("/api/xp", xpRouter);
 app.use("/api/progress-tracker", progressTrackerRouter);
 app.use("/api/app-usage", appUsageRouter);
+app.use("/api/grammar-tips", grammarTipsRouter);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {

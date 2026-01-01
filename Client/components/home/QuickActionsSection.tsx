@@ -1,5 +1,7 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { getGrammarTipOfDay } from "@/services/grammarTips";
+import React, { useEffect, useMemo, useState } from "react";
 import { Dimensions, StyleSheet, TouchableOpacity, View } from "react-native";
 
 const { width } = Dimensions.get("window");
@@ -13,42 +15,74 @@ export default function QuickActionsSection({
   selectedLanguage,
   onQuickAction,
 }: QuickActionsSectionProps) {
-  const getGrammarTip = () => {
-    const tips = {
-      swahili: [
-        "In Swahili, noun classes determine agreement patterns!",
-        "Use 'na' to connect ideas, like 'mimi na wewe' (me and you).",
-        "Swahili verbs change prefixes based on who's doing the action.",
+  const getLocalGrammarTip = (language: string | null) => {
+    const tips: Record<string, string[]> = {
+      sw: [
+        "Swahili nouns belong to noun classes, and agreement shows up across the sentence.",
+        "Verb prefixes can encode subject + tense + object in one word.",
+        "The connector 'na' is commonly used for 'and/with'.",
       ],
-      zulu: [
-        "isiZulu uses clicks! The 'c' makes a dental click sound.",
-        "Respect is shown through language - use 'nkosi' for sir/madam.",
-        "Zulu nouns have classes that affect the whole sentence structure.",
+      zu: [
+        "isiZulu uses click consonants; the letter 'c' is a dental click.",
+        "Zulu has noun classes—agreement affects verbs and adjectives.",
+        "Politeness can change forms; listen for respectful language in context.",
       ],
-      xhosa: [
-        "isiXhosa has three types of clicks: c, q, and x sounds!",
-        "The prefix 'uku-' often indicates an infinitive verb form.",
-        "Tone is important - the same word can mean different things!",
+      xh: [
+        "isiXhosa uses three main click types: c, q, and x.",
+        "The prefix 'uku-' commonly marks an infinitive verb form.",
+        "Tone and stress matter—practice by copying native audio.",
       ],
-      lingala: [
-        "Lingala uses tones to distinguish meaning between words.",
-        "The word order is usually Subject-Verb-Object, like English.",
-        "Respect levels change the pronouns you use for others.",
+      ln: [
+        "Lingala often follows Subject–Verb–Object word order.",
+        "Tone and rhythm can change meaning—practice listening closely.",
+        "Pronouns and forms can vary with respect and familiarity.",
+      ],
+      general: [
+        "Consistency beats intensity: a little every day adds up.",
+        "Learn phrases, not just single words.",
+        "Repeat after native audio to improve rhythm and pronunciation.",
       ],
     };
 
-    const languageTips = tips[selectedLanguage as keyof typeof tips] || [
-      "Practice makes perfect - consistency beats intensity!",
-      "Learn phrases, not just words, for better fluency.",
-      "Listen to native speakers to improve your accent.",
-    ];
+    const languageKey = language && tips[language] ? language : "general";
+    const languageTips = tips[languageKey];
 
     const dayOfYear = Math.floor(
       (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) /
         86400000
     );
+
     return languageTips[dayOfYear % languageTips.length];
   };
+
+  const [grammarTip, setGrammarTip] = useState<string>(() =>
+    getLocalGrammarTip(selectedLanguage)
+  );
+
+  const languageForTip = useMemo(() => {
+    if (!selectedLanguage) return null;
+    return selectedLanguage.toLowerCase();
+  }, [selectedLanguage]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    // Always show something immediately.
+    setGrammarTip(getLocalGrammarTip(languageForTip));
+
+    (async () => {
+      const result = await getGrammarTipOfDay(languageForTip);
+      if (cancelled) return;
+
+      if (result.success && result.data?.text) {
+        setGrammarTip(result.data.text);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [languageForTip]);
 
   return (
     <ThemedView style={styles.quickActions}>
@@ -109,9 +143,7 @@ export default function QuickActionsSection({
           <ThemedText style={styles.grammarTipTitle}>
             Grammar Tip of the Day
           </ThemedText>
-          <ThemedText style={styles.grammarTipText}>
-            {getGrammarTip()}
-          </ThemedText>
+          <ThemedText style={styles.grammarTipText}>{grammarTip}</ThemedText>
         </View>
         <ThemedText style={styles.grammarTipArrow}>→</ThemedText>
       </TouchableOpacity>
