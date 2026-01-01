@@ -48,7 +48,7 @@ export default function Achievements({
     {
       emoji: "🎯",
       name: "Goal Crusher",
-      description: "Hit daily goal 10 times",
+      description: "Complete 50 activities",
       unlocked: activitiesCompleted >= 50,
     },
     {

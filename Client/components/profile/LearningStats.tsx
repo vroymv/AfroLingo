@@ -17,9 +17,11 @@ export default function LearningStats({
   profileStats,
   isLoading,
 }: LearningStatsProps) {
-  // Calculate study time estimate (rough estimate: 2 minutes per activity)
+  // Estimate study time based on activity completions
+  // Assuming approximately 2 minutes per activity
+  const MINUTES_PER_ACTIVITY = 2;
   const estimatedStudyHours = profileStats
-    ? Math.floor((profileStats.completedActivities * 2) / 60)
+    ? Math.floor((profileStats.completedActivities * MINUTES_PER_ACTIVITY) / 60)
     : 0;
 
   const stats = [

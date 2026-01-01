@@ -37,9 +37,9 @@ export default function WeeklyGoals({
       icon: "⏰",
     },
     {
-      label: "Maintain your streak",
-      current: profileStats?.streakDays || 0,
-      total: (profileStats?.streakDays || 0) + 1,
+      label: "Keep your streak alive",
+      current: profileStats?.todayXpEarned > 0 ? 1 : 0,
+      total: 1,
       icon: "🔥",
     },
   ];

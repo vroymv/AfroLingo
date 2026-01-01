@@ -61,7 +61,6 @@ export async function fetchProfileStats(
   try {
     const res = await fetch(`${API_BASE_URL}/progress-tracker/${userId}`, {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
     });
 
     const json = await res.json().catch(() => ({}));
@@ -103,7 +102,6 @@ export async function fetchOnboardingData(
   try {
     const res = await fetch(`${API_BASE_URL}/onboarding/${userId}`, {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
     });
 
     const json = await res.json().catch(() => ({}));

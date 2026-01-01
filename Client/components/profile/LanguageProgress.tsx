@@ -51,8 +51,13 @@ export default function LanguageProgress({
     : "Beginner";
 
   // Calculate progress based on real activity completions
+  // Assuming 2 activities per 1% progress point (200 activities = 100% proficiency)
+  const ACTIVITIES_PER_PROGRESS_POINT = 2;
   const activitiesCompleted = profileStats?.completedActivities || 0;
-  const baseProgress = Math.min(Math.floor(activitiesCompleted / 2), 100);
+  const baseProgress = Math.min(
+    Math.floor(activitiesCompleted / ACTIVITIES_PER_PROGRESS_POINT),
+    100
+  );
 
   const skills = [
     {
