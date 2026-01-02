@@ -7,6 +7,14 @@ export interface User {
   languages: string[];
   xp: number;
   badges: string[];
+  nativeLanguage?: string;
+  targetLanguage?: string;
+  level?: "beginner" | "intermediate" | "advanced";
+  bio?: string;
+  streak?: number;
+  followers?: number;
+  following?: number;
+  isFollowing?: boolean;
 }
 
 export interface Post {
@@ -283,3 +291,350 @@ export const mockResources: Resource[] = [
     reviews: 15,
   },
 ];
+
+// New interfaces for additional features
+export interface PracticePartner {
+  id: string;
+  user: User;
+  nativeLanguage: string;
+  targetLanguage: string;
+  level: "beginner" | "intermediate" | "advanced";
+  interests: string[];
+  availability: string;
+  matchScore: number;
+  isOnline: boolean;
+}
+
+export interface ChatMessage {
+  id: string;
+  senderId: string;
+  content: string;
+  timestamp: Date;
+  type: "text" | "voice" | "image";
+  isRead: boolean;
+}
+
+export interface ConversationPrompt {
+  id: string;
+  category: string;
+  prompt: string;
+  difficulty: "beginner" | "intermediate" | "advanced";
+}
+
+export interface Group {
+  id: string;
+  name: string;
+  description: string;
+  language: string;
+  avatar: string;
+  memberCount: number;
+  weeklyXpGoal: number;
+  currentXp: number;
+  groupStreak: number;
+  type: "public" | "private";
+  category: string;
+  isMember: boolean;
+  topMembers: User[];
+}
+
+export interface UserProfile extends User {
+  joinedDate: Date;
+  totalXp: number;
+  currentStreak: number;
+  longestStreak: number;
+  lessonsCompleted: number;
+  achievements: Achievement[];
+  recentActivity: Activity[];
+}
+
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  earnedDate: Date;
+  rarity: "common" | "rare" | "epic" | "legendary";
+}
+
+export interface Activity {
+  id: string;
+  type: "lesson" | "challenge" | "streak" | "achievement" | "post";
+  description: string;
+  timestamp: Date;
+  xpEarned?: number;
+}
+
+// Mock data for new features
+export const mockPracticePartners: PracticePartner[] = [
+  {
+    id: "1",
+    user: {
+      id: "p1",
+      name: "Chioma Okafor",
+      avatar: "👩🏿‍💼",
+      userType: "native",
+      country: "NG",
+      languages: ["Yoruba", "Igbo", "English"],
+      xp: 2400,
+      badges: ["Native Speaker", "Helpful Partner"],
+      nativeLanguage: "Yoruba",
+      targetLanguage: "French",
+      level: "intermediate",
+      bio: "Native Yoruba speaker looking to practice French",
+      streak: 45,
+    },
+    nativeLanguage: "Yoruba",
+    targetLanguage: "French",
+    level: "intermediate",
+    interests: ["Culture", "Music", "Food"],
+    availability: "Evenings (GMT+1)",
+    matchScore: 95,
+    isOnline: true,
+  },
+  {
+    id: "2",
+    user: {
+      id: "p2",
+      name: "Themba Ndlovu",
+      avatar: "👨🏿‍🎓",
+      userType: "learner",
+      country: "ZA",
+      languages: ["Zulu", "English"],
+      xp: 1800,
+      badges: ["Fast Learner", "Weekly Challenger"],
+      nativeLanguage: "English",
+      targetLanguage: "Zulu",
+      level: "beginner",
+      bio: "Learning Zulu to connect with my roots",
+      streak: 28,
+    },
+    nativeLanguage: "English",
+    targetLanguage: "Zulu",
+    level: "beginner",
+    interests: ["History", "Travel", "Sports"],
+    availability: "Weekends",
+    matchScore: 88,
+    isOnline: false,
+  },
+  {
+    id: "3",
+    user: {
+      id: "p3",
+      name: "Fatima Diallo",
+      avatar: "👩🏾‍🏫",
+      userType: "tutor",
+      country: "SN",
+      languages: ["Wolof", "French", "English"],
+      xp: 3200,
+      badges: ["Master Tutor", "Community Star"],
+      nativeLanguage: "Wolof",
+      targetLanguage: "English",
+      level: "advanced",
+      bio: "Teaching Wolof and practicing English conversation",
+      streak: 67,
+    },
+    nativeLanguage: "Wolof",
+    targetLanguage: "English",
+    level: "advanced",
+    interests: ["Teaching", "Literature", "Culture"],
+    availability: "Flexible",
+    matchScore: 92,
+    isOnline: true,
+  },
+];
+
+export const mockConversationPrompts: ConversationPrompt[] = [
+  {
+    id: "1",
+    category: "Greetings",
+    prompt: "Introduce yourself and ask about their day",
+    difficulty: "beginner",
+  },
+  {
+    id: "2",
+    category: "Food",
+    prompt: "Discuss your favorite traditional dishes and recipes",
+    difficulty: "intermediate",
+  },
+  {
+    id: "3",
+    category: "Culture",
+    prompt: "Share a story about an important cultural celebration in your community",
+    difficulty: "advanced",
+  },
+  {
+    id: "4",
+    category: "Travel",
+    prompt: "Describe a place you'd like to visit and why",
+    difficulty: "intermediate",
+  },
+  {
+    id: "5",
+    category: "Family",
+    prompt: "Talk about your family traditions and customs",
+    difficulty: "beginner",
+  },
+];
+
+export const mockGroups: Group[] = [
+  {
+    id: "1",
+    name: "Yoruba Warriors 🦁",
+    description: "Daily practice group for dedicated Yoruba learners. Join us for weekly challenges and cultural discussions!",
+    language: "Yoruba",
+    avatar: "🦁",
+    memberCount: 156,
+    weeklyXpGoal: 5000,
+    currentXp: 4230,
+    groupStreak: 23,
+    type: "public",
+    category: "Study Group",
+    isMember: true,
+    topMembers: [mockUsers[0], mockUsers[1]],
+  },
+  {
+    id: "2",
+    name: "Swahili Circle",
+    description: "Practice conversational Swahili with native speakers and learners from East Africa.",
+    language: "Swahili",
+    avatar: "🌍",
+    memberCount: 203,
+    weeklyXpGoal: 7500,
+    currentXp: 6890,
+    groupStreak: 45,
+    type: "public",
+    category: "Conversation",
+    isMember: false,
+    topMembers: [mockUsers[2]],
+  },
+  {
+    id: "3",
+    name: "Zulu Beginners Hub",
+    description: "Supportive community for those just starting their Zulu journey. We help each other learn!",
+    language: "Zulu",
+    avatar: "🌱",
+    memberCount: 89,
+    weeklyXpGoal: 3000,
+    currentXp: 2100,
+    groupStreak: 12,
+    type: "public",
+    category: "Beginners",
+    isMember: true,
+    topMembers: [mockUsers[0]],
+  },
+  {
+    id: "4",
+    name: "Akan Culture & Language",
+    description: "Explore Akan language alongside its rich cultural heritage. Storytelling, proverbs, and more!",
+    language: "Akan",
+    avatar: "👑",
+    memberCount: 127,
+    weeklyXpGoal: 4500,
+    currentXp: 3800,
+    groupStreak: 34,
+    type: "public",
+    category: "Culture",
+    isMember: false,
+    topMembers: [mockUsers[1]],
+  },
+  {
+    id: "5",
+    name: "Wolof Advanced Learners",
+    description: "For advanced learners ready to dive deep into complex grammar and literature.",
+    language: "Wolof",
+    avatar: "📚",
+    memberCount: 45,
+    weeklyXpGoal: 6000,
+    currentXp: 5200,
+    groupStreak: 18,
+    type: "private",
+    category: "Advanced",
+    isMember: false,
+    topMembers: [],
+  },
+];
+
+export const mockUserProfile: UserProfile = {
+  id: "current_user",
+  name: "Alex Johnson",
+  avatar: "👤",
+  userType: "learner",
+  country: "US",
+  languages: ["Yoruba", "Swahili"],
+  xp: 2450,
+  badges: ["First Post", "Weekly Challenger", "7-Day Streak"],
+  nativeLanguage: "English",
+  targetLanguage: "Yoruba",
+  level: "intermediate",
+  bio: "Passionate about learning African languages and connecting with native speakers!",
+  streak: 15,
+  followers: 48,
+  following: 32,
+  joinedDate: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
+  totalXp: 2450,
+  currentStreak: 15,
+  longestStreak: 21,
+  lessonsCompleted: 67,
+  achievements: [
+    {
+      id: "1",
+      title: "First Steps",
+      description: "Complete your first lesson",
+      icon: "🎯",
+      earnedDate: new Date(Date.now() - 85 * 24 * 60 * 60 * 1000),
+      rarity: "common",
+    },
+    {
+      id: "2",
+      title: "Week Warrior",
+      description: "Maintain a 7-day streak",
+      icon: "🔥",
+      earnedDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
+      rarity: "rare",
+    },
+    {
+      id: "3",
+      title: "Social Butterfly",
+      description: "Make your first post in the community",
+      icon: "🦋",
+      earnedDate: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
+      rarity: "common",
+    },
+    {
+      id: "4",
+      title: "Challenge Champion",
+      description: "Complete 5 community challenges",
+      icon: "🏆",
+      earnedDate: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
+      rarity: "epic",
+    },
+  ],
+  recentActivity: [
+    {
+      id: "1",
+      type: "lesson",
+      description: "Completed 'Yoruba Greetings' lesson",
+      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      xpEarned: 50,
+    },
+    {
+      id: "2",
+      type: "challenge",
+      description: "Joined 'Record Three Zulu Greetings' challenge",
+      timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
+    },
+    {
+      id: "3",
+      type: "streak",
+      description: "Achieved 15-day streak!",
+      timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
+      xpEarned: 25,
+    },
+    {
+      id: "4",
+      type: "post",
+      description: "Posted in Yoruba Discussion Hub",
+      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
+    },
+  ],
+};
