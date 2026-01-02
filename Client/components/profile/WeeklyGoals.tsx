@@ -111,9 +111,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   goalCard: {
-    padding: 20,
+    padding: 5,
     borderRadius: 16,
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    backgroundColor: "rgba(74, 144, 226, 0.2)",
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.1)",
   },
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 5,
   },
   goalInfo: {
     flex: 1,
