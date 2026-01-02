@@ -16,6 +16,10 @@ export default function UserProfileScreen() {
 
   const profile = mockUserProfile;
 
+  // Constants for mock progress percentages
+  const BASE_LANGUAGE_PROGRESS = 45;
+  const PROGRESS_INCREMENT = 15;
+
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
       case "legendary":
@@ -171,12 +175,12 @@ export default function UserProfileScreen() {
                     <View
                       style={[
                         styles.miniProgressFill,
-                        { width: `${45 + index * 15}%` },
+                        { width: `${BASE_LANGUAGE_PROGRESS + index * PROGRESS_INCREMENT}%` },
                       ]}
                     />
                   </View>
                   <ThemedText style={styles.languagePercentage}>
-                    {45 + index * 15}%
+                    {BASE_LANGUAGE_PROGRESS + index * PROGRESS_INCREMENT}%
                   </ThemedText>
                 </View>
               </View>

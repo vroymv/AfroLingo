@@ -16,6 +16,13 @@ export default function SafetyScreen() {
   const [reportReason, setReportReason] = useState("");
   const [reportDescription, setReportDescription] = useState("");
 
+  const handleReportSubmit = () => {
+    // Simulated report submission
+    setShowReportModal(false);
+    setReportReason("");
+    setReportDescription("");
+  };
+
   const safetyFeatures = [
     {
       id: "1",
@@ -430,12 +437,7 @@ export default function SafetyScreen() {
                   !reportReason && styles.submitButtonDisabled,
                 ]}
                 disabled={!reportReason}
-                onPress={() => {
-                  // Simulated report submission
-                  setShowReportModal(false);
-                  setReportReason("");
-                  setReportDescription("");
-                }}
+                onPress={handleReportSubmit}
               >
                 <ThemedText style={styles.submitButtonText}>
                   Submit Report

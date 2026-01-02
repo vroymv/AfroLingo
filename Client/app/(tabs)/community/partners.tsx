@@ -19,6 +19,11 @@ export default function PartnersScreen() {
     return partner.level === selectedFilter;
   });
 
+  const handleNavigateToChat = () => {
+    // Navigate to chat (would be implemented with real routing)
+    console.log("Navigate to chat");
+  };
+
   const filters = [
     { key: "all", label: "All", icon: "👥" },
     { key: "online", label: "Online", icon: "🟢" },
@@ -110,9 +115,7 @@ export default function PartnersScreen() {
             <TouchableOpacity
               key={partner.id}
               style={styles.partnerCard}
-              onPress={() => {
-                // Navigate to chat (would be implemented)
-              }}
+              onPress={handleNavigateToChat}
             >
               <View style={styles.partnerHeader}>
                 <View style={styles.partnerInfo}>
