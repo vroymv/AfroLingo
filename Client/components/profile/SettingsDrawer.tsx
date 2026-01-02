@@ -14,6 +14,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "expo-router";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 const { width } = Dimensions.get("window");
 const DRAWER_WIDTH = width * 0.75;
@@ -30,9 +31,34 @@ export default function SettingsDrawer({
   const { logout } = useAuth();
   const router = useRouter();
   const slideAnim = React.useRef(new Animated.Value(-DRAWER_WIDTH)).current;
+  const [shouldRender, setShouldRender] = React.useState(visible);
+  const iconColor = useThemeColor({}, "text");
+
+  const navigateTo = React.useCallback(
+    (action: string) => {
+      const routes: Record<string, string> = {
+        preferences: "/(tabs)/profile/preferences",
+        notifications: "/(tabs)/profile/notifications",
+        language: "/(tabs)/profile/language",
+        privacy: "/(tabs)/profile/privacy",
+        support: "/(tabs)/profile/support",
+      };
+
+      const route = routes[action];
+      if (!route) return;
+
+      onClose();
+      // Allow the close animation/state update to start before navigating.
+      setTimeout(() => {
+        router.push(route as any);
+      }, 200);
+    },
+    [onClose, router]
+  );
 
   React.useEffect(() => {
     if (visible) {
+      setShouldRender(true);
       Animated.spring(slideAnim, {
         toValue: 0,
         useNativeDriver: true,
@@ -44,7 +70,9 @@ export default function SettingsDrawer({
         toValue: -DRAWER_WIDTH,
         duration: 250,
         useNativeDriver: true,
-      }).start();
+      }).start(({ finished }) => {
+        if (finished) setShouldRender(false);
+      });
     }
     // slideAnim is a ref and doesn't need to be in deps
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -105,11 +133,11 @@ export default function SettingsDrawer({
     ]);
   };
 
-  if (!visible) return null;
+  if (!shouldRender) return null;
 
   return (
     <Modal
-      visible={visible}
+      visible={shouldRender}
       transparent
       animationType="none"
       onRequestClose={onClose}
@@ -132,7 +160,7 @@ export default function SettingsDrawer({
             <View style={styles.header}>
               <ThemedText style={styles.headerTitle}>⚙️ Settings</ThemedText>
               <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <Ionicons name="close" size={24} color="#fff" />
+                <Ionicons name="close" size={24} color={iconColor} />
               </TouchableOpacity>
             </View>
 
@@ -143,6 +171,7 @@ export default function SettingsDrawer({
                   key={index}
                   style={styles.settingItem}
                   activeOpacity={0.7}
+                  onPress={() => navigateTo(setting.action)}
                 >
                   <View style={styles.settingContent}>
                     <View

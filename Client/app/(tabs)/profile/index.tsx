@@ -1,6 +1,5 @@
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
-import EmailVerificationBanner from "@/components/auth/EmailVerificationBanner";
 import React from "react";
 import {
   ScrollView,
@@ -8,9 +7,9 @@ import {
   StyleSheet,
   StatusBar,
   TouchableOpacity,
-  SafeAreaView,
   Alert,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/contexts/AuthContext";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import LearningStats from "@/components/profile/LearningStats";
@@ -19,6 +18,8 @@ import Achievements from "@/components/profile/Achievements";
 import LanguageProgress from "@/components/profile/LanguageProgress";
 import SettingsDrawer from "@/components/profile/SettingsDrawer";
 import { Ionicons } from "@expo/vector-icons";
+import { useColorScheme } from "@/hooks/useColorScheme";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import {
   fetchProfileStats,
   fetchOnboardingData,
@@ -28,6 +29,8 @@ import {
 
 export default function ProfileScreen() {
   const { user } = useAuth();
+  const colorScheme = useColorScheme();
+  const iconColor = useThemeColor({}, "text");
   const [drawerVisible, setDrawerVisible] = React.useState(false);
   const [refreshing, setRefreshing] = React.useState(false);
   const [profileStats, setProfileStats] = React.useState<ProfileStats | null>(
@@ -98,17 +101,19 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      {/* Hamburger Menu Button */}
-      <TouchableOpacity
-        style={styles.hamburgerButton}
-        onPress={() => setDrawerVisible(true)}
-        activeOpacity={0.7}
-      >
-        <Ionicons name="menu" size={28} color="#fff" />
-      </TouchableOpacity>
+    <SafeAreaView style={styles.safeArea}>
       <ThemedView style={styles.container}>
-        <StatusBar barStyle="light-content" />
+        <StatusBar
+          barStyle={colorScheme === "dark" ? "light-content" : "dark-content"}
+        />
+        {/* Hamburger Menu Button */}
+        <TouchableOpacity
+          style={styles.hamburgerButton}
+          onPress={() => setDrawerVisible(true)}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="menu" size={26} color={iconColor} />
+        </TouchableOpacity>
         <ScrollView
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
@@ -156,18 +161,21 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },
   hamburgerButton: {
     position: "absolute",
-    top: 50,
-    left: 10,
+    top: 10,
+    left: 12,
     zIndex: 1000,
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "rgba(0, 0, 0, 0.3)",
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
@@ -180,6 +188,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
+    paddingTop: 56,
     paddingLeft: 20,
     paddingRight: 20,
     paddingBottom: 40,

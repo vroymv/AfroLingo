@@ -12,36 +12,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const Tab = createMaterialTopTabNavigator();
 
-const ContinueButton: React.FC = () => {
-  // Dummy button, no data or navigation
-  return (
-    <TouchableOpacity style={styles.continueButton} onPress={() => {}}>
-      <ThemedView style={styles.continueContent}>
-        <View style={styles.continueInfo}>
-          <ThemedText type="defaultSemiBold" style={styles.continueTitle}>
-            Continue Learning
-          </ThemedText>
-          <ThemedText type="default" style={styles.continueSubtitle}>
-            Start Next Lesson
-          </ThemedText>
-        </View>
-        <View style={styles.continueStats}>
-          <View style={styles.statItem}>
-            <ThemedText type="default" style={styles.statLabel}>
-              🔥 10
-            </ThemedText>
-          </View>
-          <View style={styles.statItem}>
-            <ThemedText type="default" style={styles.statLabel}>
-              ⭐ 20
-            </ThemedText>
-          </View>
-        </View>
-      </ThemedView>
-    </TouchableOpacity>
-  );
-};
-
 export default function LearnScreen() {
   const colorScheme = useColorScheme();
   const { state } = useOnboarding();
@@ -83,8 +53,6 @@ export default function LearnScreen() {
           {headerSubtitle}
         </ThemedText>
       </View>
-
-      <ContinueButton />
 
       <Tab.Navigator
         screenOptions={() => ({

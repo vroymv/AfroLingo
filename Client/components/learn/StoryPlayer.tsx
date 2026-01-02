@@ -1,7 +1,10 @@
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
-import { Story } from "@/data/stories";
-import React, { useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Modal,
   ScrollView,
@@ -9,791 +12,565 @@ import {
   Text,
   TouchableOpacity,
   View,
-  Animated,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import type { Story } from "@/data/stories";
 
-interface StoryPlayerProps {
+type DialogueStoryPlayerProps = {
   story: Story;
   visible: boolean;
   onClose: () => void;
-}
+};
 
-export const StoryPlayer: React.FC<StoryPlayerProps> = ({
+const DialogueStoryPlayer: React.FC<DialogueStoryPlayerProps> = ({
   story,
   visible,
   onClose,
 }) => {
-  const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
-  const [showTranslation, setShowTranslation] = useState(false);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [showQuestions, setShowQuestions] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [showExplanation, setShowExplanation] = useState(false);
-  const [completedQuestions, setCompletedQuestions] = useState<number[]>([]);
-  const [fadeAnim] = useState(new Animated.Value(0));
+  const [showTranslations, setShowTranslations] = useState<{
+    [key: string]: boolean;
+  }>({});
+  const [playingSegmentId, setPlayingSegmentId] = useState<string | null>(null);
+  const [currentAudioSource, setCurrentAudioSource] = useState<string | null>(
+    null
+  );
+  const [isPlayingAll, setIsPlayingAll] = useState(false);
+  const [queueIndex, setQueueIndex] = useState(0);
+  const lastAdvancedForSegmentIdRef = useRef<string | null>(null);
 
-  const currentSegment = story.segments[currentSegmentIndex];
-  const isLastSegment = currentSegmentIndex === story.segments.length - 1;
-  const hasQuestions = story.questions && story.questions.length > 0;
+  const player = useAudioPlayer(currentAudioSource || "");
+  const status = useAudioPlayerStatus(player);
 
-  React.useEffect(() => {
-    if (visible) {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [visible, fadeAnim]);
-
-  const handleNext = () => {
-    if (isLastSegment && hasQuestions && !showQuestions) {
-      setShowQuestions(true);
-      setCurrentQuestionIndex(0);
-    } else if (!isLastSegment) {
-      setCurrentSegmentIndex(currentSegmentIndex + 1);
-      setShowTranslation(false);
-      Animated.sequence([
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 150,
-          useNativeDriver: true,
-        }),
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 150,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
+  const toggleTranslation = (segmentId: string) => {
+    setShowTranslations((prev) => ({
+      ...prev,
+      [segmentId]: !prev[segmentId],
+    }));
   };
 
-  const handlePrevious = () => {
-    if (currentSegmentIndex > 0) {
-      setCurrentSegmentIndex(currentSegmentIndex - 1);
-      setShowTranslation(false);
-    }
+  // Get unique speakers to assign consistent sides
+  const speakers = Array.from(
+    new Set(story.segments.map((s) => s.speaker).filter(Boolean))
+  );
+
+  const getSpeakerSide = (speaker?: string): "left" | "right" => {
+    if (!speaker) return "left";
+    const index = speakers.indexOf(speaker);
+    return index % 2 === 0 ? "left" : "right";
   };
 
-  const handleQuestionAnswer = (optionIndex: number) => {
-    setSelectedAnswer(optionIndex);
-    setShowExplanation(true);
+  const getSpeakerColor = (speaker?: string): string => {
+    if (!speaker) return "#4A90E2";
+    const index = speakers.indexOf(speaker);
+    const colors = ["#4A90E2", "#10B981", "#8B5CF6", "#F59E0B"];
+    return colors[index % colors.length];
+  };
 
+  const audioQueue = useMemo(() => {
+    return story.segments
+      .filter((s) => Boolean(s.audio))
+      .map((s) => ({ id: s.id, audio: s.audio as string }));
+  }, [story.segments]);
+
+  const stopAllAudio = useCallback(() => {
+    try {
+      player.pause();
+    } catch {
+      // ignore
+    }
+    setIsPlayingAll(false);
+    setPlayingSegmentId(null);
+    setCurrentAudioSource(null);
+    setQueueIndex(0);
+    lastAdvancedForSegmentIdRef.current = null;
+  }, [player]);
+
+  const playFullDialogue = useCallback(() => {
+    if (audioQueue.length === 0) return;
+
+    // Toggle: if currently playing the full queue, pause/stop.
+    if (isPlayingAll && status.playing) {
+      stopAllAudio();
+      return;
+    }
+
+    setIsPlayingAll(true);
+    setQueueIndex(0);
+    lastAdvancedForSegmentIdRef.current = null;
+
+    const first = audioQueue[0];
+    setCurrentAudioSource(first.audio);
+    player.replace(first.audio);
+    player.play();
+    setPlayingSegmentId(first.id);
+  }, [audioQueue, isPlayingAll, player, status.playing, stopAllAudio]);
+
+  const advanceQueue = useCallback(() => {
+    const nextIndex = queueIndex + 1;
+    if (nextIndex >= audioQueue.length) {
+      stopAllAudio();
+      return;
+    }
+
+    const next = audioQueue[nextIndex];
+    setQueueIndex(nextIndex);
+    setCurrentAudioSource(next.audio);
+    player.replace(next.audio);
+    player.play();
+    setPlayingSegmentId(next.id);
+  }, [audioQueue, player, queueIndex, stopAllAudio]);
+
+  useEffect(() => {
+    if (!isPlayingAll) return;
+    if (audioQueue.length === 0) return;
+    if (!playingSegmentId) return;
+
+    const anyStatus = status as any;
+    const didJustFinish =
+      Boolean(anyStatus?.didJustFinish) ||
+      Boolean(anyStatus?.didFinish) ||
+      Boolean(anyStatus?.finished) ||
+      Boolean(anyStatus?.ended);
+
+    const nearEnd =
+      typeof anyStatus?.positionMillis === "number" &&
+      typeof anyStatus?.durationMillis === "number" &&
+      anyStatus.durationMillis > 0 &&
+      anyStatus.positionMillis >= anyStatus.durationMillis - 250;
+
+    // Advance only once per segment completion.
     if (
-      story.questions &&
-      optionIndex === story.questions[currentQuestionIndex].correctAnswer
+      (didJustFinish || nearEnd) &&
+      lastAdvancedForSegmentIdRef.current !== playingSegmentId
     ) {
-      if (!completedQuestions.includes(currentQuestionIndex)) {
-        setCompletedQuestions([...completedQuestions, currentQuestionIndex]);
-      }
+      lastAdvancedForSegmentIdRef.current = playingSegmentId;
+      advanceQueue();
     }
-  };
+  }, [status, isPlayingAll, audioQueue, playingSegmentId, advanceQueue]);
 
-  const handleNextQuestion = () => {
-    if (story.questions && currentQuestionIndex < story.questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setSelectedAnswer(null);
-      setShowExplanation(false);
-    } else {
-      // All done
-      setShowQuestions(false);
-      setSelectedAnswer(null);
-      setShowExplanation(false);
+  useEffect(() => {
+    // If modal closes, ensure audio is stopped.
+    if (!visible) {
+      stopAllAudio();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
+
+  const playAudio = (segmentId: string, audioUrl?: string) => {
+    if (!audioUrl) return;
+
+    try {
+      if (isPlayingAll) {
+        setIsPlayingAll(false);
+        setQueueIndex(0);
+        lastAdvancedForSegmentIdRef.current = null;
+      }
+
+      // If same audio is already playing, pause it
+      if (currentAudioSource === audioUrl && status.playing) {
+        player.pause();
+        setPlayingSegmentId(null);
+        return;
+      }
+
+      // Set the new audio source and play
+      setCurrentAudioSource(audioUrl);
+      player.replace(audioUrl);
+      player.play();
+      setPlayingSegmentId(segmentId);
+    } catch (error) {
+      console.error("Error playing audio:", error);
+      setPlayingSegmentId(null);
     }
   };
 
   const handleClose = () => {
-    setCurrentSegmentIndex(0);
-    setShowTranslation(false);
-    setShowQuestions(false);
-    setCurrentQuestionIndex(0);
-    setSelectedAnswer(null);
-    setShowExplanation(false);
-    setCompletedQuestions([]);
+    stopAllAudio();
     onClose();
-  };
-
-  const getDifficultyColor = (): [string, string] => {
-    switch (story.difficulty) {
-      case "Beginner":
-        return ["#4CAF50", "#66BB6A"];
-      case "Intermediate":
-        return ["#FF9800", "#FFA726"];
-      case "Advanced":
-        return ["#F44336", "#EF5350"];
-      default:
-        return ["#4CAF50", "#66BB6A"];
-    }
-  };
-
-  const renderProgressDots = () => (
-    <View style={styles.progressDots}>
-      {story.segments.map((_, index) => (
-        <View
-          key={index}
-          style={[
-            styles.dot,
-            index === currentSegmentIndex && styles.activeDot,
-            index < currentSegmentIndex && styles.completedDot,
-          ]}
-        />
-      ))}
-    </View>
-  );
-
-  const renderStoryContent = () => (
-    <Animated.View style={[styles.contentContainer, { opacity: fadeAnim }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-          <Text style={styles.closeIcon}>✕</Text>
-        </TouchableOpacity>
-        <View style={styles.headerInfo}>
-          <Text style={styles.coverLarge}>{story.cover}</Text>
-          <ThemedText type="defaultSemiBold" style={styles.storyTitleHeader}>
-            {story.title}
-          </ThemedText>
-        </View>
-      </View>
-
-      {renderProgressDots()}
-
-      <ScrollView
-        style={styles.storyContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Speaker Badge */}
-        {currentSegment.speaker && (
-          <View style={styles.speakerBadge}>
-            <Text style={styles.speakerEmoji}>💬</Text>
-            <ThemedText type="defaultSemiBold" style={styles.speakerName}>
-              {currentSegment.speaker}
-            </ThemedText>
-          </View>
-        )}
-
-        {/* Main Text */}
-        <View style={styles.textContainer}>
-          <ThemedText type="title" style={styles.mainText}>
-            {currentSegment.text}
-          </ThemedText>
-
-          {/* Audio Button */}
-          <TouchableOpacity style={styles.audioButton}>
-            <Text style={styles.audioIcon}>🔊</Text>
-            <ThemedText type="default" style={styles.audioLabel}>
-              Listen
-            </ThemedText>
-          </TouchableOpacity>
-        </View>
-
-        {/* Translation Toggle */}
-        <TouchableOpacity
-          style={styles.translationToggle}
-          onPress={() => setShowTranslation(!showTranslation)}
-        >
-          <Text style={styles.toggleIcon}>{showTranslation ? "👁️" : "👁️‍🗨️"}</Text>
-          <ThemedText type="default" style={styles.toggleText}>
-            {showTranslation ? "Hide" : "Show"} Translation
-          </ThemedText>
-        </TouchableOpacity>
-
-        {/* Translation */}
-        {showTranslation && (
-          <View style={styles.translationBox}>
-            <ThemedText type="default" style={styles.translationText}>
-              {currentSegment.translation}
-            </ThemedText>
-          </View>
-        )}
-
-        {/* Highlighted Words */}
-        {currentSegment.highlightedWords.length > 0 && (
-          <View style={styles.highlightedSection}>
-            <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
-              📝 Key Words
-            </ThemedText>
-            <View style={styles.wordChips}>
-              {currentSegment.highlightedWords.map((word, idx) => (
-                <View key={idx} style={styles.wordChip}>
-                  <ThemedText type="default" style={styles.wordChipText}>
-                    {word}
-                  </ThemedText>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* Story Context */}
-        <View style={styles.contextBox}>
-          <Text style={styles.contextEmoji}>💡</Text>
-          <ThemedText type="default" style={styles.contextText}>
-            Segment {currentSegmentIndex + 1} of {story.segments.length}
-          </ThemedText>
-        </View>
-      </ScrollView>
-
-      {/* Navigation */}
-      <View style={styles.navigation}>
-        <TouchableOpacity
-          style={[
-            styles.navButton,
-            currentSegmentIndex === 0 && styles.navButtonDisabled,
-          ]}
-          onPress={handlePrevious}
-          disabled={currentSegmentIndex === 0}
-        >
-          <Text style={styles.navIcon}>←</Text>
-          <ThemedText type="default" style={styles.navText}>
-            Previous
-          </ThemedText>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.navButtonPrimary} onPress={handleNext}>
-          <ThemedText type="defaultSemiBold" style={styles.navTextPrimary}>
-            {isLastSegment ? (hasQuestions ? "Take Quiz" : "Complete") : "Next"}
-          </ThemedText>
-          <Text style={styles.navIconPrimary}>→</Text>
-        </TouchableOpacity>
-      </View>
-    </Animated.View>
-  );
-
-  const renderQuestionContent = () => {
-    if (!story.questions || story.questions.length === 0) return null;
-
-    const currentQuestion = story.questions[currentQuestionIndex];
-    const isCorrect =
-      selectedAnswer !== null &&
-      selectedAnswer === currentQuestion.correctAnswer;
-
-    return (
-      <View style={styles.questionContainer}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-            <Text style={styles.closeIcon}>✕</Text>
-          </TouchableOpacity>
-          <View style={styles.headerInfo}>
-            <Text style={styles.quizEmoji}>📝</Text>
-            <ThemedText type="defaultSemiBold" style={styles.storyTitleHeader}>
-              Story Quiz
-            </ThemedText>
-          </View>
-        </View>
-
-        {/* Progress */}
-        <View style={styles.questionProgress}>
-          <ThemedText type="default" style={styles.questionProgressText}>
-            Question {currentQuestionIndex + 1} of {story.questions.length}
-          </ThemedText>
-          <View style={styles.questionProgressBar}>
-            <View
-              style={[
-                styles.questionProgressFill,
-                {
-                  width: `${
-                    ((currentQuestionIndex + 1) / story.questions.length) * 100
-                  }%`,
-                },
-              ]}
-            />
-          </View>
-        </View>
-
-        <ScrollView
-          style={styles.questionContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Question */}
-          <View style={styles.questionBox}>
-            <ThemedText type="title" style={styles.questionText}>
-              {currentQuestion.question}
-            </ThemedText>
-          </View>
-
-          {/* Options */}
-          <View style={styles.optionsContainer}>
-            {currentQuestion.options.map((option, index) => {
-              const isSelected = selectedAnswer === index;
-              const isCorrectOption = index === currentQuestion.correctAnswer;
-              const showCorrect = showExplanation && isCorrectOption;
-              const showIncorrect = showExplanation && isSelected && !isCorrect;
-
-              return (
-                <TouchableOpacity
-                  key={index}
-                  style={[
-                    styles.optionButton,
-                    isSelected && styles.optionButtonSelected,
-                    showCorrect && styles.optionButtonCorrect,
-                    showIncorrect && styles.optionButtonIncorrect,
-                  ]}
-                  onPress={() => handleQuestionAnswer(index)}
-                  disabled={showExplanation}
-                >
-                  <View style={styles.optionContent}>
-                    <View
-                      style={[
-                        styles.optionCircle,
-                        isSelected && styles.optionCircleSelected,
-                        showCorrect && styles.optionCircleCorrect,
-                        showIncorrect && styles.optionCircleIncorrect,
-                      ]}
-                    >
-                      {showCorrect && <Text style={styles.checkmark}>✓</Text>}
-                      {showIncorrect && <Text style={styles.crossmark}>✕</Text>}
-                    </View>
-                    <ThemedText type="default" style={styles.optionText}>
-                      {option}
-                    </ThemedText>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          {/* Explanation */}
-          {showExplanation && (
-            <View
-              style={[
-                styles.explanationBox,
-                isCorrect
-                  ? styles.explanationBoxCorrect
-                  : styles.explanationBoxIncorrect,
-              ]}
-            >
-              <View style={styles.explanationHeader}>
-                <Text style={styles.explanationEmoji}>
-                  {isCorrect ? "🎉" : "💡"}
-                </Text>
-                <ThemedText
-                  type="defaultSemiBold"
-                  style={styles.explanationTitle}
-                >
-                  {isCorrect ? "Correct!" : "Not quite!"}
-                </ThemedText>
-              </View>
-              <ThemedText type="default" style={styles.explanationText}>
-                {currentQuestion.explanation}
-              </ThemedText>
-            </View>
-          )}
-        </ScrollView>
-
-        {/* Navigation */}
-        {showExplanation && (
-          <View style={styles.questionNavigation}>
-            <TouchableOpacity
-              style={styles.navButtonPrimary}
-              onPress={handleNextQuestion}
-            >
-              <ThemedText type="defaultSemiBold" style={styles.navTextPrimary}>
-                {currentQuestionIndex < story.questions.length - 1
-                  ? "Next Question"
-                  : "Finish Quiz"}
-              </ThemedText>
-              <Text style={styles.navIconPrimary}>→</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
-    );
   };
 
   return (
     <Modal
       visible={visible}
+      transparent
       animationType="slide"
-      presentationStyle="pageSheet"
       onRequestClose={handleClose}
     >
-      <LinearGradient
-        colors={getDifficultyColor()}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.gradient}
-      >
-        <ThemedView style={styles.container}>
-          {showQuestions ? renderQuestionContent() : renderStoryContent()}
+      <View style={styles.backdrop}>
+        <ThemedView style={styles.sheet}>
+          <View style={styles.header}>
+            <View style={styles.headerTitleRow}>
+              <Text style={styles.cover}>{story.cover}</Text>
+              <View style={styles.headerText}>
+                <ThemedText type="title" style={styles.title}>
+                  {story.title}
+                </ThemedText>
+                <ThemedText type="default" style={styles.description}>
+                  {story.description}
+                </ThemedText>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              onPress={handleClose}
+              accessibilityRole="button"
+              accessibilityLabel="Close story"
+              style={styles.closeButton}
+            >
+              <Text style={styles.closeIcon}>✕</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView
+            style={styles.content}
+            contentContainerStyle={styles.contentContainer}
+            showsVerticalScrollIndicator={false}
+          >
+            {story.segments.map((segment) => {
+              const side = getSpeakerSide(segment.speaker);
+              const color = getSpeakerColor(segment.speaker);
+              const isLeft = side === "left";
+
+              return (
+                <View
+                  key={segment.id}
+                  style={[
+                    styles.messageContainer,
+                    isLeft ? styles.messageLeft : styles.messageRight,
+                  ]}
+                >
+                  {segment.speaker && (
+                    <Text
+                      style={[
+                        styles.speaker,
+                        isLeft ? styles.speakerLeft : styles.speakerRight,
+                      ]}
+                    >
+                      {segment.speaker}
+                    </Text>
+                  )}
+
+                  <View
+                    style={[
+                      styles.bubble,
+                      isLeft
+                        ? [styles.bubbleLeft, { backgroundColor: color }]
+                        : styles.bubbleRight,
+                    ]}
+                  >
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={() => toggleTranslation(segment.id)}
+                      style={styles.bubbleContent}
+                    >
+                      <View style={styles.messageRow}>
+                        <Text
+                          style={[
+                            styles.messageText,
+                            isLeft
+                              ? styles.messageTextLeft
+                              : styles.messageTextRight,
+                          ]}
+                        >
+                          {segment.text}
+                        </Text>
+                        {segment.audio && (
+                          <TouchableOpacity
+                            onPress={() => playAudio(segment.id, segment.audio)}
+                            style={[
+                              styles.playButton,
+                              isLeft
+                                ? styles.playButtonLeft
+                                : styles.playButtonRight,
+                            ]}
+                          >
+                            <Text style={styles.playIcon}>
+                              {playingSegmentId === segment.id && status.playing
+                                ? "⏸"
+                                : "▶️"}
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+
+                      {showTranslations[segment.id] && (
+                        <View style={styles.translationContainer}>
+                          <Text
+                            style={[
+                              styles.translationText,
+                              isLeft
+                                ? styles.translationTextLeft
+                                : styles.translationTextRight,
+                            ]}
+                          >
+                            {segment.translation}
+                          </Text>
+                        </View>
+                      )}
+
+                      <View style={styles.tapHint}>
+                        <Text
+                          style={[
+                            styles.tapHintText,
+                            isLeft
+                              ? styles.tapHintTextLeft
+                              : styles.tapHintTextRight,
+                          ]}
+                        >
+                          {showTranslations[segment.id]
+                            ? "👁️ Hide"
+                            : "Tap for translation"}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })}
+
+            <View style={styles.bottomSpacer} />
+          </ScrollView>
+
+          <View style={styles.footer}>
+            <TouchableOpacity
+              onPress={playFullDialogue}
+              disabled={audioQueue.length === 0}
+              activeOpacity={0.8}
+              style={[
+                styles.playAllButton,
+                audioQueue.length === 0 && styles.playAllButtonDisabled,
+              ]}
+            >
+              <Text style={styles.playAllIcon}>
+                {isPlayingAll && status.playing ? "⏸" : "▶️"}
+              </Text>
+              <Text style={styles.playAllText}>
+                {isPlayingAll && status.playing
+                  ? "Pause dialogue"
+                  : "Play full dialogue"}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </ThemedView>
-      </LinearGradient>
+      </View>
     </Modal>
   );
 };
 
+export default DialogueStoryPlayer;
+
 const styles = StyleSheet.create({
-  gradient: {
+  backdrop: {
     flex: 1,
-    paddingTop: 8,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
   },
-  container: {
-    flex: 1,
-    backgroundColor: "transparent",
-  },
-  contentContainer: {
-    flex: 1,
+  sheet: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    backgroundColor: "#F8F9FA",
+    maxHeight: "88%",
+    paddingTop: 12,
   },
   header: {
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0, 0, 0, 0.05)",
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  headerTitleRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
     gap: 12,
+    flex: 1,
+  },
+  cover: {
+    fontSize: 40,
+  },
+  headerText: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 20,
+    color: "#1a1a1a",
+  },
+  description: {
+    marginTop: 4,
+    fontSize: 13,
+    opacity: 0.7,
+    color: "#1a1a1a",
   },
   closeButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  closeIcon: {
-    fontSize: 20,
-    color: "#fff",
-    fontWeight: "600",
-  },
-  headerInfo: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  coverLarge: {
-    fontSize: 40,
-  },
-  quizEmoji: {
-    fontSize: 40,
-  },
-  storyTitleHeader: {
-    fontSize: 20,
-    flex: 1,
-  },
-  progressDots: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 8,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
-  },
-  activeDot: {
-    backgroundColor: "#fff",
-    width: 24,
-  },
-  completedDot: {
-    backgroundColor: "rgba(255, 255, 255, 0.6)",
-  },
-  storyContent: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  speakerBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "flex-start",
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginBottom: 20,
-    gap: 8,
-  },
-  speakerEmoji: {
-    fontSize: 16,
-  },
-  speakerName: {
-    fontSize: 14,
-  },
-  textContainer: {
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    borderRadius: 20,
-    padding: 24,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  mainText: {
-    fontSize: 24,
-    lineHeight: 36,
-    marginBottom: 16,
-    color: "#1a1a1a",
-  },
-  audioButton: {
-    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(74, 144, 226, 0.15)",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    gap: 8,
   },
-  audioIcon: {
-    fontSize: 20,
-  },
-  audioLabel: {
-    fontSize: 14,
-    fontWeight: "600",
+  closeIcon: {
+    fontSize: 16,
     color: "#4A90E2",
+    fontWeight: "700",
   },
-  translationToggle: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    paddingVertical: 12,
-  },
-  toggleIcon: {
-    fontSize: 20,
-  },
-  toggleText: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  translationBox: {
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-  },
-  translationText: {
-    fontSize: 18,
-    lineHeight: 28,
-    color: "#555",
-    fontStyle: "italic",
-  },
-  highlightedSection: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    marginBottom: 12,
-  },
-  wordChips: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  wordChip: {
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
+  content: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 16,
   },
-  wordChipText: {
-    fontSize: 14,
-    fontWeight: "600",
+  contentContainer: {
+    paddingTop: 20,
+    paddingBottom: 96,
+    gap: 16,
   },
-  contextBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    paddingVertical: 12,
-    marginBottom: 20,
+  messageContainer: {
+    maxWidth: "80%",
   },
-  contextEmoji: {
-    fontSize: 16,
+  messageLeft: {
+    alignSelf: "flex-start",
   },
-  contextText: {
-    fontSize: 14,
-    opacity: 0.8,
+  messageRight: {
+    alignSelf: "flex-end",
   },
-  navigation: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    gap: 12,
+  speaker: {
+    fontSize: 11,
+    fontWeight: "700",
+    marginBottom: 6,
+    opacity: 0.7,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
-  navButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    paddingVertical: 16,
-    borderRadius: 12,
-    gap: 8,
+  speakerLeft: {
+    color: "#1a1a1a",
+    marginLeft: 4,
   },
-  navButtonDisabled: {
-    opacity: 0.5,
+  speakerRight: {
+    color: "#1a1a1a",
+    marginRight: 4,
+    textAlign: "right",
   },
-  navButtonPrimary: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#fff",
-    paddingVertical: 16,
-    borderRadius: 12,
-    gap: 8,
+  bubble: {
+    borderRadius: 20,
+    padding: 14,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  navIcon: {
-    fontSize: 18,
-    color: "#fff",
+  bubbleContent: {
+    width: "100%",
   },
-  navText: {
-    fontSize: 16,
-    fontWeight: "600",
+  messageRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
   },
-  navIconPrimary: {
-    fontSize: 18,
-    color: "#1a1a1a",
-  },
-  navTextPrimary: {
-    fontSize: 16,
-    color: "#1a1a1a",
-  },
-  // Question styles
-  questionContainer: {
-    flex: 1,
-  },
-  questionProgress: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  questionProgressText: {
-    fontSize: 14,
-    marginBottom: 8,
-    textAlign: "center",
-    opacity: 0.8,
-  },
-  questionProgressBar: {
-    height: 6,
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
-    borderRadius: 3,
-    overflow: "hidden",
-  },
-  questionProgressFill: {
-    height: "100%",
-    backgroundColor: "#fff",
-  },
-  questionContent: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  questionBox: {
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    borderRadius: 20,
-    padding: 24,
-    marginBottom: 24,
-  },
-  questionText: {
-    fontSize: 22,
-    lineHeight: 32,
-    color: "#1a1a1a",
-  },
-  optionsContainer: {
-    gap: 12,
-    marginBottom: 20,
-  },
-  optionButton: {
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
+  playButton: {
+    width: 32,
+    height: 32,
     borderRadius: 16,
-    padding: 16,
-    borderWidth: 2,
-    borderColor: "transparent",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 2,
   },
-  optionButtonSelected: {
-    borderColor: "#4A90E2",
+  playButtonLeft: {
+    backgroundColor: "rgba(255, 255, 255, 0.25)",
+  },
+  playButtonRight: {
     backgroundColor: "rgba(74, 144, 226, 0.1)",
   },
-  optionButtonCorrect: {
-    borderColor: "#4CAF50",
-    backgroundColor: "rgba(76, 175, 80, 0.1)",
+  playIcon: {
+    fontSize: 14,
   },
-  optionButtonIncorrect: {
-    borderColor: "#F44336",
-    backgroundColor: "rgba(244, 67, 54, 0.1)",
+  bubbleLeft: {
+    borderTopLeftRadius: 4,
   },
-  optionContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
+  bubbleRight: {
+    backgroundColor: "#fff",
+    borderTopRightRadius: 4,
+    borderWidth: 1,
+    borderColor: "rgba(0, 0, 0, 0.08)",
   },
-  optionCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#ccc",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  optionCircleSelected: {
-    borderColor: "#4A90E2",
-    backgroundColor: "#4A90E2",
-  },
-  optionCircleCorrect: {
-    borderColor: "#4CAF50",
-    backgroundColor: "#4CAF50",
-  },
-  optionCircleIncorrect: {
-    borderColor: "#F44336",
-    backgroundColor: "#F44336",
-  },
-  checkmark: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  crossmark: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  optionText: {
-    fontSize: 16,
-    flex: 1,
-    color: "#1a1a1a",
-  },
-  explanationBox: {
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-  },
-  explanationBoxCorrect: {
-    backgroundColor: "rgba(76, 175, 80, 0.2)",
-  },
-  explanationBoxIncorrect: {
-    backgroundColor: "rgba(244, 67, 54, 0.2)",
-  },
-  explanationHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 12,
-  },
-  explanationEmoji: {
-    fontSize: 24,
-  },
-  explanationTitle: {
-    fontSize: 18,
-  },
-  explanationText: {
+  messageText: {
+    flexShrink: 1,
     fontSize: 16,
     lineHeight: 24,
+    fontWeight: "500",
   },
-  questionNavigation: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
+  messageTextLeft: {
+    color: "#fff",
+  },
+  messageTextRight: {
+    color: "#1a1a1a",
+  },
+  translationContainer: {
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+  },
+  translationText: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontStyle: "italic",
+  },
+  translationTextLeft: {
+    color: "rgba(255, 255, 255, 0.9)",
+    borderTopColor: "rgba(255, 255, 255, 0.3)",
+  },
+  translationTextRight: {
+    color: "#374151",
+    borderTopColor: "rgba(0, 0, 0, 0.08)",
+  },
+  tapHint: {
+    marginTop: 8,
+    alignItems: "center",
+  },
+  tapHintText: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  tapHintTextLeft: {
+    color: "rgba(255, 255, 255, 0.7)",
+  },
+  tapHintTextRight: {
+    color: "#9CA3AF",
+  },
+  bottomSpacer: {
+    height: 12,
+  },
+  footer: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 16,
+    backgroundColor: "#fff",
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0, 0, 0, 0.06)",
+  },
+  playAllButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 18,
+    backgroundColor: "rgba(74, 144, 226, 0.15)",
+  },
+  playAllButtonDisabled: {
+    opacity: 0.5,
+  },
+  playAllIcon: {
+    fontSize: 16,
+  },
+  playAllText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#1a1a1a",
   },
 });
