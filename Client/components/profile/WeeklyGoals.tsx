@@ -28,25 +28,22 @@ export default function WeeklyGoals({
       label: `Earn ${dailyXpGoal} XP today`,
       current: todayXpEarned,
       total: dailyXpGoal,
-      icon: "🎯",
     },
     {
       label: "Complete 5 activities today",
       current: Math.min(todayActivitiesCompleted, 5),
       total: 5,
-      icon: "⏰",
     },
     {
       label: "Keep your streak alive",
       current: profileStats?.todayXpEarned > 0 ? 1 : 0,
       total: 1,
-      icon: "🔥",
     },
   ];
 
   return (
     <ThemedView style={styles.section}>
-      <ThemedText style={styles.sectionTitle}>🎯 Today's Goals</ThemedText>
+      <ThemedText style={styles.sectionTitle}>Today's Goals</ThemedText>
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#4A90E2" />
@@ -59,7 +56,6 @@ export default function WeeklyGoals({
               <View key={index} style={styles.goalCard}>
                 <View style={styles.goalHeader}>
                   <View style={styles.goalInfo}>
-                    <ThemedText style={styles.goalIcon}>{goal.icon}</ThemedText>
                     <ThemedText style={styles.goalLabel}>
                       {goal.label}
                     </ThemedText>
@@ -128,13 +124,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   goalInfo: {
-    flexDirection: "row",
-    alignItems: "center",
     flex: 1,
-  },
-  goalIcon: {
-    fontSize: 20,
-    marginRight: 12,
   },
   goalLabel: {
     fontSize: 15,

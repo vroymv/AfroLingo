@@ -1,8 +1,12 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import React from "react";
-import { StyleSheet, View, TouchableOpacity, ActivityIndicator } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import {
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import { User } from "@/types/AuthContext";
 import { ProfileStats } from "@/services/profile";
 
@@ -68,7 +72,7 @@ export default function Achievements({
   return (
     <ThemedView style={styles.section}>
       <View style={styles.headerRow}>
-        <ThemedText style={styles.sectionTitle}>🏆 Achievements</ThemedText>
+        <ThemedText style={styles.sectionTitle}>Achievements</ThemedText>
         <View style={styles.badge}>
           <ThemedText style={styles.badgeText}>
             {achievements.filter((a) => a.unlocked).length}/
@@ -84,17 +88,12 @@ export default function Achievements({
         <View style={styles.achievementsGrid}>
           {achievements.map((achievement, index) => (
             <TouchableOpacity key={index} activeOpacity={0.8}>
-              <LinearGradient
-                colors={
-                  achievement.unlocked
-                    ? ["#FFD700", "#FFA500"]
-                    : ["rgba(255, 255, 255, 0.05)", "rgba(255, 255, 255, 0.02)"]
-                }
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
+              <View
                 style={[
                   styles.achievementCard,
-                  !achievement.unlocked && styles.lockedCard,
+                  achievement.unlocked
+                    ? styles.unlockedCard
+                    : styles.lockedCard,
                 ]}
               >
                 <ThemedText
@@ -108,7 +107,7 @@ export default function Achievements({
                 <ThemedText
                   style={[
                     styles.achievementName,
-                    !achievement.unlocked && styles.lockedText,
+                    achievement.unlocked && styles.unlockedText,
                   ]}
                 >
                   {achievement.name}
@@ -118,7 +117,7 @@ export default function Achievements({
                     <ThemedText style={styles.checkmarkText}>✓</ThemedText>
                   </View>
                 )}
-              </LinearGradient>
+              </View>
             </TouchableOpacity>
           ))}
         </View>
@@ -169,16 +168,17 @@ const styles = StyleSheet.create({
     padding: 12,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 6,
     position: "relative",
   },
+  unlockedCard: {
+    backgroundColor: "rgba(74, 144, 226, 0.12)",
+    borderWidth: 2,
+    borderColor: "#4A90E2",
+  },
   lockedCard: {
+    backgroundColor: "rgba(0, 0, 0, 0.02)",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
+    borderColor: "rgba(0, 0, 0, 0.1)",
   },
   achievementEmoji: {
     fontSize: 36,
@@ -191,10 +191,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     textAlign: "center",
-    color: "#FFF",
+    opacity: 0.5,
   },
-  lockedText: {
-    opacity: 0.4,
+  unlockedText: {
+    opacity: 1,
+    color: "#4A90E2",
   },
   checkmark: {
     position: "absolute",

@@ -1,21 +1,65 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { mockStoriesData, Story } from "@/data/stories";
-import React, { useState } from "react";
+import type { Story } from "@/data/stories";
+import { fetchStories, fetchStoryById } from "@/services/stories";
+import { useAuth } from "@/contexts/AuthContext";
+import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { StoryPlayer } from "./StoryPlayerRouter";
 import { StoryCard } from "./StoryCard";
 import { StoryProgress } from "./StoryProgress";
 
 export const StoriesTab: React.FC = () => {
+  const { user } = useAuth();
   const [selectedStory, setSelectedStory] = useState<Story | null>(null);
   const [showPlayer, setShowPlayer] = useState(false);
+  const [stories, setStories] = useState<Story[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const stories = mockStoriesData;
+  useEffect(() => {
+    let isMounted = true;
 
-  const handleStoryPress = (story: Story) => {
-    setSelectedStory(story);
-    setShowPlayer(true);
+    (async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const data = await fetchStories(user?.id);
+        if (!isMounted) return;
+        setStories(data);
+      } catch (e: any) {
+        if (!isMounted) return;
+        setError(e?.message ?? "Failed to load stories");
+      } finally {
+        if (!isMounted) return;
+        setIsLoading(false);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.id]);
+
+  const handleStoryPress = async (story: Story) => {
+    try {
+      setError(null);
+      const full = await fetchStoryById(story.id, user?.id);
+      setSelectedStory(full);
+      setShowPlayer(true);
+    } catch (e: any) {
+      setError(e?.message ?? "Failed to load story");
+    }
+  };
+
+  const handleMarkedComplete = (storyId: string) => {
+    setStories((prev) =>
+      prev.map((s) => (s.id === storyId ? { ...s, isCompleted: true } : s))
+    );
+
+    setSelectedStory((prev) =>
+      prev && prev.id === storyId ? { ...prev, isCompleted: true } : prev
+    );
   };
 
   return (
@@ -25,6 +69,27 @@ export const StoriesTab: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         <StoryProgress stories={stories} />
+
+        {isLoading && (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateEmoji}>⏳</Text>
+            <ThemedText type="defaultSemiBold" style={styles.emptyStateTitle}>
+              Loading stories...
+            </ThemedText>
+          </View>
+        )}
+
+        {error && !isLoading && (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateEmoji}>⚠️</Text>
+            <ThemedText type="defaultSemiBold" style={styles.emptyStateTitle}>
+              Couldn’t load stories
+            </ThemedText>
+            <ThemedText type="default" style={styles.emptyStateText}>
+              {error}
+            </ThemedText>
+          </View>
+        )}
 
         {/* Stories Section */}
         <View style={styles.storiesSection}>
@@ -37,7 +102,7 @@ export const StoriesTab: React.FC = () => {
             </ThemedText>
           </View>
 
-          {stories.length > 0 ? (
+          {!isLoading && !error && stories.length > 0 ? (
             stories.map((story) => (
               <StoryCard
                 key={story.id}
@@ -45,7 +110,7 @@ export const StoriesTab: React.FC = () => {
                 onPress={() => handleStoryPress(story)}
               />
             ))
-          ) : (
+          ) : !isLoading && !error ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyStateEmoji}>🔍</Text>
               <ThemedText type="defaultSemiBold" style={styles.emptyStateTitle}>
@@ -55,7 +120,7 @@ export const StoriesTab: React.FC = () => {
                 Check back soon for new stories.
               </ThemedText>
             </View>
-          )}
+          ) : null}
         </View>
 
         <View style={styles.bottomPadding} />
@@ -67,6 +132,7 @@ export const StoriesTab: React.FC = () => {
           story={selectedStory}
           visible={showPlayer}
           onClose={() => setShowPlayer(false)}
+          onMarkedComplete={handleMarkedComplete}
         />
       )}
     </ThemedView>

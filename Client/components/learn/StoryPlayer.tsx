@@ -17,18 +17,23 @@ import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import type { Story } from "@/data/stories";
+import { useAuth } from "@/contexts/AuthContext";
+import { markStoryComplete } from "@/services/stories";
 
 type DialogueStoryPlayerProps = {
   story: Story;
   visible: boolean;
   onClose: () => void;
+  onMarkedComplete?: (storyId: string) => void;
 };
 
 const DialogueStoryPlayer: React.FC<DialogueStoryPlayerProps> = ({
   story,
   visible,
   onClose,
+  onMarkedComplete,
 }) => {
+  const { user } = useAuth();
   const [showTranslations, setShowTranslations] = useState<{
     [key: string]: boolean;
   }>({});
@@ -39,6 +44,11 @@ const DialogueStoryPlayer: React.FC<DialogueStoryPlayerProps> = ({
   const [isPlayingAll, setIsPlayingAll] = useState(false);
   const [queueIndex, setQueueIndex] = useState(0);
   const lastAdvancedForSegmentIdRef = useRef<string | null>(null);
+
+  const [isMarkingComplete, setIsMarkingComplete] = useState(false);
+  const [localIsCompleted, setLocalIsCompleted] = useState<boolean>(
+    Boolean(story.isCompleted)
+  );
 
   const player = useAudioPlayer(currentAudioSource || "");
   const status = useAudioPlayerStatus(player);
@@ -158,6 +168,10 @@ const DialogueStoryPlayer: React.FC<DialogueStoryPlayerProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
+  useEffect(() => {
+    setLocalIsCompleted(Boolean(story.isCompleted));
+  }, [story.id, story.isCompleted]);
+
   const playAudio = (segmentId: string, audioUrl?: string) => {
     if (!audioUrl) return;
 
@@ -191,6 +205,22 @@ const DialogueStoryPlayer: React.FC<DialogueStoryPlayerProps> = ({
     onClose();
   };
 
+  const handleMarkComplete = async () => {
+    if (!user?.id) return;
+    if (isMarkingComplete) return;
+
+    try {
+      setIsMarkingComplete(true);
+      await markStoryComplete(story.id, user.id);
+      setLocalIsCompleted(true);
+      onMarkedComplete?.(story.id);
+    } catch (e) {
+      console.error("Failed to mark story complete:", e);
+    } finally {
+      setIsMarkingComplete(false);
+    }
+  };
+
   return (
     <Modal
       visible={visible}
@@ -210,6 +240,27 @@ const DialogueStoryPlayer: React.FC<DialogueStoryPlayerProps> = ({
                 <ThemedText type="default" style={styles.description}>
                   {story.description}
                 </ThemedText>
+
+                <View style={styles.headerActionsRow}>
+                  {localIsCompleted ? (
+                    <View style={styles.completedPill}>
+                      <Text style={styles.completedPillText}>Completed</Text>
+                    </View>
+                  ) : user?.id ? (
+                    <TouchableOpacity
+                      onPress={handleMarkComplete}
+                      disabled={isMarkingComplete}
+                      accessibilityRole="button"
+                      accessibilityLabel="Mark story as complete"
+                      style={styles.completeButton}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={styles.completeButtonText}>
+                        {isMarkingComplete ? "Saving..." : "Mark as complete"}
+                      </Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
               </View>
             </View>
 
@@ -406,6 +457,36 @@ const styles = StyleSheet.create({
     fontSize: 13,
     opacity: 0.7,
     color: "#1a1a1a",
+  },
+  headerActionsRow: {
+    marginTop: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  completeButton: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+    backgroundColor: "rgba(16, 185, 129, 0.15)",
+  },
+  completeButtonText: {
+    color: "#10B981",
+    fontWeight: "800",
+    fontSize: 12,
+  },
+  completedPill: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+    backgroundColor: "rgba(16, 185, 129, 0.15)",
+  },
+  completedPillText: {
+    color: "#10B981",
+    fontWeight: "800",
+    fontSize: 12,
   },
   closeButton: {
     width: 36,

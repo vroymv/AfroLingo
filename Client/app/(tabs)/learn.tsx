@@ -1,5 +1,4 @@
 import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
 import { LessonsTab } from "@/components/learn/LessonsTab";
 import { PracticeTab } from "@/components/learn/PracticeTab";
 import { StoriesTab } from "@/components/learn/StoriesTab";
@@ -7,7 +6,7 @@ import { useOnboarding } from "@/contexts/OnboardingContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import React from "react";
-import { Platform, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Tab = createMaterialTopTabNavigator();

@@ -16,8 +16,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "expo-router";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
-const { width } = Dimensions.get("window");
-const DRAWER_WIDTH = width * 0.75;
+const { width, height } = Dimensions.get("window");
+const MODAL_HEIGHT = height * 0.85;
 
 interface SettingsDrawerProps {
   visible: boolean;
@@ -30,7 +30,7 @@ export default function SettingsDrawer({
 }: SettingsDrawerProps) {
   const { logout } = useAuth();
   const router = useRouter();
-  const slideAnim = React.useRef(new Animated.Value(-DRAWER_WIDTH)).current;
+  const slideAnim = React.useRef(new Animated.Value(MODAL_HEIGHT)).current;
   const [shouldRender, setShouldRender] = React.useState(visible);
   const iconColor = useThemeColor({}, "text");
 
@@ -67,7 +67,7 @@ export default function SettingsDrawer({
       }).start();
     } else {
       Animated.timing(slideAnim, {
-        toValue: -DRAWER_WIDTH,
+        toValue: MODAL_HEIGHT,
         duration: 250,
         useNativeDriver: true,
       }).start(({ finished }) => {
@@ -149,16 +149,19 @@ export default function SettingsDrawer({
 
         <Animated.View
           style={[
-            styles.drawer,
+            styles.modal,
             {
-              transform: [{ translateX: slideAnim }],
+              transform: [{ translateY: slideAnim }],
             },
           ]}
         >
-          <ThemedView style={styles.drawerContent}>
+          <ThemedView style={styles.modalContent}>
+            {/* Handle Bar */}
+            <View style={styles.handleBar} />
+
             {/* Header */}
             <View style={styles.header}>
-              <ThemedText style={styles.headerTitle}>⚙️ Settings</ThemedText>
+              <ThemedText style={styles.headerTitle}>Settings</ThemedText>
               <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                 <Ionicons name="close" size={24} color={iconColor} />
               </TouchableOpacity>
@@ -246,37 +249,51 @@ export default function SettingsDrawer({
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    flexDirection: "row",
+    justifyContent: "flex-end",
   },
   overlay: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
-  drawer: {
+  modal: {
     position: "absolute",
-    left: 0,
-    top: 0,
     bottom: 0,
-    width: DRAWER_WIDTH,
+    left: 0,
+    right: 0,
+    height: MODAL_HEIGHT,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     shadowColor: "#000",
-    shadowOffset: { width: 2, height: 0 },
+    shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 5,
   },
-  drawerContent: {
+  modalContent: {
     flex: 1,
-    padding: 20,
-    paddingTop: 60,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 40,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  handleBar: {
+    width: 40,
+    height: 4,
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
+    borderRadius: 2,
+    alignSelf: "center",
+    marginBottom: 20,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 24,
+    paddingTop: 8,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "bold",
   },
   closeButton: {

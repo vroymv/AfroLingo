@@ -7,6 +7,7 @@ type StoryPlayerProps = {
   story: Story;
   visible: boolean;
   onClose: () => void;
+  onMarkedComplete?: (storyId: string) => void;
 };
 
 /**
@@ -19,14 +20,25 @@ export const StoryPlayer: React.FC<StoryPlayerProps> = ({
   story,
   visible,
   onClose,
+  onMarkedComplete,
 }) => {
   if (story.type === "dialogue") {
     return (
-      <DialogueStoryPlayer story={story} visible={visible} onClose={onClose} />
+      <DialogueStoryPlayer
+        story={story}
+        visible={visible}
+        onClose={onClose}
+        onMarkedComplete={onMarkedComplete}
+      />
     );
   }
 
   return (
-    <ImmersiveStoryPlayer story={story} visible={visible} onClose={onClose} />
+    <ImmersiveStoryPlayer
+      story={story}
+      visible={visible}
+      onClose={onClose}
+      onMarkedComplete={onMarkedComplete}
+    />
   );
 };

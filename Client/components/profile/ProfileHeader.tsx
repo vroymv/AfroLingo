@@ -1,7 +1,6 @@
 import { ThemedText } from "@/components/ThemedText";
 import React from "react";
 import { Image, StyleSheet, View, ActivityIndicator } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { User } from "@/types/AuthContext";
 import { useAuth } from "@/contexts/AuthContext";
 import ImagePickerComponent from "@/components/ui/ImagePicker";
@@ -60,47 +59,37 @@ export default function ProfileHeader({
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={["#4A90E2", "#357ABD", "#2C5F99"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.gradientCard}
-      >
+      <View style={styles.card}>
         <View style={styles.header}>
           <View style={styles.avatarContainer}>
-            <LinearGradient
-              colors={["#FFD700", "#FFA500", "#FF8C00"]}
-              style={styles.avatarGradient}
+            <ImagePickerComponent
+              currentImageUrl={user?.avatar}
+              userId={user?.id || "guest"}
+              onImageUploaded={handleImageUploaded}
+              size={96}
+              showEditBadge={true}
             >
-              <ImagePickerComponent
-                currentImageUrl={user?.avatar}
-                userId={user?.id || "guest"}
-                onImageUploaded={handleImageUploaded}
-                size={92}
-                showEditBadge={true}
-              >
-                {user?.avatar ? (
-                  <Image
-                    source={{ uri: user.avatar }}
-                    style={styles.avatarImage}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <View style={styles.avatar}>
-                    <ThemedText style={styles.avatarEmoji}>👤</ThemedText>
-                  </View>
-                )}
-              </ImagePickerComponent>
-            </LinearGradient>
+              {user?.avatar ? (
+                <Image
+                  source={{ uri: user.avatar }}
+                  style={styles.avatarImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={styles.avatar}>
+                  <ThemedText style={styles.avatarText}>👤</ThemedText>
+                </View>
+              )}
+            </ImagePickerComponent>
           </View>
           <ThemedText style={styles.name}>{user.name || "User"}</ThemedText>
-          <View style={styles.levelBadge}>
+          <View style={styles.infoRow}>
             {isLoading ? (
-              <ActivityIndicator size="small" color="#FFF" />
+              <ActivityIndicator size="small" color="#4A90E2" />
             ) : (
-              <ThemedText style={styles.levelText}>
-                🌟 {levelName}
-              </ThemedText>
+              <View style={styles.levelBadge}>
+                <ThemedText style={styles.levelText}>{levelName}</ThemedText>
+              </View>
             )}
           </View>
           {languageName && (
@@ -123,12 +112,12 @@ export default function ProfileHeader({
           {!user.emailVerified && (
             <View style={styles.verificationBadge}>
               <ThemedText style={styles.verificationText}>
-                ⚠️ Email not verified
+                Email not verified
               </ThemedText>
             </View>
           )}
         </View>
-      </LinearGradient>
+      </View>
     </View>
   );
 }
@@ -137,14 +126,12 @@ const styles = StyleSheet.create({
   container: {
     marginBottom: 24,
   },
-  gradientCard: {
-    borderRadius: 24,
+  card: {
+    borderRadius: 20,
     padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    backgroundColor: "rgba(74, 144, 226, 0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(74, 144, 226, 0.15)",
   },
   header: {
     alignItems: "center",
@@ -153,92 +140,65 @@ const styles = StyleSheet.create({
     position: "relative",
     marginBottom: 16,
   },
-  avatarGradient: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    padding: 4,
-    shadowColor: "#FFD700",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 8,
-  },
   avatar: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 46,
-    backgroundColor: "#FFF",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarImage: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 46,
-    backgroundColor: "#FFF",
-  },
-  avatarEmoji: {
-    fontSize: 48,
-  },
-  editBadge: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    backgroundColor: "#4A90E2",
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: "#E8F4FD",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 3,
-    borderColor: "#FFF",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+    borderColor: "#4A90E2",
   },
-  editIcon: {
-    fontSize: 14,
+  avatarImage: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: "#FFF",
+  },
+  avatarText: {
+    fontSize: 40,
   },
   name: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: "bold",
-    color: "#FFF",
+    marginBottom: 8,
+  },
+  infoRow: {
     marginBottom: 8,
   },
   levelBadge: {
-    backgroundColor: "rgba(255, 255, 255, 0.25)",
+    backgroundColor: "rgba(74, 144, 226, 0.15)",
     paddingHorizontal: 16,
     paddingVertical: 6,
     borderRadius: 20,
-    marginBottom: 8,
   },
   levelText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#FFF",
+    color: "#4A90E2",
   },
   language: {
-    fontSize: 16,
-    color: "rgba(255, 255, 255, 0.9)",
+    fontSize: 15,
+    opacity: 0.7,
   },
   memberSince: {
     fontSize: 13,
-    color: "rgba(255, 255, 255, 0.7)",
+    opacity: 0.5,
     marginTop: 4,
   },
   verificationBadge: {
-    backgroundColor: "rgba(255, 152, 0, 0.3)",
+    backgroundColor: "rgba(255, 152, 0, 0.15)",
     paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingVertical: 6,
     borderRadius: 12,
     marginTop: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 152, 0, 0.3)",
   },
   verificationText: {
     fontSize: 12,
-    color: "#FFF",
+    color: "#FF9800",
     fontWeight: "500",
   },
 });

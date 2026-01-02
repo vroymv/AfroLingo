@@ -12,11 +12,14 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import type { Story } from "@/data/stories";
+import { useAuth } from "@/contexts/AuthContext";
+import { markStoryComplete } from "@/services/stories";
 
 type ImmersiveStoryPlayerProps = {
   story: Story;
   visible: boolean;
   onClose: () => void;
+  onMarkedComplete?: (storyId: string) => void;
 };
 
 const { height } = Dimensions.get("window");
@@ -25,12 +28,19 @@ export const ImmersiveStoryPlayer: React.FC<ImmersiveStoryPlayerProps> = ({
   story,
   visible,
   onClose,
+  onMarkedComplete,
 }) => {
+  const { user } = useAuth();
   const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
   const [showTranslation, setShowTranslation] = useState(false);
   const fadeAnim = React.useRef(new Animated.Value(1)).current;
   const [currentAudioSource, setCurrentAudioSource] = useState<string | null>(
     null
+  );
+
+  const [isMarkingComplete, setIsMarkingComplete] = useState(false);
+  const [localIsCompleted, setLocalIsCompleted] = useState<boolean>(
+    Boolean(story.isCompleted)
   );
 
   const player = useAudioPlayer(currentAudioSource || "");
@@ -113,6 +123,30 @@ export const ImmersiveStoryPlayer: React.FC<ImmersiveStoryPlayerProps> = ({
       player.play();
     } catch (error) {
       console.error("Error playing audio:", error);
+    }
+  };
+
+  React.useEffect(() => {
+    setLocalIsCompleted(Boolean(story.isCompleted));
+  }, [story.id, story.isCompleted]);
+
+  const handleMarkComplete = async () => {
+    if (!user?.id) {
+      onClose();
+      return;
+    }
+    if (isMarkingComplete) return;
+
+    try {
+      setIsMarkingComplete(true);
+      await markStoryComplete(story.id, user.id);
+      setLocalIsCompleted(true);
+      onMarkedComplete?.(story.id);
+      onClose();
+    } catch (error) {
+      console.error("Failed to mark immersive story complete:", error);
+    } finally {
+      setIsMarkingComplete(false);
     }
   };
 
@@ -255,11 +289,24 @@ export const ImmersiveStoryPlayer: React.FC<ImmersiveStoryPlayerProps> = ({
 
           <TouchableOpacity
             style={[styles.navButton, styles.navButtonPrimary]}
-            onPress={isLastSegment ? onClose : handleNext}
+            onPress={
+              isLastSegment
+                ? localIsCompleted
+                  ? onClose
+                  : handleMarkComplete
+                : handleNext
+            }
+            disabled={isLastSegment ? isMarkingComplete : false}
             activeOpacity={0.7}
           >
             <Text style={[styles.navButtonText, styles.navButtonPrimaryText]}>
-              {isLastSegment ? "Complete ✓" : "Next →"}
+              {isLastSegment
+                ? localIsCompleted
+                  ? "Completed ✓"
+                  : isMarkingComplete
+                  ? "Saving..."
+                  : "Mark complete"
+                : "Next →"}
             </Text>
           </TouchableOpacity>
         </View>

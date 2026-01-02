@@ -106,13 +106,13 @@ export default function ProfileScreen() {
         <StatusBar
           barStyle={colorScheme === "dark" ? "light-content" : "dark-content"}
         />
-        {/* Hamburger Menu Button */}
+        {/* Settings Button */}
         <TouchableOpacity
-          style={styles.hamburgerButton}
+          style={styles.settingsButton}
           onPress={() => setDrawerVisible(true)}
           activeOpacity={0.7}
         >
-          <Ionicons name="menu" size={26} color={iconColor} />
+          <Ionicons name="settings-outline" size={24} color={iconColor} />
         </TouchableOpacity>
         <ScrollView
           style={styles.scrollView}
@@ -167,22 +167,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  hamburgerButton: {
+  settingsButton: {
     position: "absolute",
-    top: 10,
-    left: 12,
+    top: 16,
+    right: 20,
     zIndex: 1000,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(0, 0, 0, 0.05)",
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
   scrollView: {
     flex: 1,
