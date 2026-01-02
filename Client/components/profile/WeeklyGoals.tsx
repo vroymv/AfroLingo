@@ -43,7 +43,7 @@ export default function WeeklyGoals({
 
   return (
     <ThemedView style={styles.section}>
-      <ThemedText style={styles.sectionTitle}>Today's Goals</ThemedText>
+      <ThemedText style={styles.sectionTitle}>{"Today's Goals"}</ThemedText>
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#4A90E2" />
