@@ -34,18 +34,14 @@ Status Legend: Planned | In Progress | Alpha | Beta | Released | Deferred
 
 ## 4. Community & Social Features
 
-| Feature               | Description                                          | Status   | Notes                                                   |
-| --------------------- | ---------------------------------------------------- | -------- | ------------------------------------------------------- |
-| Community Hub         | Material Top Tabs navigation for community features  | Released | Three main sections: Discussions, Challenges, Resources |
-| Discussion Forums     | Reddit-style forum for language learning discussions | Released | Post cards, threaded replies, reactions                 |
-| Weekly Challenges     | Gamified speaking/writing practice challenges        | Released | Audio/video submissions, XP rewards, progress tracking  |
-| Resource Sharing      | Curated learning materials with bookmarking          | Released | Podcasts, videos, PDFs, study groups                    |
-| Post Detail View      | Full post view with threaded comments                | Released | Audio/video reply capabilities                          |
-| User Types & Badges   | Diaspora learner vs native speaker identification    | Released | Country flags, role indicators                          |
-| Emoji Reactions       | Quick feedback system for posts and comments         | Released | Multiple reaction types                                 |
-| Trending Content      | Hot discussions and popular posts                    | Released | Fire badge for trending posts                           |
-| Search & Filtering    | Find content by language, difficulty, type           | Released | Tag-based filtering system                              |
-| Gamification Elements | XP rewards, badges, progress bars                    | Released | Challenge participation tracking                        |
+| Feature               | Description                                         | Status   | Notes                                                  |
+| --------------------- | --------------------------------------------------- | -------- | ------------------------------------------------------ |
+| Community Hub         | Material Top Tabs navigation for community features | Released | Sections vary by build                                 |
+| Weekly Challenges     | Gamified speaking/writing practice challenges       | Released | Audio/video submissions, XP rewards, progress tracking |
+| Resource Sharing      | Curated learning materials with bookmarking         | Released | Podcasts, videos, PDFs, study groups                   |
+| User Types & Badges   | Diaspora learner vs native speaker identification   | Released | Country flags, role indicators                         |
+| Emoji Reactions       | Quick feedback system for posts and comments        | Released | Multiple reaction types                                |
+| Gamification Elements | XP rewards, badges, progress bars                   | Released | Challenge participation tracking                       |
 
 ## 5. Accounts & Social (Future)
 

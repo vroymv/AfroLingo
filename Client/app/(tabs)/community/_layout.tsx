@@ -32,7 +32,26 @@ export default function CommunityLayout() {
             textTransform: "none",
           },
         }}
-      />
+      >
+        <TopTabs.Screen
+          name="index"
+          options={{
+            title: "Feed",
+          }}
+        />
+        <TopTabs.Screen
+          name="groups"
+          options={{
+            title: "Groups",
+          }}
+        />
+        <TopTabs.Screen
+          name="profiles"
+          options={{
+            title: "Connect",
+          }}
+        />
+      </TopTabs>
     </SafeAreaView>
   );
 }

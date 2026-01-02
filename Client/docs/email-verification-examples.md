@@ -178,14 +178,14 @@ export default function CommunityScreen() {
         <>
           <CreatePostButton />
           <MessageUsersButton />
-          <JoinDiscussionsButton />
+          <JoinGroupsButton />
         </>
       ) : (
         <View style={styles.lockedFeatures}>
           <Text>🔒 Verify your email to unlock community features:</Text>
           <Text>• Create posts</Text>
           <Text>• Message other users</Text>
-          <Text>• Join discussions</Text>
+          <Text>• Join groups</Text>
         </View>
       )}
     </View>

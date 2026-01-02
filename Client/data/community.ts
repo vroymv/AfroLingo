@@ -364,123 +364,12 @@ export interface Activity {
   xpEarned?: number;
 }
 
-// Mock data for new features
-export const mockPracticePartners: PracticePartner[] = [
-  {
-    id: "1",
-    user: {
-      id: "p1",
-      name: "Chioma Okafor",
-      avatar: "👩🏿‍💼",
-      userType: "native",
-      country: "NG",
-      languages: ["Yoruba", "Igbo", "English"],
-      xp: 2400,
-      badges: ["Native Speaker", "Helpful Partner"],
-      nativeLanguage: "Yoruba",
-      targetLanguage: "French",
-      level: "intermediate",
-      bio: "Native Yoruba speaker looking to practice French",
-      streak: 45,
-    },
-    nativeLanguage: "Yoruba",
-    targetLanguage: "French",
-    level: "intermediate",
-    interests: ["Culture", "Music", "Food"],
-    availability: "Evenings (GMT+1)",
-    matchScore: 95,
-    isOnline: true,
-  },
-  {
-    id: "2",
-    user: {
-      id: "p2",
-      name: "Themba Ndlovu",
-      avatar: "👨🏿‍🎓",
-      userType: "learner",
-      country: "ZA",
-      languages: ["Zulu", "English"],
-      xp: 1800,
-      badges: ["Fast Learner", "Weekly Challenger"],
-      nativeLanguage: "English",
-      targetLanguage: "Zulu",
-      level: "beginner",
-      bio: "Learning Zulu to connect with my roots",
-      streak: 28,
-    },
-    nativeLanguage: "English",
-    targetLanguage: "Zulu",
-    level: "beginner",
-    interests: ["History", "Travel", "Sports"],
-    availability: "Weekends",
-    matchScore: 88,
-    isOnline: false,
-  },
-  {
-    id: "3",
-    user: {
-      id: "p3",
-      name: "Fatima Diallo",
-      avatar: "👩🏾‍🏫",
-      userType: "tutor",
-      country: "SN",
-      languages: ["Wolof", "French", "English"],
-      xp: 3200,
-      badges: ["Master Tutor", "Community Star"],
-      nativeLanguage: "Wolof",
-      targetLanguage: "English",
-      level: "advanced",
-      bio: "Teaching Wolof and practicing English conversation",
-      streak: 67,
-    },
-    nativeLanguage: "Wolof",
-    targetLanguage: "English",
-    level: "advanced",
-    interests: ["Teaching", "Literature", "Culture"],
-    availability: "Flexible",
-    matchScore: 92,
-    isOnline: true,
-  },
-];
-
-export const mockConversationPrompts: ConversationPrompt[] = [
-  {
-    id: "1",
-    category: "Greetings",
-    prompt: "Introduce yourself and ask about their day",
-    difficulty: "beginner",
-  },
-  {
-    id: "2",
-    category: "Food",
-    prompt: "Discuss your favorite traditional dishes and recipes",
-    difficulty: "intermediate",
-  },
-  {
-    id: "3",
-    category: "Culture",
-    prompt: "Share a story about an important cultural celebration in your community",
-    difficulty: "advanced",
-  },
-  {
-    id: "4",
-    category: "Travel",
-    prompt: "Describe a place you'd like to visit and why",
-    difficulty: "intermediate",
-  },
-  {
-    id: "5",
-    category: "Family",
-    prompt: "Talk about your family traditions and customs",
-    difficulty: "beginner",
-  },
-];
-
 export const mockGroups: Group[] = [
   {
     id: "1",
     name: "Yoruba Warriors 🦁",
-    description: "Daily practice group for dedicated Yoruba learners. Join us for weekly challenges and cultural discussions!",
+    description:
+      "Daily practice group for dedicated Yoruba learners. Join us for weekly challenges and cultural discussions!",
     language: "Yoruba",
     avatar: "🦁",
     memberCount: 156,
@@ -495,7 +384,8 @@ export const mockGroups: Group[] = [
   {
     id: "2",
     name: "Swahili Circle",
-    description: "Practice conversational Swahili with native speakers and learners from East Africa.",
+    description:
+      "Practice conversational Swahili with native speakers and learners from East Africa.",
     language: "Swahili",
     avatar: "🌍",
     memberCount: 203,
@@ -510,7 +400,8 @@ export const mockGroups: Group[] = [
   {
     id: "3",
     name: "Zulu Beginners Hub",
-    description: "Supportive community for those just starting their Zulu journey. We help each other learn!",
+    description:
+      "Supportive community for those just starting their Zulu journey. We help each other learn!",
     language: "Zulu",
     avatar: "🌱",
     memberCount: 89,
@@ -525,7 +416,8 @@ export const mockGroups: Group[] = [
   {
     id: "4",
     name: "Akan Culture & Language",
-    description: "Explore Akan language alongside its rich cultural heritage. Storytelling, proverbs, and more!",
+    description:
+      "Explore Akan language alongside its rich cultural heritage. Storytelling, proverbs, and more!",
     language: "Akan",
     avatar: "👑",
     memberCount: 127,
@@ -540,7 +432,8 @@ export const mockGroups: Group[] = [
   {
     id: "5",
     name: "Wolof Advanced Learners",
-    description: "For advanced learners ready to dive deep into complex grammar and literature.",
+    description:
+      "For advanced learners ready to dive deep into complex grammar and literature.",
     language: "Wolof",
     avatar: "📚",
     memberCount: 45,

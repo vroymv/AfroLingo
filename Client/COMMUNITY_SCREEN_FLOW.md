@@ -8,100 +8,24 @@
 │                    (Material Top Tabs)                           │
 └─────────────────────────────────────────────────────────────────┘
                               │
-        ┌─────────────────────┼─────────────────────┬──────────────┐
-        │                     │                      │              │
-        ▼                     ▼                      ▼              ▼
-┌──────────────┐    ┌──────────────┐      ┌──────────────┐  ┌──────────────┐
-│ DISCUSSIONS  │    │   PARTNERS   │      │   GROUPS     │  │  CHALLENGES  │
-│              │    │              │      │              │  │              │
-│ - All Posts  │    │ - All        │      │ - My Groups  │  │ - Active     │
-│ - Trending   │    │ - Online     │      │ - Public     │  │ - Previous   │
-│ - Filtered   │    │ - By Level   │      │ - Available  │  │ - Submit     │
-│ - AI Tips    │    │ - Prompts    │      │ - Create     │  │ - Progress   │
-└──────┬───────┘    └──────┬───────┘      └──────┬───────┘  └──────────────┘
-       │                   │                     │
-       ▼                   ▼                     ▼
-┌──────────────┐    ┌──────────────┐      ┌──────────────┐
-│ POST DETAIL  │    │ START CHAT   │      │ GROUP DETAIL │
-│              │    │              │      │              │
-│ - Comments   │    │ - Messages   │      │ - Members    │
-│ - Replies    │    │ - Voice UI   │      │ - Progress   │
-│ - Reactions  │    │ - Prompts    │      │ - Leaderboard│
-│ - Audio/Vid  │    │              │      │              │
-└──────────────┘    └──────────────┘      └──────────────┘
-
-        │                     │                      │              
-        ▼                     ▼                      ▼              
-┌──────────────┐    ┌──────────────┐      ┌──────────────┐  
-│  RESOURCES   │    │   PROFILES   │      │    SAFETY    │  
-│              │    │              │      │              │  
-│ - Search     │    │ - Stats      │      │ - Guidelines │  
-│ - Filter     │    │ - Badges     │      │ - Report     │  
-│ - Types      │    │ - Follow     │      │ - Block      │  
-│ - Bookmark   │    │ - Activity   │      │ - AI Mod     │  
-└──────────────┘    └──────────────┘      └──────────────┘  
+         ┌─────────────────────┼─────────────────────┐
+         │                     │                     │
+         ▼                     ▼                     ▼
+┌──────────────┐      ┌──────────────┐      ┌──────────────┐
+│    FEED      │      │   GROUPS     │      │   PROFILES   │
+│              │      │              │      │              │
+│ - Posts      │      │ - List       │      │ - Find users │
+│ - Reactions  │      │ - Search     │      │ - Search     │
+│ - Like/FAB   │      │ - Join       │      │ - Connect    │
+└──────────────┘      └──────────────┘      └──────────────┘
 ```
 
 ---
 
 ## 📱 Screen-by-Screen Features
 
-### 1️⃣ Discussions Screen
-```
-╔═══════════════════════════════════════════╗
-║         Discussions 💬                     ║
-║    Connect with fellow learners           ║
-╠═══════════════════════════════════════════╣
-║ [All] [Grammar] [Vocabulary] [Pronunciation] ║ <- Tag Filters
-╠═══════════════════════════════════════════╣
-║ 🤖 AI Suggestions (when filtered)         ║
-║ • Try practicing with a language partner  ║
-║ • Focus on one sound at a time           ║
-╠═══════════════════════════════════════════╣
-║ 🔥 Trending Now                           ║
-║ ┌─────────────────────────────────────┐   ║
-║ │ 👩🏽‍🎓 Sarah • 2h ago • 🇺🇸 📚         │   ║
-║ │ Pronunciation tips for beginners    │   ║
-║ │ I've been struggling with...        │   ║
-║ │ [Yoruba] [Pronunciation] [Beginner] │   ║
-║ │ 👍45 🔥12 👏8 • 💬24 • 👍45           │   ║
-║ └─────────────────────────────────────┘   ║
-╠═══════════════════════════════════════════╣
-║ All Discussions                            ║
-║ [Post Card] [Post Card] [Post Card]       ║
-╠═══════════════════════════════════════════╣
-║                                    [✍️ FAB]║
-╚═══════════════════════════════════════════╝
-```
+### 2️⃣ Groups Screen
 
-### 2️⃣ Partners Screen
-```
-╔═══════════════════════════════════════════╗
-║      Practice Partners 🤝                  ║
-║  Connect with language exchange partners  ║
-╠═══════════════════════════════════════════╣
-║ [All][🟢Online][🌱Beginner][📈Inter][🏆Adv]║
-╠═══════════════════════════════════════════╣
-║ 💡 Conversation Starters                  ║
-║ [Greetings][Food][Culture][Travel][Family]║
-╠═══════════════════════════════════════════╣
-║ Suggested Matches (3)                      ║
-║ ┌─────────────────────────────────────┐   ║
-║ │ 👩🏿‍💼 Chioma Okafor      🔴 95%      │   ║
-║ │ 🇳🇬 Native Yoruba speaker            │   ║
-║ │                                      │   ║
-║ │ Yoruba (Native) ⇄ French (Learning) │   ║
-║ │ 📚intermediate 🔥45-day 💫2400 XP    │   ║
-║ │ [Culture][Music][Food]               │   ║
-║ │ 🕐 Evenings (GMT+1)                  │   ║
-║ │ [💬 Start Chat] [👤 View Profile]    │   ║
-║ └─────────────────────────────────────┘   ║
-╠═══════════════════════════════════════════╣
-║                                    [⚙️ FAB]║
-╚═══════════════════════════════════════════╝
-```
-
-### 3️⃣ Groups Screen
 ```
 ╔═══════════════════════════════════════════╗
 ║        Groups & Clubs 👥                   ║
@@ -133,6 +57,7 @@
 ```
 
 ### 4️⃣ Challenges Screen
+
 ```
 ╔═══════════════════════════════════════════╗
 ║          Challenges 🎯                     ║
@@ -162,6 +87,7 @@
 ```
 
 ### 5️⃣ Profiles Screen
+
 ```
 ╔═══════════════════════════════════════════╗
 ║                   👤                       ║
@@ -199,41 +125,8 @@
 ╚═══════════════════════════════════════════╝
 ```
 
-### 6️⃣ Safety Screen
-```
-╔═══════════════════════════════════════════╗
-║       Safety & Trust 🛡️                   ║
-║      Your security is our priority        ║
-╠═══════════════════════════════════════════╣
-║ ✅ Community Status: Safe                 ║
-║    All systems monitoring and active      ║
-║  99.8% Safety Score • 24/7 Monitoring     ║
-╠═══════════════════════════════════════════╣
-║ Quick Actions                              ║
-║ [📢 Report] [🚫 Blocked] [📖 Guidelines]  ║
-╠═══════════════════════════════════════════╣
-║ Safety Features                            ║
-║ 🛡️ Content Moderation • Active           ║
-║ 🚫 Block Users • Available                ║
-║ 📢 Report Content • Available             ║
-║ 🔒 Privacy Controls • Active              ║
-╠═══════════════════════════════════════════╣
-║ Community Guidelines (Preview)             ║
-║ 🤝 Be Respectful                          ║
-║ 📚 Stay On Topic                          ║
-║ 🚫 No Spam                                ║
-╠═══════════════════════════════════════════╣
-║ Trusted Community Team                     ║
-║ 👩🏽‍💼 Sarah • Community Manager [Contact] ║
-║ 👨🏿‍🏫 David • Moderator        [Contact] ║
-╠═══════════════════════════════════════════╣
-║ 🤖 AI-Powered Moderation                  ║
-║ Advanced AI monitors content 24/7...      ║
-║   95% Accuracy • <1s Response Time        ║
-╚═══════════════════════════════════════════╝
-```
+### 6️⃣ Resources Screen
 
-### 7️⃣ Resources Screen
 ```
 ╔═══════════════════════════════════════════╗
 ║           Resources 📚                     ║
@@ -268,18 +161,21 @@
 ## 🎯 Key Interactive Elements
 
 ### Navigation
+
 - ✅ Material Top Tabs (swipeable)
 - ✅ Back buttons where appropriate
 - ✅ Deep linking to post details
 - ✅ Modal sheets for forms
 
 ### Actions
+
 - ✅ Floating Action Buttons (FAB)
 - ✅ Primary/Secondary button patterns
 - ✅ Icon-only actions for space efficiency
 - ✅ Swipe gestures (native to tabs)
 
 ### Feedback
+
 - ✅ Badge counters
 - ✅ Progress bars
 - ✅ Status indicators (online, active, trending)
@@ -287,6 +183,7 @@
 - ✅ Loading states (ready for implementation)
 
 ### Forms
+
 - ✅ Modal sheets
 - ✅ Text inputs with placeholders
 - ✅ Option selection (radio-style)
@@ -298,6 +195,7 @@
 ## 🎨 Design System
 
 ### Colors
+
 - **Primary:** #0096FF (Blue)
 - **Success:** #22c55e (Green)
 - **Warning:** #f97316 (Orange)
@@ -306,18 +204,21 @@
 - **Background:** Dark theme with transparency
 
 ### Typography
+
 - **Title:** Large, bold
 - **Subtitle:** Medium, regular
 - **Body:** Standard size, readable line height
 - **Caption:** Small, for metadata
 
 ### Spacing
+
 - **Cards:** 16px padding, 12-16px radius
 - **Sections:** 24px margins
 - **Elements:** 8-12px gaps
 - **Touch targets:** Minimum 44px
 
 ### Components
+
 - **Cards:** Rounded, semi-transparent backgrounds
 - **Badges:** Pill-shaped, colored by type
 - **Buttons:** Rounded, clear hierarchy
@@ -329,11 +230,12 @@
 ## ✨ Special Features Showcase
 
 ### 🤖 AI Integration
+
 - AI suggestions appear contextually
-- AI moderation metrics displayed
 - Future-ready for real AI
 
 ### 🎮 Gamification
+
 - XP tracking everywhere
 - Streak counters with flames
 - Badge rarity system
@@ -341,35 +243,23 @@
 - Leaderboard mentions
 
 ### 👥 Social Dynamics
+
 - Follow/unfollow states
 - Encourage interactions
 - Profile viewing
 - Comment threads
 - Reaction systems
 
-### 🛡️ Safety First
-- Comprehensive reporting
-- Clear guidelines
-- Moderator visibility
-- AI transparency
-- Safety status dashboard
-
----
-
 ## 📊 Mock Data Statistics
 
-| Data Type | Count | Details |
-|-----------|-------|---------|
-| Users | 3+ | Learner, Native, Tutor types |
-| Posts | 3 | With comments, reactions |
-| Partners | 3 | Different language pairs |
-| Groups | 5 | Various languages & sizes |
-| Challenges | 3 active | Plus 3 historical |
-| Resources | 4 | Different media types |
-| Achievements | 4 | Across rarity levels |
-| Prompts | 5 | Conversation starters |
-| Guidelines | 6 | Safety rules |
-| Moderators | 2 | Trusted team members |
+| Data Type    | Count    | Details                      |
+| ------------ | -------- | ---------------------------- |
+| Users        | 3+       | Learner, Native, Tutor types |
+| Posts        | 3        | With comments, reactions     |
+| Groups       | 5        | Various languages & sizes    |
+| Challenges   | 3 active | Plus 3 historical            |
+| Resources    | 4        | Different media types        |
+| Achievements | 4        | Across rarity levels         |
 
 ---
 
@@ -388,4 +278,4 @@
 
 ---
 
-*All screens designed with mobile-first approach, beautiful aesthetics, and intuitive user experience.*
+_All screens designed with mobile-first approach, beautiful aesthetics, and intuitive user experience._
