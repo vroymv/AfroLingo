@@ -1,12 +1,29 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { mockPosts } from "@/data/community";
-import React from "react";
+import { router } from "expo-router";
+import React, { useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 
 export default function DiscussionsScreen() {
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const trendingPosts = mockPosts.filter((post) => post.trending);
-  const allPosts = mockPosts;
+  
+  // Filter posts by selected tag
+  const filteredPosts = selectedTag
+    ? mockPosts.filter((post) => post.tags.includes(selectedTag))
+    : mockPosts;
+
+  // AI-suggested replies (simulated)
+  const aiSuggestions = [
+    "💡 Try practicing with a language partner daily",
+    "🎯 Focus on one sound at a time",
+    "📚 Use the mirror technique for pronunciation",
+  ];
+
+  const allTags = Array.from(
+    new Set(mockPosts.flatMap((post) => post.tags))
+  );
 
   return (
     <ThemedView style={styles.container}>
@@ -17,6 +34,68 @@ export default function DiscussionsScreen() {
           <ThemedText type="subtitle">Connect with fellow learners</ThemedText>
         </ThemedView>
 
+        {/* Tag Filters */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.tagFilters}
+        >
+          <TouchableOpacity
+            style={[
+              styles.tagFilter,
+              selectedTag === null && styles.tagFilterActive,
+            ]}
+            onPress={() => setSelectedTag(null)}
+          >
+            <ThemedText
+              style={[
+                styles.tagFilterText,
+                selectedTag === null && styles.tagFilterTextActive,
+              ]}
+            >
+              All
+            </ThemedText>
+          </TouchableOpacity>
+          {allTags.map((tag) => (
+            <TouchableOpacity
+              key={tag}
+              style={[
+                styles.tagFilter,
+                selectedTag === tag && styles.tagFilterActive,
+              ]}
+              onPress={() => setSelectedTag(tag)}
+            >
+              <ThemedText
+                style={[
+                  styles.tagFilterText,
+                  selectedTag === tag && styles.tagFilterTextActive,
+                ]}
+              >
+                {tag}
+              </ThemedText>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* AI Suggestions */}
+        {selectedTag === "Pronunciation" && (
+          <ThemedView style={styles.aiSection}>
+            <View style={styles.aiHeader}>
+              <ThemedText style={styles.aiIcon}>🤖</ThemedText>
+              <ThemedText type="defaultSemiBold" style={styles.aiTitle}>
+                AI Suggestions
+              </ThemedText>
+            </View>
+            {aiSuggestions.map((suggestion, index) => (
+              <View key={index} style={styles.aiSuggestion}>
+                <ThemedText style={styles.aiSuggestionText}>
+                  {suggestion}
+                </ThemedText>
+              </View>
+            ))}
+          </ThemedView>
+        )}
+
         {/* Trending Section */}
         {trendingPosts.length > 0 && (
           <ThemedView style={styles.section}>
@@ -24,7 +103,11 @@ export default function DiscussionsScreen() {
               🔥 Trending Now
             </ThemedText>
             {trendingPosts.map((post) => (
-              <TouchableOpacity key={post.id} style={styles.postCard}>
+              <TouchableOpacity
+                key={post.id}
+                style={styles.postCard}
+                onPress={() => router.push(`/community/post/${post.id}`)}
+              >
                 <View style={styles.postHeader}>
                   <View style={styles.authorInfo}>
                     <ThemedText style={styles.avatar}>
@@ -99,8 +182,12 @@ export default function DiscussionsScreen() {
           <ThemedText type="defaultSemiBold" style={styles.sectionTitle}>
             All Discussions
           </ThemedText>
-          {allPosts.map((post) => (
-            <TouchableOpacity key={post.id} style={styles.postCard}>
+          {filteredPosts.map((post) => (
+            <TouchableOpacity
+              key={post.id}
+              style={styles.postCard}
+              onPress={() => router.push(`/community/post/${post.id}`)}
+            >
               <View style={styles.postHeader}>
                 <View style={styles.authorInfo}>
                   <ThemedText style={styles.avatar}>
@@ -217,6 +304,57 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 24,
     alignItems: "center",
+  },
+  tagFilters: {
+    marginBottom: 24,
+  },
+  tagFilter: {
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 12,
+  },
+  tagFilterActive: {
+    backgroundColor: "rgba(0, 150, 255, 0.2)",
+  },
+  tagFilterText: {
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  tagFilterTextActive: {
+    color: "#0096FF",
+    fontWeight: "600",
+  },
+  aiSection: {
+    backgroundColor: "rgba(0, 150, 255, 0.05)",
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: "rgba(0, 150, 255, 0.2)",
+  },
+  aiHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  aiIcon: {
+    fontSize: 24,
+    marginRight: 8,
+  },
+  aiTitle: {
+    fontSize: 16,
+  },
+  aiSuggestion: {
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  aiSuggestionText: {
+    fontSize: 14,
+    lineHeight: 20,
   },
   section: {
     marginBottom: 24,
