@@ -16,8 +16,6 @@ export const StoryProgress: React.FC<StoryProgressProps> = ({ stories }) => {
   ).length;
   const completedStories = stories.filter((story) => story.isCompleted).length;
 
-  // Removed Total Words Learned functionality
-
   return (
     <ThemedView style={styles.progressContainer}>
       <View style={styles.progressTitleRow}>

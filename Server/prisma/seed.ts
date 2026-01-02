@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 
 import { UNIT_2_NUMBERS_SW } from "./seed-data/unit-2";
+import { seedStories } from "./seed-stories";
 
 const prisma = new PrismaClient();
 
@@ -173,7 +174,6 @@ async function main() {
         unitId: unit.id,
         progress: 0,
         completedActivities: 0,
-        xpEarned: 0,
       },
       update: {},
     });
@@ -220,6 +220,8 @@ async function main() {
     });
   }
   console.log("✅ Grammar Tips upserted\n");
+
+  await seedStories(prisma);
 
   console.log("Seeding completed successfully!");
 }

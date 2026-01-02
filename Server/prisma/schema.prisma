@@ -48,6 +48,7 @@ model User {
   dailyActivity    UserDailyActivity[]
   mistakes         UserMistake[]
   xpTransactions   XpTransaction[]
+  storyProgress    UserStoryProgress[]
 
   @@map("users")
 }
@@ -277,4 +278,110 @@ model GrammarTip {
   @@index([isActive])
   @@unique([language, sortOrder], name: "language_sortOrder")
   @@map("grammar_tips")
+}
+
+enum StoryDifficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum StoryType {
+  DIALOGUE
+  NARRATIVE
+  CULTURAL
+}
+
+enum StoryCategory {
+  GREETING
+  DIALOGUE
+  CULTURE
+  EVERYDAY
+}
+
+model Story {
+  id            String          @id @default(uuid())
+  externalId    String          @unique
+  title         String
+  description   String
+  cover         String
+  difficulty    StoryDifficulty
+  estimatedTime String
+  type          StoryType
+  category      StoryCategory
+  totalWords    Int
+  isActive      Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  segments StorySegment[]
+  questions StoryQuestion[]
+  progress UserStoryProgress[]
+
+  @@index([category])
+  @@index([difficulty])
+  @@index([type])
+  @@map("stories")
+}
+
+model StorySegment {
+  id              String   @id @default(uuid())
+  storyId         String
+  externalId      String
+  sortOrder       Int
+  speaker         String?
+  text            String   @db.Text
+  translation     String   @db.Text
+  audioUrl        String?
+  highlightedWords String[] @default([])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, externalId], name: "story_segments_storyId_externalId")
+  @@unique([storyId, sortOrder], name: "story_segments_storyId_sortOrder")
+  @@index([storyId])
+  @@map("story_segments")
+}
+
+model StoryQuestion {
+  id            String   @id @default(uuid())
+  storyId       String
+  externalId    String
+  sortOrder     Int
+  question      String   @db.Text
+  options       String[] @default([])
+  correctAnswer Int
+  explanation   String   @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, externalId], name: "story_questions_storyId_externalId")
+  @@unique([storyId, sortOrder], name: "story_questions_storyId_sortOrder")
+  @@index([storyId])
+  @@map("story_questions")
+}
+
+model UserStoryProgress {
+  id             String   @id @default(uuid())
+  userId         String
+  storyId        String
+  completedWords String[] @default([])
+  isCompleted    Boolean  @default(false)
+  completedAt    DateTime?
+  lastAccessedAt DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, storyId])
+  @@index([userId])
+  @@index([storyId])
+  @@index([isCompleted])
+  @@map("user_story_progress")
 }
