@@ -109,6 +109,7 @@ model Activity {
   contentRef   String? // e.g., "activity-alphabet-1" in JSON, or "s3://.../activity.json"
   order        Int     @default(0) // For ordering activities within a lesson
   isActive     Boolean @default(true)
+  featuredForPractice Boolean @default(false) // Show in Practice tab
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
