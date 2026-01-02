@@ -13,6 +13,12 @@ datasource db {
   url      = "postgresql://neondb_owner:npg_G0Ra7FZPxLhW@ep-summer-river-adr25leo-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require"
 }
 
+enum ThemePreference {
+  SYSTEM
+  LIGHT
+  DARK
+}
+
 // User model
 model User {
   id    String @id @default(uuid())
@@ -30,6 +36,20 @@ model User {
   onboardingCompleted   Boolean   @default(false)
   onboardingCompletedAt DateTime?
   currentOnboardingStep String? // Tracks the last onboarding step completed
+
+  // App preferences
+  themePreference         ThemePreference @default(DARK)
+  soundEffectsEnabled     Boolean         @default(true)
+  hapticsEnabled          Boolean         @default(true)
+  offlineDownloadsEnabled Boolean         @default(false)
+
+  // Notification preferences
+  dailyReminderEnabled                    Boolean @default(true)
+  dailyReminderTime                       String  @default("09:00") // local time, HH:mm
+  streakAlertsEnabled                     Boolean @default(true)
+  weeklySummaryEnabled                    Boolean @default(false)
+  achievementUnlockedNotificationsEnabled Boolean @default(true)
+  communityActivityNotificationsEnabled   Boolean @default(false)
 
   // Daily goal configuration & streaks
   dailyXpGoal       Int       @default(30) // Target XP per day
@@ -181,15 +201,15 @@ model UserDailyActivity {
   date   DateTime @db.Date // Date of activity (without time)
 
   // Activity metrics
-  unitsCompleted      Int @default(0)
-  activitiesCompleted Int @default(0)
+  unitsCompleted      Int       @default(0)
+  activitiesCompleted Int       @default(0)
   // App usage (best-effort; app may terminate without sending a close event)
-  firstAppOpenedAt DateTime? // First time the app was opened on this date (server time)
-  lastAppOpenedAt  DateTime? // Most recent app open on this date (server time)
-  lastAppClosedAt  DateTime? // Most recent app close/background on this date (server time)
-  appOpensCount     Int       @default(0)
-  appClosesCount    Int       @default(0)
-  xpEarned            Int @default(0)
+  firstAppOpenedAt    DateTime? // First time the app was opened on this date (server time)
+  lastAppOpenedAt     DateTime? // Most recent app open on this date (server time)
+  lastAppClosedAt     DateTime? // Most recent app close/background on this date (server time)
+  appOpensCount       Int       @default(0)
+  appClosesCount      Int       @default(0)
+  xpEarned            Int       @default(0)
 
   // Daily goal snapshot
   goalXp      Int?
@@ -267,16 +287,16 @@ model XpTransaction {
 // Grammar tip model - Rotating daily tips per language
 model GrammarTip {
   id        String   @id @default(uuid())
-  language  String   // e.g. "sw", "zu", "ln", "xh", or "general"
+  language  String // e.g. "sw", "zu", "ln", "xh", or "general"
   text      String   @db.Text
   sortOrder Int      @default(0)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([language, sortOrder], name: "language_sortOrder")
   @@index([language])
   @@index([isActive])
-  @@unique([language, sortOrder], name: "language_sortOrder")
   @@map("grammar_tips")
 }
 
@@ -314,9 +334,9 @@ model Story {
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
-  segments StorySegment[]
+  segments  StorySegment[]
   questions StoryQuestion[]
-  progress UserStoryProgress[]
+  progress  UserStoryProgress[]
 
   @@index([category])
   @@index([difficulty])
@@ -325,17 +345,17 @@ model Story {
 }
 
 model StorySegment {
-  id              String   @id @default(uuid())
-  storyId         String
-  externalId      String
-  sortOrder       Int
-  speaker         String?
-  text            String   @db.Text
-  translation     String   @db.Text
-  audioUrl        String?
+  id               String   @id @default(uuid())
+  storyId          String
+  externalId       String
+  sortOrder        Int
+  speaker          String?
+  text             String   @db.Text
+  translation      String   @db.Text
+  audioUrl         String?
   highlightedWords String[] @default([])
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
 
@@ -366,15 +386,15 @@ model StoryQuestion {
 }
 
 model UserStoryProgress {
-  id             String   @id @default(uuid())
+  id             String    @id @default(uuid())
   userId         String
   storyId        String
-  completedWords String[] @default([])
-  isCompleted    Boolean  @default(false)
+  completedWords String[]  @default([])
+  isCompleted    Boolean   @default(false)
   completedAt    DateTime?
-  lastAccessedAt DateTime @default(now())
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  lastAccessedAt DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
