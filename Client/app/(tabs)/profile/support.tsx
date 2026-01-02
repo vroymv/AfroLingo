@@ -2,129 +2,159 @@ import ProfileSubscreenLayout from "@/components/profile/ProfileSubscreenLayout"
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
+import React, { useState } from "react";
+import { BecomeTutorModal } from "@/components/tutors/BecomeTutorModal";
 import { Linking, StyleSheet, TouchableOpacity, View } from "react-native";
 
-const SUPPORT_EMAIL = "support@afrolingo.com";
-const FAQ_URL = "https://afrolingo.com/faq";
-const COMMUNITY_URL = "https://community.afrolingo.com";
-
 export default function HelpSupportScreen() {
+  const [isChatModalVisible, setIsChatModalVisible] = useState(false);
+
+  const supportEmail =
+    process.env.EXPO_PUBLIC_SUPPORT_EMAIL ?? "support@afrolingo.com";
+  const faqUrl = process.env.EXPO_PUBLIC_FAQ_URL ?? "https://afrolingo.com/faq";
+  const communityUrl =
+    process.env.EXPO_PUBLIC_COMMUNITY_URL ?? "https://community.afrolingo.com";
+
   const handleEmail = () => {
-    Linking.openURL(`mailto:${SUPPORT_EMAIL}`);
+    Linking.openURL(`mailto:${supportEmail}`);
   };
 
   const handleFAQ = () => {
-    Linking.openURL(FAQ_URL);
+    Linking.openURL(faqUrl);
   };
 
   const handleCommunity = () => {
-    Linking.openURL(COMMUNITY_URL);
+    Linking.openURL(communityUrl);
+  };
+
+  const handleLiveChat = () => {
+    setIsChatModalVisible(true);
   };
 
   return (
-    <ProfileSubscreenLayout title="Help & Support" subtitle="Get help quickly">
-      {/* Quick Actions */}
-      <View style={styles.section}>
-        <ThemedText style={styles.sectionTitle}>Quick Help</ThemedText>
-        <View style={styles.quickActions}>
-          <TouchableOpacity
-            style={styles.quickActionCard}
-            activeOpacity={0.7}
-            onPress={handleFAQ}
-          >
-            <View style={[styles.quickIcon, { backgroundColor: "#3498DB20" }]}>
-              <Ionicons name="help-circle" size={28} color="#3498DB" />
-            </View>
-            <ThemedText style={styles.quickActionLabel}>FAQ</ThemedText>
-          </TouchableOpacity>
+    <>
+      <ProfileSubscreenLayout
+        title="Help & Support"
+        subtitle="Get help quickly"
+      >
+        {/* Quick Actions */}
+        <View style={styles.section}>
+          <ThemedText style={styles.sectionTitle}>Quick Help</ThemedText>
+          <View style={styles.quickActions}>
+            <TouchableOpacity
+              style={styles.quickActionCard}
+              activeOpacity={0.7}
+              onPress={handleFAQ}
+            >
+              <View
+                style={[styles.quickIcon, { backgroundColor: "#3498DB20" }]}
+              >
+                <Ionicons name="help-circle" size={28} color="#3498DB" />
+              </View>
+              <ThemedText style={styles.quickActionLabel}>FAQ</ThemedText>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.quickActionCard}
-            activeOpacity={0.7}
-            onPress={handleEmail}
-          >
-            <View style={[styles.quickIcon, { backgroundColor: "#E74C3C20" }]}>
-              <Ionicons name="mail" size={28} color="#E74C3C" />
-            </View>
-            <ThemedText style={styles.quickActionLabel}>Email Us</ThemedText>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.quickActionCard}
+              activeOpacity={0.7}
+              onPress={handleEmail}
+            >
+              <View
+                style={[styles.quickIcon, { backgroundColor: "#E74C3C20" }]}
+              >
+                <Ionicons name="mail" size={28} color="#E74C3C" />
+              </View>
+              <ThemedText style={styles.quickActionLabel}>Email Us</ThemedText>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.quickActionCard}
-            activeOpacity={0.7}
-            onPress={handleCommunity}
-          >
-            <View style={[styles.quickIcon, { backgroundColor: "#9B59B620" }]}>
-              <Ionicons name="people" size={28} color="#9B59B6" />
-            </View>
-            <ThemedText style={styles.quickActionLabel}>Community</ThemedText>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.quickActionCard}
+              activeOpacity={0.7}
+              onPress={handleCommunity}
+            >
+              <View
+                style={[styles.quickIcon, { backgroundColor: "#9B59B620" }]}
+              >
+                <Ionicons name="people" size={28} color="#9B59B6" />
+              </View>
+              <ThemedText style={styles.quickActionLabel}>Community</ThemedText>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
 
-      {/* Help Resources */}
-      <View style={styles.section}>
-        <ThemedText style={styles.sectionTitle}>Help Resources</ThemedText>
-        <ThemedView style={styles.card}>
-          <HelpRow
-            icon="book"
-            iconColor="#27AE60"
-            label="Getting Started Guide"
-            description="Learn the basics of AfroLingo"
-            showDivider
-          />
-          <HelpRow
-            icon="school"
-            iconColor="#F39C12"
-            label="Learning Tips"
-            description="Make the most of your lessons"
-            showDivider
-          />
-          <HelpRow
-            icon="videocam"
-            iconColor="#E74C3C"
-            label="Video Tutorials"
-            description="Watch how-to videos"
-          />
-        </ThemedView>
-      </View>
+        {/* Help Resources */}
+        <View style={styles.section}>
+          <ThemedText style={styles.sectionTitle}>Help Resources</ThemedText>
+          <ThemedView style={styles.card}>
+            <HelpRow
+              icon="book"
+              iconColor="#27AE60"
+              label="Getting Started Guide"
+              description="Learn the basics of AfroLingo"
+              showDivider
+            />
+            <HelpRow
+              icon="school"
+              iconColor="#F39C12"
+              label="Learning Tips"
+              description="Make the most of your lessons"
+              showDivider
+            />
+            <HelpRow
+              icon="videocam"
+              iconColor="#E74C3C"
+              label="Video Tutorials"
+              description="Watch how-to videos"
+            />
+          </ThemedView>
+        </View>
 
-      {/* Contact & Feedback */}
-      <View style={styles.section}>
-        <ThemedText style={styles.sectionTitle}>Contact & Feedback</ThemedText>
-        <ThemedView style={styles.card}>
-          <HelpRow
-            icon="chatbubbles"
-            iconColor="#3498DB"
-            label="Live Chat"
-            description="Chat with our support team"
-            showDivider
-          />
-          <HelpRow
-            icon="bug"
-            iconColor="#E74C3C"
-            label="Report a Bug"
-            description="Help us fix issues"
-            showDivider
-          />
-          <HelpRow
-            icon="bulb"
-            iconColor="#F1C40F"
-            label="Feature Request"
-            description="Suggest new features"
-          />
-        </ThemedView>
-      </View>
+        {/* Contact & Feedback */}
+        <View style={styles.section}>
+          <ThemedText style={styles.sectionTitle}>
+            Contact & Feedback
+          </ThemedText>
+          <ThemedView style={styles.card}>
+            <HelpRow
+              icon="chatbubbles"
+              iconColor="#3498DB"
+              label="Live Chat"
+              description="Chat with our support team"
+              showDivider
+              onPress={handleLiveChat}
+            />
+            <HelpRow
+              icon="bug"
+              iconColor="#E74C3C"
+              label="Report a Bug"
+              description="Help us fix issues"
+              showDivider
+            />
+            <HelpRow
+              icon="bulb"
+              iconColor="#F1C40F"
+              label="Feature Request"
+              description="Suggest new features"
+            />
+          </ThemedView>
+        </View>
 
-      {/* App Info */}
-      <View style={styles.footer}>
-        <ThemedText style={styles.footerText}>AfroLingo v1.0.0</ThemedText>
-        <ThemedText style={styles.footerText}>
-          Made with ❤️ for language learners
-        </ThemedText>
-      </View>
-    </ProfileSubscreenLayout>
+        {/* App Info */}
+        <View style={styles.footer}>
+          <ThemedText style={styles.footerText}>AfroLingo v1.0.0</ThemedText>
+          <ThemedText style={styles.footerText}>
+            Made with ❤️ for language learners
+          </ThemedText>
+        </View>
+      </ProfileSubscreenLayout>
+
+      {/* Customer Service Modal (Live Chat) */}
+      <BecomeTutorModal
+        visible={isChatModalVisible}
+        onClose={() => setIsChatModalVisible(false)}
+        initialDraft=""
+      />
+    </>
   );
 }
 
@@ -134,6 +164,7 @@ type HelpRowProps = {
   label: string;
   description: string;
   showDivider?: boolean;
+  onPress?: () => void;
 };
 
 function HelpRow({
@@ -142,11 +173,13 @@ function HelpRow({
   label,
   description,
   showDivider,
+  onPress,
 }: HelpRowProps) {
   return (
     <TouchableOpacity
       style={[styles.row, showDivider && styles.rowWithDivider]}
       activeOpacity={0.7}
+      onPress={onPress}
     >
       <View style={[styles.iconBox, { backgroundColor: `${iconColor}20` }]}>
         <Ionicons name={icon} size={20} color={iconColor} />

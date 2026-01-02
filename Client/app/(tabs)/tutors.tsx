@@ -10,11 +10,17 @@ import { BecomeTutorCTA } from "@/components/tutors/BecomeTutorCTA";
 import { TutorSearchBar } from "@/components/tutors/TutorSearchBar";
 import { TutorLanguageFilter } from "@/components/tutors/TutorLanguageFilter";
 import { TutorCard } from "@/components/tutors/TutorCard";
+import { BecomeTutorModal } from "@/components/tutors/BecomeTutorModal";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function TutorsScreen() {
   const colorScheme = useColorScheme() ?? "light";
+  const { user } = useAuth();
+
   const [query, setQuery] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
+  const [isBecomeTutorModalVisible, setIsBecomeTutorModalVisible] =
+    useState(false);
 
   const languages = useMemo(
     () => Array.from(new Set(MOCK_TUTORS.map((t) => t.language))),
@@ -41,8 +47,7 @@ export default function TutorsScreen() {
   };
 
   const handleBecomeTutor = () => {
-    console.log("Navigate to become a tutor flow");
-    // Navigate to tutor application
+    setIsBecomeTutorModalVisible(true);
   };
 
   return (
@@ -61,6 +66,14 @@ export default function TutorsScreen() {
       </View>
 
       <BecomeTutorCTA colorScheme={colorScheme} onPress={handleBecomeTutor} />
+
+      <BecomeTutorModal
+        visible={isBecomeTutorModalVisible}
+        onClose={() => setIsBecomeTutorModalVisible(false)}
+        initialDraft={`Hi Customer Service, I'd like to become a tutor. My user id is ${
+          user?.id ?? "guest"
+        }.`}
+      />
 
       <TutorSearchBar
         value={query}
