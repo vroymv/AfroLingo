@@ -1,5 +1,6 @@
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import { withLayoutContext } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Colors } from "@/constants/Colors";
 
@@ -9,25 +10,29 @@ const TopTabs = withLayoutContext(Navigator);
 
 export default function CommunityLayout() {
   const colorScheme = useColorScheme();
+  const backgroundColor = Colors[colorScheme ?? "light"].background;
 
   return (
-    <TopTabs
-      screenOptions={{
-        tabBarScrollEnabled: true,
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
-        tabBarInactiveTintColor: Colors[colorScheme ?? "light"].tabIconDefault,
-        tabBarStyle: {
-          backgroundColor: Colors[colorScheme ?? "light"].background,
-        },
-        tabBarIndicatorStyle: {
-          backgroundColor: Colors[colorScheme ?? "light"].tint,
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: "600",
-          textTransform: "none",
-        },
-      }}
-    />
+    <SafeAreaView style={{ flex: 1, backgroundColor }} edges={["top"]}>
+      <TopTabs
+        screenOptions={{
+          tabBarScrollEnabled: true,
+          tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+          tabBarInactiveTintColor:
+            Colors[colorScheme ?? "light"].tabIconDefault,
+          tabBarStyle: {
+            backgroundColor,
+          },
+          tabBarIndicatorStyle: {
+            backgroundColor: Colors[colorScheme ?? "light"].tint,
+          },
+          tabBarLabelStyle: {
+            fontSize: 12,
+            fontWeight: "600",
+            textTransform: "none",
+          },
+        }}
+      />
+    </SafeAreaView>
   );
 }
