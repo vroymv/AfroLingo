@@ -10,6 +10,8 @@ import {
   View,
 } from "react-native";
 
+import { KaraokeLyricsModal } from "./practice/KaraokeLyricsModal";
+
 import {
   FEATURED_MODES,
   PRACTICE_ACTIVITIES,
@@ -25,6 +27,7 @@ import {
 export const PracticeTab: React.FC = () => {
   const colorScheme = useColorScheme() ?? "light";
   const [query, setQuery] = useState("");
+  const [showKaraoke, setShowKaraoke] = useState(false);
 
   const normalizedQuery = query.trim().toLowerCase();
   const filtered = useMemo(
@@ -37,6 +40,11 @@ export const PracticeTab: React.FC = () => {
   };
 
   const handlePressActivity = (activity: PracticeActivity) => {
+    if (activity.id === "karaoke-lyrics") {
+      setShowKaraoke(true);
+      return;
+    }
+
     // Intentionally no navigation yet — this tab is the discovery surface.
     // Hook this into your practice routes/lesson launcher when ready.
     console.log("Selected practice activity:", activity.id);
@@ -80,6 +88,11 @@ export const PracticeTab: React.FC = () => {
           <View style={styles.bottomPadding} />
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <KaraokeLyricsModal
+        visible={showKaraoke}
+        onClose={() => setShowKaraoke(false)}
+      />
     </ThemedView>
   );
 };

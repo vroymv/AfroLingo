@@ -1,7 +1,6 @@
 export * from "./practiceData";
 export * from "./practiceTypes";
 export * from "./practiceUtils";
-export * from "./PracticeHeader";
 export * from "./PracticeSearchCard";
 export * from "./PracticeFeaturedSection";
 export * from "./PracticeActivitiesSection";

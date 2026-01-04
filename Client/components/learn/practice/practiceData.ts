@@ -75,4 +75,14 @@ export const PRACTICE_ACTIVITIES: PracticeActivity[] = [
     xpLabel: "+18 XP",
     tags: ["conversation", "phrases", "speaking"],
   },
+  {
+    id: "karaoke-lyrics",
+    title: "Karaoke Lyrics",
+    description: "Listen and follow along word-by-word.",
+    kind: "listening",
+    emoji: "🎶",
+    durationLabel: "~10 sec",
+    xpLabel: "+5 XP",
+    tags: ["listening", "audio", "lyrics", "timed"],
+  },
 ];
