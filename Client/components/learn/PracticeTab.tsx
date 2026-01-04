@@ -1,7 +1,8 @@
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import React, { useMemo, useState } from "react";
+import { getPracticeActivitiesFeatured } from "@/services/practice";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -13,31 +14,111 @@ import {
 import { KaraokeLyricsModal } from "./practice/KaraokeLyricsModal";
 
 import {
-  FEATURED_MODES,
-  PRACTICE_ACTIVITIES,
   PracticeActivitiesSection,
-  PracticeFeaturedSection,
+  PracticeEmptyState,
   PracticeSearchCard,
   filterPracticeActivities,
-  kindLabel,
   type PracticeActivity,
-  type PracticeKind,
 } from "./practice";
+
+function titleFromId(id: string) {
+  return id
+    .split(/[-_]/g)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
+function kindFromType(type: string): PracticeActivity["kind"] {
+  const normalized = type.trim().toLowerCase();
+  if (normalized.includes("pronun") || normalized.includes("speak")) {
+    return "pronunciation";
+  }
+  if (normalized.includes("listen") || normalized.includes("dictation")) {
+    return "listening";
+  }
+  if (normalized.includes("quiz") || normalized.includes("daily")) {
+    return "daily-quiz";
+  }
+  if (normalized.includes("vocab") || normalized.includes("word")) {
+    return "vocabulary";
+  }
+  return "conversation";
+}
+
+function emojiFromKind(kind: PracticeActivity["kind"]) {
+  switch (kind) {
+    case "listening":
+      return "🎧";
+    case "pronunciation":
+      return "🗣️";
+    case "daily-quiz":
+      return "🧠";
+    case "vocabulary":
+      return "⚡";
+    case "conversation":
+      return "💬";
+  }
+}
 
 export const PracticeTab: React.FC = () => {
   const colorScheme = useColorScheme() ?? "light";
   const [query, setQuery] = useState("");
   const [showKaraoke, setShowKaraoke] = useState(false);
 
+  const [activities, setActivities] = useState<PracticeActivity[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let canceled = false;
+    setLoading(true);
+    setLoadError(null);
+
+    (async () => {
+      const result = await getPracticeActivitiesFeatured();
+      if (canceled) return;
+
+      if (!result.success || !result.data) {
+        setLoadError(result.message || "Failed to load practice activities");
+        setActivities([]);
+        setLoading(false);
+        return;
+      }
+
+      const mapped: PracticeActivity[] = result.data.map((a) => {
+        const kind = kindFromType(a.type);
+        return {
+          id: a.id,
+          title: titleFromId(a.id),
+          description: a.type,
+          kind,
+          emoji: emojiFromKind(kind),
+          durationLabel: "",
+          xpLabel: "",
+          tags: [a.type, kind, a.componentKey].filter(Boolean),
+        };
+      });
+
+      setActivities(mapped);
+      setLoading(false);
+    })().catch((e) => {
+      if (canceled) return;
+      setLoadError(e?.message || "Failed to load practice activities");
+      setActivities([]);
+      setLoading(false);
+    });
+
+    return () => {
+      canceled = true;
+    };
+  }, []);
+
   const normalizedQuery = query.trim().toLowerCase();
   const filtered = useMemo(
-    () => filterPracticeActivities(PRACTICE_ACTIVITIES, normalizedQuery),
-    [normalizedQuery]
+    () => filterPracticeActivities(activities, normalizedQuery),
+    [activities, normalizedQuery]
   );
-
-  const handlePressMode = (kind: PracticeKind) => {
-    setQuery(kindLabel(kind));
-  };
 
   const handlePressActivity = (activity: PracticeActivity) => {
     if (activity.id === "karaoke-lyrics") {
@@ -74,16 +155,25 @@ export const PracticeTab: React.FC = () => {
             onClear={() => setQuery("")}
           />
 
-          <PracticeFeaturedSection
-            modes={FEATURED_MODES}
-            onSelectKind={handlePressMode}
-          />
-
-          <PracticeActivitiesSection
-            activities={filtered}
-            dividerColor={dividerColor}
-            onPressActivity={handlePressActivity}
-          />
+          {loading ? (
+            <PracticeEmptyState
+              emoji="⏳"
+              title="Loading"
+              message="Fetching practice activities…"
+            />
+          ) : loadError ? (
+            <PracticeEmptyState
+              emoji="⚠️"
+              title="Couldn’t load"
+              message={loadError}
+            />
+          ) : (
+            <PracticeActivitiesSection
+              activities={filtered}
+              dividerColor={dividerColor}
+              onPressActivity={handlePressActivity}
+            />
+          )}
 
           <View style={styles.bottomPadding} />
         </ScrollView>

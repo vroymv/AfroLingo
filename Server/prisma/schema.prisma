@@ -10,7 +10,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://neondb_owner:npg_G0Ra7FZPxLhW@ep-summer-river-adr25leo-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require"
+  url      = env("DATABASE_URL")
 }
 
 enum ThemePreference {
@@ -125,6 +125,36 @@ model Activity {
   @@index([type])
   @@index([componentKey])
   @@map("activities")
+}
+
+// Karaoke practice exercises (audio + timed lyrics)
+model KaraokeExercise {
+  id String @id @default(uuid())
+
+  // Optional stable ID for syncing seeded content
+  externalId String? @unique
+
+  title    String
+  subtitle String?
+  language String? // e.g. "sw", "zu", etc.
+
+  // Where the audio clip lives (CDN URL, S3 key, etc.)
+  audioClipUrl String
+
+  // Timed lyrics/words payload used by the client for highlighting.
+  // Suggested shape mirrors Client/data/karaoke-demo.json (lines -> words with startMs/endMs).
+  transcript Json?
+
+  durationMs Int?
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([language])
+  @@index([isActive])
+  @@map("karaoke_exercises")
 }
 
 // User progress for units

@@ -1,4 +1,3 @@
-export * from "./practiceData";
 export * from "./practiceTypes";
 export * from "./practiceUtils";
 export * from "./PracticeSearchCard";

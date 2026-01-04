@@ -14,6 +14,9 @@ export function PracticeActivityCard({
   dividerColor: string;
   onPress: () => void;
 }) {
+  const showDuration = Boolean(activity.durationLabel?.trim());
+  const showXp = Boolean(activity.xpLabel?.trim());
+
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -43,14 +46,22 @@ export function PracticeActivityCard({
         </View>
 
         <View style={[styles.footerRow, { borderTopColor: dividerColor }]}>
-          <View style={styles.metaRow}>
-            <ThemedText type="default" style={styles.metaText}>
-              ⏱ {activity.durationLabel}
-            </ThemedText>
-            <ThemedText type="default" style={styles.metaText}>
-              ⭐ {activity.xpLabel}
-            </ThemedText>
-          </View>
+          {showDuration || showXp ? (
+            <View style={styles.metaRow}>
+              {showDuration ? (
+                <ThemedText type="default" style={styles.metaText}>
+                  ⏱ {activity.durationLabel}
+                </ThemedText>
+              ) : null}
+              {showXp ? (
+                <ThemedText type="default" style={styles.metaText}>
+                  ⭐ {activity.xpLabel}
+                </ThemedText>
+              ) : null}
+            </View>
+          ) : (
+            <View />
+          )}
           <ThemedText type="default" style={styles.cta}>
             Start →
           </ThemedText>

@@ -1,8 +1,12 @@
 import { useColorScheme } from "@/hooks/useColorScheme";
-import karaokeDemo from "@/data/karaoke-demo.json";
 import { ThemedText } from "@/components/ThemedText";
+import {
+  getActiveKaraokeExercise,
+  type KaraokeExercise,
+  type KaraokeLine,
+  type KaraokeWord,
+} from "@/services/karaoke";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
-import { Asset } from "expo-asset";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -12,57 +16,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
-type KaraokeAudioSource =
-  | { type: "asset"; key: "swahili-alphabet" | "karaoke-test-audio" }
-  | { type: "remote"; url: string };
-
-type KaraokeWord = {
-  text: string;
-  startMs: number;
-  endMs: number;
-};
-
-type KaraokeLine = {
-  words: KaraokeWord[];
-};
-
-type KaraokeTrack = {
-  id: string;
-  title: string;
-  subtitle?: string;
-  audio: KaraokeAudioSource;
-  lines: KaraokeLine[];
-};
-
-async function resolveAudioUrl(source: KaraokeAudioSource): Promise<string> {
-  if (source.type === "remote") return source.url;
-
-  switch (source.key) {
-    case "swahili-alphabet": {
-      const asset = Asset.fromModule(
-        require("@/assets/audio/swahili-alphabet.mp3")
-      );
-      if (!asset.localUri) {
-        await asset.downloadAsync();
-      }
-      return asset.localUri ?? asset.uri;
-    }
-    case "karaoke-test-audio": {
-      const asset = Asset.fromModule(
-        require("@/assets/audio/Karaoke-type-test-audio.mp3")
-      );
-      if (!asset.localUri) {
-        await asset.downloadAsync();
-      }
-      return asset.localUri ?? asset.uri;
-    }
-    default: {
-      const exhaustiveCheck: never = source.key;
-      return exhaustiveCheck;
-    }
-  }
-}
 
 function flattenWords(lines: KaraokeLine[]) {
   const flat: (KaraokeWord & { flatIndex: number; lineIndex: number })[] = [];
@@ -94,10 +47,16 @@ export function KaraokeLyricsModal({
 }) {
   const colorScheme = useColorScheme() ?? "light";
 
-  // For now we load a dummy JSON. Later you can swap this to a track picker.
-  const track = karaokeDemo as unknown as KaraokeTrack;
+  const [exercise, setExercise] = useState<KaraokeExercise | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  const flatWords = useMemo(() => flattenWords(track.lines), [track.lines]);
+  const lines: KaraokeLine[] = useMemo(
+    () => exercise?.transcript?.lines ?? [],
+    [exercise]
+  );
+
+  const flatWords = useMemo(() => flattenWords(lines), [lines]);
   const justWords = useMemo(
     () =>
       flatWords.map(({ text, startMs, endMs }) => ({ text, startMs, endMs })),
@@ -109,18 +68,6 @@ export function KaraokeLyricsModal({
 
   const player = useAudioPlayer(audioUrl || "");
   const status = useAudioPlayerStatus(player);
-
-  // Debug: log status to see what properties are available
-  useEffect(() => {
-    if (visible && audioUrl) {
-      console.log("Karaoke status update:", {
-        status,
-        playing: status.playing,
-        currentTime: status.currentTime,
-        duration: status.duration,
-      });
-    }
-  }, [status, visible, audioUrl]);
 
   const isPlaying = Boolean(status.playing);
   const positionMs = status.currentTime ? status.currentTime * 1000 : 0;
@@ -139,26 +86,43 @@ export function KaraokeLyricsModal({
     if (!visible) return;
 
     let canceled = false;
+
+    setLoading(true);
+    setLoadError(null);
     setIsReady(false);
+    setExercise(null);
+    setAudioUrl("");
 
     (async () => {
-      try {
-        const url = await resolveAudioUrl(track.audio);
-        if (canceled) return;
+      const result = await getActiveKaraokeExercise();
+      if (canceled) return;
 
-        setAudioUrl(url);
-        setIsReady(true);
-      } catch (e) {
-        console.error("Failed to resolve karaoke audio", e);
-        setAudioUrl("");
-        setIsReady(false);
+      if (!result.success || !result.data) {
+        setLoadError(result.message || "Failed to load karaoke exercise");
+        setLoading(false);
+        return;
       }
-    })();
+
+      if (!result.data.audioClipUrl) {
+        setLoadError("Karaoke exercise is missing audio");
+        setLoading(false);
+        return;
+      }
+
+      setExercise(result.data);
+      setAudioUrl(result.data.audioClipUrl);
+      setIsReady(true);
+      setLoading(false);
+    })().catch((e) => {
+      if (canceled) return;
+      setLoadError(e?.message || "Failed to load karaoke exercise");
+      setLoading(false);
+    });
 
     return () => {
       canceled = true;
     };
-  }, [track.audio, visible]);
+  }, [visible]);
 
   useEffect(() => {
     if (!visible) return;
@@ -178,6 +142,9 @@ export function KaraokeLyricsModal({
 
     setIsReady(false);
     setAudioUrl("");
+    setExercise(null);
+    setLoading(false);
+    setLoadError(null);
 
     try {
       player.pause();
@@ -266,10 +233,12 @@ export function KaraokeLyricsModal({
         {/* Title area */}
         <View style={styles.titleContainer}>
           <ThemedText style={styles.emoji}>🎵</ThemedText>
-          <ThemedText style={styles.trackTitle}>{track.title}</ThemedText>
-          {track.subtitle ? (
+          <ThemedText style={styles.trackTitle}>
+            {exercise?.title ?? "Karaoke Lyrics"}
+          </ThemedText>
+          {exercise?.subtitle ? (
             <ThemedText style={styles.trackSubtitle}>
-              {track.subtitle}
+              {exercise.subtitle}
             </ThemedText>
           ) : null}
         </View>
@@ -277,37 +246,52 @@ export function KaraokeLyricsModal({
         {/* Lyrics display - centered and large */}
         <View style={styles.lyricsContainer}>
           <View style={styles.lyricsScrollArea}>
-            {track.lines.map((line, lineIndex) => (
-              <View key={`line-${lineIndex}`} style={styles.lyricsLine}>
-                {line.words.map((word, wordIndex) => {
-                  const flatIndex =
-                    track.lines
-                      .slice(0, lineIndex)
-                      .reduce((sum, l) => sum + l.words.length, 0) + wordIndex;
+            {loading ? (
+              <ThemedText style={styles.trackSubtitle}>Loading…</ThemedText>
+            ) : loadError ? (
+              <ThemedText style={styles.trackSubtitle}>{loadError}</ThemedText>
+            ) : lines.length === 0 ? (
+              <ThemedText style={styles.trackSubtitle}>
+                No lyrics available.
+              </ThemedText>
+            ) : (
+              lines.map((line, lineIndex) => {
+                const priorWordCount = lines
+                  .slice(0, lineIndex)
+                  .reduce((sum, l) => sum + l.words.length, 0);
 
-                  const isActive = flatIndex === activeIndex;
+                return (
+                  <View key={`line-${lineIndex}`} style={styles.lyricsLine}>
+                    {line.words.map((word, wordIndex) => {
+                      const flatIndex = priorWordCount + wordIndex;
+                      const isActive = flatIndex === activeIndex;
 
-                  return (
-                    <Animated.Text
-                      key={`w-${lineIndex}-${wordIndex}`}
-                      style={[
-                        styles.lyricWord,
-                        isActive && {
-                          color: "#FFD700",
-                          fontWeight: "700",
-                          textShadowColor: "rgba(255, 215, 0, 0.5)",
-                          textShadowOffset: { width: 0, height: 0 },
-                          textShadowRadius: 12,
-                          transform: [{ translateY: jump }, { scale: 1.15 }],
-                        },
-                      ]}
-                    >
-                      {word.text + " "}
-                    </Animated.Text>
-                  );
-                })}
-              </View>
-            ))}
+                      return (
+                        <Animated.Text
+                          key={`w-${lineIndex}-${wordIndex}`}
+                          style={[
+                            styles.lyricWord,
+                            isActive && {
+                              color: "#FFD700",
+                              fontWeight: "700",
+                              textShadowColor: "rgba(255, 215, 0, 0.5)",
+                              textShadowOffset: { width: 0, height: 0 },
+                              textShadowRadius: 12,
+                              transform: [
+                                { translateY: jump },
+                                { scale: 1.15 },
+                              ],
+                            },
+                          ]}
+                        >
+                          {word.text + " "}
+                        </Animated.Text>
+                      );
+                    })}
+                  </View>
+                );
+              })
+            )}
           </View>
         </View>
 

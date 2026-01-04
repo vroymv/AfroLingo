@@ -13,6 +13,8 @@ import {
   appUsageRouter,
   grammarTipsRouter,
   storiesRouter,
+  karaokeRouter,
+  practiceRouter,
 } from "./routes";
 
 dotenv.config();
@@ -35,6 +37,8 @@ app.use("/api/progress-tracker", progressTrackerRouter);
 app.use("/api/app-usage", appUsageRouter);
 app.use("/api/grammar-tips", grammarTipsRouter);
 app.use("/api/stories", storiesRouter);
+app.use("/api/karaoke", karaokeRouter);
+app.use("/api/practice", practiceRouter);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {

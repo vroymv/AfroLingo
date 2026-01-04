@@ -14,3 +14,5 @@ export { default as progressTrackerRouter } from "./progressTracker";
 export { default as appUsageRouter } from "./appUsage";
 export { default as grammarTipsRouter } from "./grammarTips";
 export { default as storiesRouter } from "./stories";
+export { default as karaokeRouter } from "./karaoke";
+export { default as practiceRouter } from "./practice";
