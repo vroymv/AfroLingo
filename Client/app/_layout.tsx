@@ -10,6 +10,7 @@ import "react-native-reanimated";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { AppLifecycleReporter } from "@/components/AppLifecycleReporter";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { GroupsProvider } from "@/contexts/community/GroupsContext";
 import {
   OnboardingProvider,
   useOnboarding,
@@ -65,7 +66,9 @@ export default function RootLayout() {
           value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
         >
           <AppLifecycleReporter />
-          <AppNavigator />
+          <GroupsProvider>
+            <AppNavigator />
+          </GroupsProvider>
         </ThemeProvider>
       </OnboardingProvider>
     </AuthProvider>
