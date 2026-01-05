@@ -1,3 +1,6 @@
 Note that you would have to set up each of the activities to report the erros the user makes to the backend. The currently implemented exercises do not yet do this.
 When a user is created, can you add their timezone alongside their data entry.
 After each of the activities or units are completed, have the UserDailyActivity table updated.
+
+Running the seed for a table: 
+npx ts-node prisma/seed-tutors.ts

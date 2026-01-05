@@ -9,11 +9,13 @@ const { width } = Dimensions.get("window");
 interface QuickActionsSectionProps {
   selectedLanguage: string | null;
   onQuickAction: (action: string) => void;
+  refreshSignal?: number;
 }
 
 export default function QuickActionsSection({
   selectedLanguage,
   onQuickAction,
+  refreshSignal,
 }: QuickActionsSectionProps) {
   const getLocalGrammarTip = (language: string | null) => {
     const tips: Record<string, string[]> = {
@@ -82,7 +84,7 @@ export default function QuickActionsSection({
     return () => {
       cancelled = true;
     };
-  }, [languageForTip]);
+  }, [languageForTip, refreshSignal]);
 
   return (
     <ThemedView style={styles.quickActions}>

@@ -1,10 +1,9 @@
-import React, { useMemo, useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemedText } from "@/components/ThemedText";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Colors } from "@/constants/Colors";
-import { MOCK_TUTORS } from "@/data/tutors";
 import type { Tutor } from "@/types/Tutor";
 import { BecomeTutorCTA } from "@/components/tutors/BecomeTutorCTA";
 import { TutorSearchBar } from "@/components/tutors/TutorSearchBar";
@@ -12,25 +11,69 @@ import { TutorLanguageFilter } from "@/components/tutors/TutorLanguageFilter";
 import { TutorCard } from "@/components/tutors/TutorCard";
 import { BecomeTutorModal } from "@/components/tutors/BecomeTutorModal";
 import { useAuth } from "@/contexts/AuthContext";
+import { fetchTutors } from "@/services/tutors";
 
 export default function TutorsScreen() {
   const colorScheme = useColorScheme() ?? "light";
   const { user } = useAuth();
 
+  const [tutors, setTutors] = useState<Tutor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
   const [isBecomeTutorModalVisible, setIsBecomeTutorModalVisible] =
     useState(false);
 
+  const loadTutors = useCallback(async () => {
+    setError(null);
+    const res = await fetchTutors();
+
+    if (!res.success) {
+      setTutors([]);
+      setError(res.message ?? "Failed to fetch tutors");
+      return;
+    }
+
+    setTutors(res.data ?? []);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      setLoading(true);
+      try {
+        await loadTutors();
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loadTutors]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await loadTutors();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadTutors]);
+
   const languages = useMemo(
-    () => Array.from(new Set(MOCK_TUTORS.map((t) => t.language))),
-    []
+    () => Array.from(new Set(tutors.map((t) => t.language))).sort(),
+    [tutors]
   );
 
   const filteredTutors = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
-    return MOCK_TUTORS.filter((tutor) => {
+    return tutors.filter((tutor) => {
       if (selectedLanguage && tutor.language !== selectedLanguage) return false;
 
       if (!normalizedQuery) return true;
@@ -39,7 +82,7 @@ export default function TutorsScreen() {
         tutor.language.toLowerCase().includes(normalizedQuery)
       );
     });
-  }, [query, selectedLanguage]);
+  }, [query, selectedLanguage, tutors]);
 
   const handleChat = (tutor: Tutor) => {
     console.log(`Starting chat with ${tutor.name}`);
@@ -93,15 +136,26 @@ export default function TutorsScreen() {
         style={styles.tutorsList}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.tutorsListContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
-        {filteredTutors.map((tutor) => (
-          <TutorCard
-            key={tutor.id}
-            tutor={tutor}
-            colorScheme={colorScheme}
-            onChat={handleChat}
-          />
-        ))}
+        {loading ? (
+          <ThemedText style={styles.stateText}>Loading tutors…</ThemedText>
+        ) : error ? (
+          <ThemedText style={styles.stateText}>{error}</ThemedText>
+        ) : filteredTutors.length === 0 ? (
+          <ThemedText style={styles.stateText}>No tutors found.</ThemedText>
+        ) : (
+          filteredTutors.map((tutor) => (
+            <TutorCard
+              key={tutor.id}
+              tutor={tutor}
+              colorScheme={colorScheme}
+              onChat={handleChat}
+            />
+          ))
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -127,5 +181,9 @@ const styles = StyleSheet.create({
   tutorsListContent: {
     padding: 20,
     paddingTop: 8,
+  },
+  stateText: {
+    paddingVertical: 12,
+    opacity: 0.7,
   },
 });

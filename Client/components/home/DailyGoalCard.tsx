@@ -3,15 +3,17 @@ import { ThemedView } from "@/components/ThemedView";
 import { useAuth } from "@/contexts/AuthContext";
 import { getProgressTrackerStats } from "@/services/progressTracker";
 import { useFocusEffect } from "@react-navigation/native";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 
 interface DailyGoalCardProps {
   onContinueLesson: () => void;
+  refreshSignal?: number;
 }
 
 export default function DailyGoalCard({
   onContinueLesson,
+  refreshSignal,
 }: DailyGoalCardProps) {
   const { user } = useAuth();
   const [live, setLive] = useState({
@@ -49,6 +51,11 @@ export default function DailyGoalCard({
       fetchLive();
     }, [fetchLive])
   );
+
+  useEffect(() => {
+    if (typeof refreshSignal !== "number") return;
+    fetchLive();
+  }, [fetchLive, refreshSignal]);
 
   const progressPercent = useMemo(() => {
     if (!live.dailyXpGoal || live.dailyXpGoal <= 0) return 0;

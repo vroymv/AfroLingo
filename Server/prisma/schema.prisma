@@ -19,6 +19,33 @@ enum ThemePreference {
   DARK
 }
 
+model Tutor {
+  id         String @id @default(uuid())
+  externalId String @unique // Stable ID for seeding/syncing (maps to Client MOCK_TUTORS[].id)
+
+  name     String
+  language String
+
+  rating      Float
+  reviewCount Int
+  hourlyRate  Int
+
+  specialties String[] @default([])
+  bio         String   @db.Text
+  avatar      String
+  availability String
+  lessonsCompleted Int
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([language])
+  @@index([isActive])
+  @@map("tutors")
+}
+
 // User model
 model User {
   id    String @id @default(uuid())

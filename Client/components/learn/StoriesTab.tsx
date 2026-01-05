@@ -3,8 +3,14 @@ import { ThemedView } from "@/components/ThemedView";
 import type { Story } from "@/data/stories";
 import { fetchStories, fetchStoryById } from "@/services/stories";
 import { useAuth } from "@/contexts/AuthContext";
-import React, { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { StoryPlayer } from "./StoryPlayerRouter";
 import { StoryCard } from "./StoryCard";
 import { StoryProgress } from "./StoryProgress";
@@ -16,30 +22,47 @@ export const StoriesTab: React.FC = () => {
   const [stories, setStories] = useState<Story[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadStories = useCallback(
+    async (options?: { showLoading?: boolean }) => {
+      const showLoading = options?.showLoading ?? false;
+      if (showLoading) setIsLoading(true);
+
+      try {
+        setError(null);
+        const data = await fetchStories(user?.id);
+        setStories(data);
+      } catch (e: any) {
+        setError(e?.message ?? "Failed to load stories");
+      } finally {
+        if (showLoading) setIsLoading(false);
+      }
+    },
+    [user?.id]
+  );
 
   useEffect(() => {
     let isMounted = true;
 
     (async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const data = await fetchStories(user?.id);
-        if (!isMounted) return;
-        setStories(data);
-      } catch (e: any) {
-        if (!isMounted) return;
-        setError(e?.message ?? "Failed to load stories");
-      } finally {
-        if (!isMounted) return;
-        setIsLoading(false);
-      }
+      if (!isMounted) return;
+      await loadStories({ showLoading: true });
     })();
 
     return () => {
       isMounted = false;
     };
-  }, [user?.id]);
+  }, [loadStories]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await loadStories();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadStories]);
 
   const handleStoryPress = async (story: Story) => {
     try {
@@ -67,6 +90,9 @@ export const StoriesTab: React.FC = () => {
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
         <StoryProgress stories={stories} />
 

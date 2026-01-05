@@ -1,7 +1,21 @@
-import type { Tutor } from "@/types/Tutor";
+export type SeedTutorAvailability = "online" | "offline" | "away";
 
-// Mock tutor data - replace with real data from API
-export const MOCK_TUTORS: Tutor[] = [
+export type SeedTutor = {
+  id: string;
+  name: string;
+  language: string;
+  rating: number;
+  reviewCount: number;
+  hourlyRate: number;
+  specialties: string[];
+  bio: string;
+  avatar: string;
+  availability: SeedTutorAvailability;
+  lessonsCompleted: number;
+};
+
+// Mirrors Client/data/tutors.ts (MOCK_TUTORS)
+export const TUTORS: SeedTutor[] = [
   {
     id: "1",
     name: "Amina Kamau",

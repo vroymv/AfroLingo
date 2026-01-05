@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 
 import { UNIT_2_NUMBERS_SW } from "./seed-data/unit-2";
 import { seedStories } from "./seed-stories";
+import { seedTutors } from "./seed-tutors";
 
 const prisma = new PrismaClient();
 
@@ -98,6 +99,8 @@ const GRAMMAR_TIPS: Array<{
 
 async function main() {
   console.log("🌱 Seeding (non-destructive)...\n");
+
+  await seedTutors(prisma);
 
   console.log("📚 Resolving User (optional)...");
   const userId = "tFgOgdOSSZaUkvPKlarhwx25rVZ2";

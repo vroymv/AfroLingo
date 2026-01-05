@@ -6,6 +6,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   View,
@@ -69,50 +70,70 @@ export const PracticeTab: React.FC = () => {
   const [activities, setActivities] = useState<PracticeActivity[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadActivities = React.useCallback(
+    async (options?: { showLoading?: boolean }) => {
+      const showLoading = options?.showLoading ?? false;
+
+      if (showLoading) setLoading(true);
+      setLoadError(null);
+
+      try {
+        const result = await getPracticeActivitiesFeatured();
+
+        if (!result.success || !result.data) {
+          setLoadError(result.message || "Failed to load practice activities");
+          setActivities([]);
+          return;
+        }
+
+        const mapped: PracticeActivity[] = result.data.map((a) => {
+          const kind = kindFromType(a.type);
+          return {
+            id: a.id,
+            title: titleFromId(a.id),
+            description: a.type,
+            kind,
+            emoji: emojiFromKind(kind),
+            durationLabel: "",
+            xpLabel: "",
+            tags: [a.type, kind, a.componentKey].filter(Boolean),
+          };
+        });
+
+        setActivities(mapped);
+      } catch (e: any) {
+        setLoadError(e?.message || "Failed to load practice activities");
+        setActivities([]);
+      } finally {
+        if (showLoading) setLoading(false);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     let canceled = false;
-    setLoading(true);
-    setLoadError(null);
 
     (async () => {
-      const result = await getPracticeActivitiesFeatured();
       if (canceled) return;
-
-      if (!result.success || !result.data) {
-        setLoadError(result.message || "Failed to load practice activities");
-        setActivities([]);
-        setLoading(false);
-        return;
-      }
-
-      const mapped: PracticeActivity[] = result.data.map((a) => {
-        const kind = kindFromType(a.type);
-        return {
-          id: a.id,
-          title: titleFromId(a.id),
-          description: a.type,
-          kind,
-          emoji: emojiFromKind(kind),
-          durationLabel: "",
-          xpLabel: "",
-          tags: [a.type, kind, a.componentKey].filter(Boolean),
-        };
-      });
-
-      setActivities(mapped);
-      setLoading(false);
-    })().catch((e) => {
-      if (canceled) return;
-      setLoadError(e?.message || "Failed to load practice activities");
-      setActivities([]);
-      setLoading(false);
-    });
+      await loadActivities({ showLoading: true });
+    })();
 
     return () => {
       canceled = true;
     };
-  }, []);
+  }, [loadActivities]);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await loadActivities();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadActivities]);
 
   const normalizedQuery = query.trim().toLowerCase();
   const filtered = useMemo(
@@ -148,6 +169,9 @@ export const PracticeTab: React.FC = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         >
           <PracticeSearchCard
             query={query}

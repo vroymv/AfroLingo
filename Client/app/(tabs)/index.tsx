@@ -6,8 +6,8 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 
 // Import home components
 import CommunitySection from "@/components/home/CommunitySection";
@@ -23,6 +23,9 @@ export default function HomeScreen() {
   const { state } = useOnboarding();
   const { user } = useAuth();
   const colorScheme = useColorScheme();
+
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshSignal, setRefreshSignal] = useState(0);
 
   useEffect(() => {
     if (!state.isCompleted) {
@@ -74,6 +77,15 @@ export default function HomeScreen() {
     console.log("Navigate to Community tab");
   };
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    setRefreshSignal((prev) => prev + 1);
+
+    // Allow child components time to re-fetch.
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    setRefreshing(false);
+  }, []);
+
   return (
     <SafeAreaView
       style={[
@@ -88,14 +100,21 @@ export default function HomeScreen() {
           { backgroundColor: Colors[colorScheme ?? "light"].background },
         ]}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
         <HeaderSection selectedLanguage={state.selectedLanguage} />
 
-        <DailyGoalCard onContinueLesson={handleTodayLesson} />
+        <DailyGoalCard
+          onContinueLesson={handleTodayLesson}
+          refreshSignal={refreshSignal}
+        />
 
         <QuickActionsSection
           selectedLanguage={state.selectedLanguage}
           onQuickAction={handleQuickAction}
+          refreshSignal={refreshSignal}
         />
 
         <CommunitySection
