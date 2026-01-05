@@ -19,6 +19,12 @@ enum ThemePreference {
   DARK
 }
 
+enum CommunityUserType {
+  LEARNER
+  NATIVE
+  TUTOR
+}
+
 model Tutor {
   id         String @id @default(uuid())
   externalId String @unique // Stable ID for seeding/syncing (maps to Client MOCK_TUTORS[].id)
@@ -51,6 +57,12 @@ model User {
   id    String @id @default(uuid())
   email String @unique
   name  String
+
+  // Community profile (used by Community/People UI)
+  userType     CommunityUserType @default(LEARNER)
+  languages    String[]          @default([])
+  bio          String?           @db.Text
+  countryCode  String?           @db.VarChar(2)
 
   // Profile image
   profileImageUrl       String? // URL to user's profile image
@@ -97,7 +109,28 @@ model User {
   xpTransactions   XpTransaction[]
   storyProgress    UserStoryProgress[]
 
+  // Community relationships
+  following UserFollow[] @relation("UserFollows")
+  followers UserFollow[] @relation("UserFollowedBy")
+
   @@map("users")
+  @@index([userType])
+  @@index([countryCode])
+}
+
+model UserFollow {
+  id          String   @id @default(uuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("UserFollows", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("UserFollowedBy", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@map("user_follows")
 }
 
 // Unit model - Represents a learning unit (e.g., "The Alphabet", "Numbers")
@@ -340,6 +373,7 @@ model XpTransaction {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("xp_transactions")
+  @@index([userId])
 }
 
 // Grammar tip model - Rotating daily tips per language

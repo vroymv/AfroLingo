@@ -1,5 +1,28 @@
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
+import { auth } from "@/config/firebase";
+
+export type CommunityUserType = "LEARNER" | "NATIVE" | "TUTOR";
+
+export interface CommunityProfile {
+  id: string;
+  email: string;
+  name: string;
+  profileImageUrl: string | null;
+  userType: CommunityUserType;
+  languages: string[];
+  bio: string | null;
+  countryCode: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CommunityProfileResponse {
+  success: boolean;
+  message?: string;
+  data?: CommunityProfile;
+}
+
 export interface ProfileStats {
   userId: string;
   totalXP: number;
@@ -122,6 +145,104 @@ export async function fetchOnboardingData(
     return {
       success: false,
       message: err?.message || "Failed to fetch onboarding data",
+    };
+  }
+}
+
+export async function fetchCommunityProfile(
+  userId: string
+): Promise<CommunityProfileResponse> {
+  if (!API_BASE_URL) {
+    return {
+      success: false,
+      message:
+        "API base URL is not configured. Set EXPO_PUBLIC_API_BASE_URL in env.",
+    };
+  }
+
+  try {
+    const token = auth.currentUser ? await auth.currentUser.getIdToken() : null;
+    const res = await fetch(`${API_BASE_URL}/users/${userId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+    const json = await res.json().catch(() => ({}));
+
+    if (!res.ok || json?.success === false) {
+      return {
+        success: false,
+        message: json?.message || `Request failed with status ${res.status}`,
+      };
+    }
+
+    return {
+      success: true,
+      data: json?.data,
+      message: json?.message,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      message: err?.message || "Failed to fetch community profile",
+    };
+  }
+}
+
+export interface UpdateCommunityProfileInput {
+  userType?: CommunityUserType;
+  languages?: string[];
+  bio?: string | null;
+  countryCode?: string | null;
+  // Stored as the same string used for avatar display (emoji or URL)
+  profileImageUrl?: string | null;
+  name?: string;
+}
+
+export async function updateCommunityProfile(
+  userId: string,
+  updates: UpdateCommunityProfileInput
+): Promise<CommunityProfileResponse> {
+  if (!API_BASE_URL) {
+    return {
+      success: false,
+      message:
+        "API base URL is not configured. Set EXPO_PUBLIC_API_BASE_URL in env.",
+    };
+  }
+
+  try {
+    const token = auth.currentUser ? await auth.currentUser.getIdToken() : null;
+    const res = await fetch(`${API_BASE_URL}/users/${userId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(updates),
+    });
+
+    const json = await res.json().catch(() => ({}));
+
+    if (!res.ok || json?.success === false) {
+      return {
+        success: false,
+        message: json?.message || `Request failed with status ${res.status}`,
+      };
+    }
+
+    return {
+      success: true,
+      data: json?.data,
+      message: json?.message,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      message: err?.message || "Failed to update community profile",
     };
   }
 }

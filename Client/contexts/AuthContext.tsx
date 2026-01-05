@@ -14,6 +14,8 @@ import {
   User as FirebaseUser,
 } from "firebase/auth";
 
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -40,6 +42,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Get ID token
         const idToken = await firebaseUser.getIdToken();
         setToken(idToken);
+
+        // Best-effort: ensure a matching Prisma User record exists
+        // (required by onboarding/profile stats/community)
+        if (API_BASE_URL) {
+          fetch(`${API_BASE_URL}/users`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${idToken}`,
+            },
+            body: JSON.stringify({
+              firebaseUid: firebaseUser.uid,
+              email: firebaseUser.email || "",
+              name: firebaseUser.displayName || "",
+              createdAt: firebaseUser.metadata.creationTime || undefined,
+            }),
+          }).catch(() => {
+            // Ignore network errors; user can still proceed
+          });
+        }
       } else {
         setUser(null);
         setToken(null);
@@ -138,6 +160,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Update local user state
         setUser((prev) => (prev ? { ...prev, ...updates } : null));
+
+        // Best-effort: sync name/avatar to Prisma user record.
+        // In Prisma, `profileImageUrl` is used as the avatar string (emoji or URL).
+        if (API_BASE_URL) {
+          const idToken = await auth.currentUser.getIdToken();
+          const body: Record<string, unknown> = {};
+          if (updates.name !== undefined) body.name = updates.name;
+          if (updates.avatar !== undefined)
+            body.profileImageUrl = updates.avatar;
+          if (Object.keys(body).length > 0) {
+            fetch(`${API_BASE_URL}/users/${auth.currentUser.uid}`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${idToken}`,
+              },
+              body: JSON.stringify(body),
+            }).catch(() => {
+              // Ignore sync errors
+            });
+          }
+        }
       }
     } catch (err: any) {
       setError(err.message || "Failed to update profile");
