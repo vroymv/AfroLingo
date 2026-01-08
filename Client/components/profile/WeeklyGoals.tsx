@@ -21,6 +21,8 @@ export default function WeeklyGoals({
   const dailyXpGoal = profileStats?.dailyXpGoal || 30;
   const todayXpEarned = profileStats?.todayXpEarned || 0;
   const todayActivitiesCompleted = profileStats?.todayActivitiesCompleted || 0;
+  const todayLessonsGoal =
+    profileStats?.todayGoalLessons ?? profileStats?.dailyLessonGoal;
 
   // Calculate weekly goals based on daily progress
   const goals = [
@@ -29,14 +31,18 @@ export default function WeeklyGoals({
       current: todayXpEarned,
       total: dailyXpGoal,
     },
-    {
-      label: "Complete 5 activities today",
-      current: Math.min(todayActivitiesCompleted, 5),
-      total: 5,
-    },
+    ...(todayLessonsGoal && todayLessonsGoal > 0
+      ? [
+          {
+            label: `Complete ${todayLessonsGoal} activities today`,
+            current: Math.min(todayActivitiesCompleted, todayLessonsGoal),
+            total: todayLessonsGoal,
+          },
+        ]
+      : []),
     {
       label: "Keep your streak alive",
-      current: profileStats?.todayXpEarned > 0 ? 1 : 0,
+      current: profileStats?.todayIsStreakDay ? 1 : 0,
       total: 1,
     },
   ];

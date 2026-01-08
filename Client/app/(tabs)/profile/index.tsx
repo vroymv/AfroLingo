@@ -23,11 +23,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import {
-  fetchProfileStats,
-  fetchOnboardingData,
   ProfileStats,
   OnboardingData,
-  fetchCommunityProfile,
+  fetchProfileOverview,
   updateCommunityProfile,
   CommunityUserType,
   CommunityProfile,
@@ -65,43 +63,32 @@ export default function ProfileScreen() {
 
     try {
       setIsLoading(true);
-      const [statsResponse, onboardingResponse, communityResponse] =
-        await Promise.all([
-          fetchProfileStats(user.id),
-          fetchOnboardingData(user.id),
-          fetchCommunityProfile(user.id),
-        ]);
 
-      if (statsResponse.success && statsResponse.data) {
-        setProfileStats(statsResponse.data);
-      } else {
-        console.warn("Failed to fetch profile stats:", statsResponse.message);
-      }
+      const overviewResponse = await fetchProfileOverview(user.id);
 
-      if (onboardingResponse.success && onboardingResponse.data) {
-        setOnboardingData(onboardingResponse.data);
-      } else {
-        console.warn(
-          "Failed to fetch onboarding data:",
-          onboardingResponse.message
-        );
-      }
-
-      if (communityResponse.success && communityResponse.data) {
-        setCommunityProfile(communityResponse.data);
+      if (overviewResponse.success && overviewResponse.data) {
+        setProfileStats(overviewResponse.data.stats);
+        setOnboardingData(overviewResponse.data.onboarding);
+        setCommunityProfile(overviewResponse.data.communityProfile);
 
         // Initialize form once (avoid overwriting user edits)
         if (!didInitCommunityForm.current) {
           didInitCommunityForm.current = true;
-          setUserType(communityResponse.data.userType || "LEARNER");
-          setLanguagesText((communityResponse.data.languages || []).join(", "));
-          setCountryCode(communityResponse.data.countryCode || "");
-          setBio(communityResponse.data.bio || "");
+          setUserType(
+            overviewResponse.data.communityProfile.userType || "LEARNER"
+          );
+          setLanguagesText(
+            (overviewResponse.data.communityProfile.languages || []).join(", ")
+          );
+          setCountryCode(
+            overviewResponse.data.communityProfile.countryCode || ""
+          );
+          setBio(overviewResponse.data.communityProfile.bio || "");
         }
       } else {
         console.warn(
-          "Failed to fetch community profile:",
-          communityResponse.message
+          "Failed to fetch profile overview:",
+          overviewResponse.message
         );
       }
     } catch (error) {

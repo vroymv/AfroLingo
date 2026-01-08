@@ -7,6 +7,19 @@ const router = Router();
 
 const userIdSchema = z.string().min(1, "userId is required");
 
+function inferDailyLessonGoal(timeCommitment: string | null | undefined) {
+  switch (timeCommitment) {
+    case "5min":
+      return 1;
+    case "15min":
+      return 3;
+    case "30min":
+      return 5;
+    default:
+      return null;
+  }
+}
+
 // GET /api/progress-tracker/:userId
 // Returns lightweight stats used by the client ProgressTracker widget.
 router.get("/:userId", async (req: Request, res: Response) => {
@@ -28,6 +41,7 @@ router.get("/:userId", async (req: Request, res: Response) => {
           timezone: true,
           dailyXpGoal: true,
           dailyLessonGoal: true,
+          timeCommitment: true,
           currentStreakDays: true,
           longestStreakDays: true,
           lastStreakDate: true,
@@ -59,6 +73,9 @@ router.get("/:userId", async (req: Request, res: Response) => {
       },
     });
 
+    const inferredLessonGoal =
+      user?.dailyLessonGoal ?? inferDailyLessonGoal(user?.timeCommitment);
+
     return res.status(200).json({
       success: true,
       data: {
@@ -74,10 +91,9 @@ router.get("/:userId", async (req: Request, res: Response) => {
         todayIsStreakDay: todayDaily?.isStreakDay ?? false,
         streakThreshold,
         dailyXpGoal: user?.dailyXpGoal ?? null,
-        dailyLessonGoal: user?.dailyLessonGoal ?? null,
+        dailyLessonGoal: inferredLessonGoal,
         todayGoalXp: todayDaily?.goalXp ?? user?.dailyXpGoal ?? null,
-        todayGoalLessons:
-          todayDaily?.goalLessons ?? user?.dailyLessonGoal ?? null,
+        todayGoalLessons: todayDaily?.goalLessons ?? inferredLessonGoal,
         todayMetGoal: todayDaily?.metGoal ?? false,
         todayActivitiesCompleted: todayDaily?.activitiesCompleted ?? 0,
         todayUnitsCompleted: todayDaily?.unitsCompleted ?? 0,

@@ -17,3 +17,4 @@ export { default as storiesRouter } from "./stories";
 export { default as karaokeRouter } from "./karaoke";
 export { default as practiceRouter } from "./practice";
 export { default as tutorsRouter } from "./tutors";
+export { default as profileRouter } from "./profile";

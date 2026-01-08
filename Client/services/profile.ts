@@ -67,6 +67,65 @@ export interface OnboardingDataResponse {
   data?: OnboardingData;
 }
 
+export interface ProfileOverview {
+  stats: ProfileStats;
+  onboarding: OnboardingData;
+  communityProfile: CommunityProfile;
+}
+
+export interface ProfileOverviewResponse {
+  success: boolean;
+  message?: string;
+  data?: ProfileOverview;
+}
+
+/**
+ * Fetch profile overview data used by the Profile tab.
+ * This is preferred over calling multiple endpoints separately.
+ */
+export async function fetchProfileOverview(
+  userId: string
+): Promise<ProfileOverviewResponse> {
+  if (!API_BASE_URL) {
+    return {
+      success: false,
+      message:
+        "API base URL is not configured. Set EXPO_PUBLIC_API_BASE_URL in env.",
+    };
+  }
+
+  try {
+    const token = auth.currentUser ? await auth.currentUser.getIdToken() : null;
+    const res = await fetch(`${API_BASE_URL}/profile/${userId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+    const json = await res.json().catch(() => ({}));
+
+    if (!res.ok || json?.success === false) {
+      return {
+        success: false,
+        message: json?.message || `Request failed with status ${res.status}`,
+      };
+    }
+
+    return {
+      success: true,
+      data: json?.data,
+      message: json?.message,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      message: err?.message || "Failed to fetch profile overview",
+    };
+  }
+}
+
 /**
  * Fetch comprehensive profile stats from the progress tracker endpoint
  */
