@@ -20,51 +20,60 @@ export function PracticeActivityCard({
   return (
     <TouchableOpacity
       onPress={onPress}
-      activeOpacity={0.9}
+      activeOpacity={0.7}
       accessibilityRole="button"
       accessibilityLabel={`Open ${activity.title}`}
       style={styles.cardTouch}
     >
       <ThemedView style={styles.card}>
-        <View style={styles.headerRow}>
-          <View style={styles.icon}>
-            <ThemedText style={styles.emoji}>{activity.emoji}</ThemedText>
-          </View>
-          <View style={styles.info}>
-            <ThemedText type="defaultSemiBold" style={styles.title}>
-              {activity.title}
-            </ThemedText>
-            <ThemedText type="default" style={styles.description}>
-              {activity.description}
-            </ThemedText>
-          </View>
-          <View style={styles.pill}>
-            <ThemedText style={styles.pillText}>
-              {kindLabel(activity.kind)}
-            </ThemedText>
-          </View>
-        </View>
-
-        <View style={[styles.footerRow, { borderTopColor: dividerColor }]}>
-          {showDuration || showXp ? (
-            <View style={styles.metaRow}>
-              {showDuration ? (
-                <ThemedText type="default" style={styles.metaText}>
-                  ⏱ {activity.durationLabel}
-                </ThemedText>
-              ) : null}
-              {showXp ? (
-                <ThemedText type="default" style={styles.metaText}>
-                  ⭐ {activity.xpLabel}
-                </ThemedText>
-              ) : null}
+        {/* Main Content */}
+        <View style={styles.content}>
+          {/* Icon and Text */}
+          <View style={styles.leftContent}>
+            <View style={styles.iconContainer}>
+              <ThemedText style={styles.emoji}>{activity.emoji}</ThemedText>
             </View>
-          ) : (
-            <View />
-          )}
-          <ThemedText type="default" style={styles.cta}>
-            Start →
-          </ThemedText>
+            <View style={styles.textContent}>
+              <ThemedText type="defaultSemiBold" style={styles.title}>
+                {activity.title}
+              </ThemedText>
+              <ThemedText type="default" style={styles.description}>
+                {activity.description}
+              </ThemedText>
+
+              {/* Meta info below description */}
+              {(showDuration || showXp) && (
+                <View style={styles.metaRow}>
+                  {showDuration && (
+                    <ThemedText type="default" style={styles.metaText}>
+                      {activity.durationLabel}
+                    </ThemedText>
+                  )}
+                  {showDuration && showXp && (
+                    <ThemedText type="default" style={styles.metaDot}>
+                      •
+                    </ThemedText>
+                  )}
+                  {showXp && (
+                    <ThemedText type="default" style={styles.metaText}>
+                      {activity.xpLabel} XP
+                    </ThemedText>
+                  )}
+                  <ThemedText type="default" style={styles.metaDot}>
+                    •
+                  </ThemedText>
+                  <ThemedText type="default" style={styles.metaText}>
+                    {kindLabel(activity.kind)}
+                  </ThemedText>
+                </View>
+              )}
+            </View>
+          </View>
+
+          {/* Arrow Indicator */}
+          <View style={styles.arrowContainer}>
+            <ThemedText style={styles.arrow}>›</ThemedText>
+          </View>
         </View>
       </ThemedView>
     </TouchableOpacity>
@@ -73,72 +82,80 @@ export function PracticeActivityCard({
 
 const styles = StyleSheet.create({
   cardTouch: {
-    marginBottom: 12,
+    marginBottom: 10,
   },
   card: {
-    borderRadius: 16,
-    padding: 14,
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderRadius: 12,
+    padding: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    // Add subtle shadow for depth
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 12,
-  },
-  icon: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(74, 144, 226, 0.12)",
-  },
-  emoji: {
-    fontSize: 18,
-  },
-  info: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 15,
-    marginBottom: 4,
-  },
-  description: {
-    fontSize: 13,
-    opacity: 0.75,
-    lineHeight: 18,
-  },
-  pill: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: "rgba(255, 255, 255, 0.06)",
-  },
-  pillText: {
-    fontSize: 11,
-    opacity: 0.8,
-    fontWeight: "600",
-  },
-  footerRow: {
+  content: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 12,
-    paddingTop: 10,
-    borderTopWidth: 1,
+  },
+  leftContent: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    flex: 1,
+    gap: 12,
+  },
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
+  },
+  emoji: {
+    fontSize: 24,
+  },
+  textContent: {
+    flex: 1,
+    gap: 4,
+  },
+  title: {
+    fontSize: 16,
+    lineHeight: 22,
+  },
+  description: {
+    fontSize: 13,
+    opacity: 0.65,
+    lineHeight: 18,
   },
   metaRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 6,
+    marginTop: 4,
   },
   metaText: {
     fontSize: 12,
-    opacity: 0.75,
+    opacity: 0.5,
   },
-  cta: {
-    fontSize: 13,
-    color: "#4A90E2",
-    fontWeight: "700",
+  metaDot: {
+    fontSize: 12,
+    opacity: 0.3,
+  },
+  arrowContainer: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 8,
+  },
+  arrow: {
+    fontSize: 28,
+    opacity: 0.4,
+    fontWeight: "300",
   },
 });
