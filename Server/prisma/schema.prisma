@@ -104,6 +104,7 @@ model User {
   // Relations
   progress         UserProgress[]
   activityProgress ActivityProgress[]
+  practiceProgress PracticeActivityProgress[]
   dailyActivity    UserDailyActivity[]
   mistakes         UserMistake[]
   xpTransactions   XpTransaction[]
@@ -177,6 +178,7 @@ model Activity {
   // Relations
   unit             Unit               @relation(fields: [unitId], references: [id], onDelete: Cascade)
   activityProgress ActivityProgress[]
+  practiceProgress PracticeActivityProgress[]
   mistakes         UserMistake[]
 
   @@index([externalId])
@@ -185,6 +187,45 @@ model Activity {
   @@index([type])
   @@index([componentKey])
   @@map("activities")
+}
+
+// User progress for practice activities (Practice tab)
+model PracticeActivityProgress {
+  id         String @id @default(uuid())
+  userId     String
+  activityId String
+
+  // Completion status
+  isCompleted Boolean  @default(false)
+  isCorrect   Boolean? // Optional for practice types that have a notion of correctness
+
+  // Performance tracking
+  attempts          Int  @default(0)
+  bestScore         Int? // Optional numeric score (0-100 or any scale your client uses)
+  lastScore         Int?
+  totalTimeSpentSec Int  @default(0)
+
+  // Optional payloads for flexible practice activities
+  lastAnswer Json?
+  metadata   Json?
+
+  // Timestamps
+  startedAt     DateTime? // First time they started this practice activity
+  lastAttemptAt DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activity Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, activityId])
+  @@index([userId])
+  @@index([activityId])
+  @@index([isCompleted])
+  @@index([completedAt])
+  @@map("practice_activity_progress")
 }
 
 // Karaoke practice exercises (audio + timed lyrics)

@@ -118,6 +118,9 @@ export default function ListeningDictationActivity({
   // Report progress on mount (and when identifiers change)
   useEffect(() => {
     if (!userId) return; // Skip if user not authenticated yet
+    const isPracticeRuntime =
+      typeof unitId === "string" && unitId.startsWith("practice:");
+    if (isPracticeRuntime) return;
     updateUserProgress({
       userId,
       unitId,

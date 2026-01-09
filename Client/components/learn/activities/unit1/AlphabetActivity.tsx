@@ -60,16 +60,26 @@ export default function AlphabetActivity({
   const { userId, unitId, currentActivityNumber, totalActivities } =
     useLessonRuntime();
 
+  const isPracticeRuntime =
+    typeof unitId === "string" && unitId.startsWith("practice:");
+
   // Report progress on mount (and when identifiers change)
   useEffect(() => {
     if (!userId) return; // Skip if user not authenticated yet
+    if (isPracticeRuntime) return;
     updateUserProgress({
       userId,
       unitId,
       currentActivityNumber,
       totalActivities,
     }).catch((e) => console.warn("Failed to send progress", e));
-  }, [userId, unitId, currentActivityNumber, totalActivities]);
+  }, [
+    userId,
+    unitId,
+    currentActivityNumber,
+    totalActivities,
+    isPracticeRuntime,
+  ]);
 
   // Award XP once when the audio has been listened to fully
   useEffect(() => {

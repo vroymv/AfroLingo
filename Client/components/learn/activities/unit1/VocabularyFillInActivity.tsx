@@ -40,18 +40,28 @@ export default function VocabularyFillInActivity({
   const { userId, unitId, currentActivityNumber, totalActivities } =
     useLessonRuntime();
 
+  const isPracticeRuntime =
+    typeof unitId === "string" && unitId.startsWith("practice:");
+
   const [completionXPAwarded, setCompletionXPAwarded] = useState(false);
 
   // Report progress on mount (and when identifiers change)
   useEffect(() => {
     if (!userId) return; // Skip if user not authenticated yet
+    if (isPracticeRuntime) return;
     updateUserProgress({
       userId,
       unitId,
       currentActivityNumber,
       totalActivities,
     }).catch((e) => console.warn("Failed to send progress", e));
-  }, [userId, unitId, currentActivityNumber, totalActivities]);
+  }, [
+    userId,
+    unitId,
+    currentActivityNumber,
+    totalActivities,
+    isPracticeRuntime,
+  ]);
 
   // Image mapping for vocabulary items
   const imageMap: { [key: string]: any } = {
