@@ -14,6 +14,11 @@ router.get("/activities", async (_req: Request, res: Response) => {
       where: {
         isActive: true,
         featuredForPractice: true,
+        NOT: {
+          componentKey: {
+            in: ["alphabet", "alphabet-introduction"],
+          },
+        },
       },
       orderBy: { order: "asc" },
       select: {

@@ -1,15 +1,9 @@
-import AlphabetActivity, {
-  componentKey as alphabetKey,
-} from "@/components/learn/practiceActivities/unit1/AlphabetActivity";
 import AlphabetVocabularyTableActivity, {
   componentKey as alphabetVocabularyTableKey,
 } from "@/components/learn/practiceActivities/unit1/AlphabetVocabularyTableActivity";
 import ConversationPracticeActivity from "@/components/learn/practiceActivities/ConversationPracticeActivity";
 import DialogueActivity from "@/components/learn/practiceActivities/DialogueActivity";
 import FlashcardActivity from "@/components/learn/practiceActivities/FlashcardActivity";
-import AlphabetIntroductionActivity, {
-  componentKey as introductionKey,
-} from "@/components/learn/practiceActivities/unit1/AlphabetIntroductionActivity";
 import ListeningDictationActivity, {
   componentKey as listeningDictationKey,
 } from "@/components/learn/practiceActivities/unit1/ListeningDictationActivity";
@@ -57,8 +51,6 @@ export default function PracticeActivityRenderer({
   onActivityComplete: () => void;
 }) {
   const registry: Record<string, React.ComponentType<any>> = {
-    [introductionKey]: AlphabetIntroductionActivity,
-    [alphabetKey]: AlphabetActivity,
     [multipleChoiceKey]: MultipleChoiceActivity,
     [listeningDictationKey]: ListeningDictationActivity,
     [vocabularyFillInKey]: VocabularyFillInActivity,
