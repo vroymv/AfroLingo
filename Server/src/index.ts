@@ -1,7 +1,9 @@
 import express, { Application, Request, Response } from "express";
+import http from "http";
 import cors from "cors";
 import dotenv from "dotenv";
 import { connectDB } from "./config/database";
+import { initSocketServer } from "./realtime/socketServer";
 import {
   healthRouter,
   usersRouter,
@@ -24,6 +26,7 @@ dotenv.config();
 
 const app: Application = express();
 const PORT = process.env.PORT || 3000;
+const httpServer = http.createServer(app);
 
 // Middleware
 app.use(cors());
@@ -60,7 +63,10 @@ const startServer = async () => {
     // Connect to database
     await connectDB();
 
-    app.listen(PORT, () => {
+    // WebSockets (socket.io)
+    initSocketServer(httpServer);
+
+    httpServer.listen(PORT, () => {
       console.log(`AfroLingo Server running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
     });

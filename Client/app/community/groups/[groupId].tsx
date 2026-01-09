@@ -1,10 +1,9 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
   StyleSheet,
-  View,
 } from "react-native";
 import {
   SafeAreaView,
@@ -38,6 +37,7 @@ export default function GroupDetailScreen() {
     usersById,
     getGroupById,
     getMessagesForGroup,
+    loadMessagesForGroup,
     sendMessage,
     reactToMessage,
   } = useGroupsStore();
@@ -47,6 +47,11 @@ export default function GroupDetailScreen() {
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
 
   const activeGroupId = group?.id;
+
+  useEffect(() => {
+    if (!activeGroupId) return;
+    void loadMessagesForGroup(activeGroupId);
+  }, [activeGroupId, loadMessagesForGroup]);
 
   const messages = useMemo(() => {
     return activeGroupId ? getMessagesForGroup(activeGroupId) : [];

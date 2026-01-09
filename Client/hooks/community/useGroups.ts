@@ -1,7 +1,20 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { Group } from "@/data/community";
-import { mockUserProfile, mockUsers } from "@/data/community";
+import { getLanguageFlag } from "@/utils/language";
+
+import { useAuth } from "@/contexts/AuthContext";
+import { useNotificationBadge } from "@/contexts/community/NotificationBadgeContext";
+import {
+  fetchDiscoverGroups,
+  fetchGroupMessages,
+  fetchMyGroups,
+  joinGroup as joinGroupApi,
+  leaveGroup as leaveGroupApi,
+  type DiscoverGroupRow,
+  type MyGroupRow,
+  type ServerGroupMessage,
+} from "@/services/communityGroups";
 
 export type GroupChatReactionMap = Record<string, string[]>;
 
@@ -12,6 +25,7 @@ export type GroupChatMessage = {
   content: string;
   timestamp: Date;
   reactions: GroupChatReactionMap;
+  clientMessageId?: string;
 };
 
 export type GroupRow = Group & {
@@ -29,42 +43,6 @@ type CreateGroupInput = {
   type: Group["type"];
   category: string;
 };
-
-function seedMessagesForGroup(group: Group): GroupChatMessage[] {
-  const participants = [mockUserProfile, ...group.topMembers, ...mockUsers]
-    .filter((u, idx, arr) => arr.findIndex((x) => x.id === u.id) === idx)
-    .slice(0, 5);
-
-  const now = Date.now();
-  const texts = [
-    `Hey everyone — welcome to ${group.name}!`,
-    "What are you practicing today?",
-    "Drop a phrase you learned this week 👇",
-    "Anyone want to do a quick speaking challenge?",
-    "Here’s a helpful resource I found.",
-    "🔥 Let’s keep the streak going!",
-  ];
-
-  return texts.map((content, index) => {
-    const sender = participants[index % participants.length];
-    const minutesAgo = (texts.length - index) * 9;
-
-    return {
-      id: `${group.id}-m-${index + 1}`,
-      groupId: group.id,
-      senderId: sender.id,
-      content,
-      timestamp: new Date(now - minutesAgo * 60 * 1000),
-      reactions: {},
-    };
-  });
-}
-
-function seedConversations(
-  groups: Group[]
-): Record<string, GroupChatMessage[]> {
-  return Object.fromEntries(groups.map((g) => [g.id, seedMessagesForGroup(g)]));
-}
 
 function toggleTapback(
   reactions: GroupChatReactionMap,
@@ -98,43 +76,160 @@ function toggleTapback(
 function makeMeta(
   groups: Group[]
 ): Record<string, Omit<GroupRow, keyof Group>> {
-  const now = Date.now();
   return Object.fromEntries(
-    groups.map((group, index) => {
-      const idNumber = Number.parseInt(group.id, 10);
-      const hoursAgo = (Number.isFinite(idNumber) ? idNumber : index + 1) * 7;
-      const lastActivityAt = new Date(now - hoursAgo * 60 * 60 * 1000);
-
-      const unreadBase = (Number.isFinite(idNumber) ? idNumber : index + 1) * 3;
-      const unreadCount = group.isMember ? unreadBase % 6 : 0;
-
-      return [
-        group.id,
-        {
-          lastActivityAt,
-          unreadCount,
-          lastMessagePreview: group.description,
-        },
-      ];
-    })
+    groups.map((group) => [
+      group.id,
+      {
+        lastActivityAt: new Date(group.isMember ? Date.now() : 0),
+        unreadCount: 0,
+        lastMessagePreview: group.description,
+      },
+    ])
   );
 }
 
-export function useGroups(initialGroups: Group[]) {
+function mapDiscoverRowToGroup(row: DiscoverGroupRow): Group {
+  const language = row.language ?? "";
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description ?? "",
+    language,
+    avatar: getLanguageFlag(language) || "👥",
+    memberCount: row.memberCount ?? 0,
+    weeklyXpGoal: 3000,
+    currentXp: 0,
+    groupStreak: 0,
+    type: row.privacy === "PUBLIC" ? "public" : "private",
+    category: row.tags?.[0] ?? "Study Group",
+    isMember: row.isMember,
+    topMembers: [],
+  };
+}
+
+function mapMyRowToGroup(row: MyGroupRow): Group {
+  const language = row.group.language ?? "";
+  return {
+    id: row.group.id,
+    name: row.group.name,
+    description: row.group.description ?? "",
+    language,
+    avatar: getLanguageFlag(language) || "👥",
+    memberCount: row.group.memberCount ?? 0,
+    weeklyXpGoal: 3000,
+    currentXp: 0,
+    groupStreak: 0,
+    type: row.group.privacy === "PUBLIC" ? "public" : "private",
+    category: row.group.tags?.[0] ?? "Study Group",
+    isMember: true,
+    topMembers: [],
+  };
+}
+
+function mapServerMessageToClientMessage(
+  m: ServerGroupMessage
+): GroupChatMessage {
+  return {
+    id: m.id,
+    groupId: m.groupId,
+    senderId: m.senderId,
+    content: m.body,
+    timestamp: new Date(m.createdAt),
+    reactions: {},
+    clientMessageId: m.clientMessageId,
+  };
+}
+
+function makeClientMessageId(): string {
+  return `cm_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+}
+
+export function useGroups(initialGroups: Group[] = []) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<GroupsFilter>("all");
   const [groups, setGroups] = useState<Group[]>(initialGroups);
   const [metaById, setMetaById] = useState(() => makeMeta(initialGroups));
-  const [conversationsByGroupId, setConversationsByGroupId] = useState(() =>
-    seedConversations(initialGroups)
-  );
+  const [conversationsByGroupId, setConversationsByGroupId] = useState<
+    Record<string, GroupChatMessage[]>
+  >({});
 
-  const currentUser = mockUserProfile;
+  const { user, isAuthenticated } = useAuth();
+  const { socket, isSocketConnected } = useNotificationBadge();
+
+  const currentUser = useMemo(() => {
+    return {
+      id: user?.id ?? "",
+      name: user?.name ?? "",
+      avatar: "🙂",
+    };
+  }, [user?.id, user?.name]);
 
   const usersById = useMemo(() => {
-    const all = [mockUserProfile, ...mockUsers];
-    return Object.fromEntries(all.map((u) => [u.id, u]));
-  }, []);
+    if (!currentUser.id) return {} as Record<string, typeof currentUser>;
+    return { [currentUser.id]: currentUser } as Record<
+      string,
+      typeof currentUser
+    >;
+  }, [currentUser]);
+
+  const refreshGroups = useCallback(async () => {
+    if (!isAuthenticated || !user?.id) return;
+
+    const [myRes, discoverRes] = await Promise.all([
+      fetchMyGroups(user.id),
+      fetchDiscoverGroups({ userId: user.id }),
+    ]);
+
+    if (!myRes.success || !discoverRes.success) {
+      return;
+    }
+
+    const myRows = myRes.data;
+    const discoverRows = discoverRes.data;
+
+    const myGroups = myRows.map(mapMyRowToGroup);
+    const myIds = new Set(myGroups.map((g) => g.id));
+
+    const availableGroups = discoverRows
+      .filter((g) => !g.isMember)
+      .filter((g) => !myIds.has(g.id))
+      .map(mapDiscoverRowToGroup);
+
+    const merged = [...myGroups, ...availableGroups];
+    setGroups(merged);
+
+    setMetaById(() => {
+      const next: Record<string, Omit<GroupRow, keyof Group>> = {};
+
+      for (const row of myRows) {
+        const groupId = row.group.id;
+        const lastMessage = row.group.lastMessage;
+        next[groupId] = {
+          lastActivityAt: new Date(
+            lastMessage?.createdAt ?? row.group.createdAt
+          ),
+          unreadCount: row.membership.unreadCount ?? 0,
+          lastMessagePreview: lastMessage?.body ?? row.group.description ?? "",
+        };
+      }
+
+      for (const row of discoverRows) {
+        if (row.isMember) continue;
+        if (myIds.has(row.id)) continue;
+        next[row.id] = {
+          lastActivityAt: new Date(row.createdAt),
+          unreadCount: 0,
+          lastMessagePreview: row.description ?? "",
+        };
+      }
+
+      return next;
+    });
+  }, [isAuthenticated, user?.id]);
+
+  useEffect(() => {
+    void refreshGroups();
+  }, [refreshGroups]);
 
   const rows = useMemo<GroupRow[]>(() => {
     return groups
@@ -193,59 +288,29 @@ export function useGroups(initialGroups: Group[]) {
   const getGroupById = (groupId: string) =>
     rows.find((group) => group.id === groupId);
 
-  const joinGroup = (groupId: string) => {
-    setGroups((prev) =>
-      prev.map((group) =>
-        group.id === groupId
-          ? {
-              ...group,
-              isMember: true,
-              memberCount: group.memberCount + 1,
-            }
-          : group
-      )
-    );
+  const joinGroup = useCallback(
+    async (groupId: string) => {
+      if (!isAuthenticated || !user?.id) return;
+      const res = await joinGroupApi({ userId: user.id, groupId });
+      if (!res.success) return;
 
-    setMetaById((prev) => {
-      const existing = prev[groupId];
-      if (!existing) return prev;
-      return {
-        ...prev,
-        [groupId]: {
-          ...existing,
-          unreadCount: Math.max(existing.unreadCount, 1),
-          lastActivityAt: new Date(),
-        },
-      };
-    });
-  };
+      socket?.emit?.("groups:sync");
+      void refreshGroups();
+    },
+    [isAuthenticated, refreshGroups, socket, user?.id]
+  );
 
-  const leaveGroup = (groupId: string) => {
-    setGroups((prev) =>
-      prev.map((group) =>
-        group.id === groupId
-          ? {
-              ...group,
-              isMember: false,
-              memberCount: Math.max(0, group.memberCount - 1),
-            }
-          : group
-      )
-    );
+  const leaveGroup = useCallback(
+    async (groupId: string) => {
+      if (!isAuthenticated || !user?.id) return;
+      const res = await leaveGroupApi({ userId: user.id, groupId });
+      if (!res.success) return;
 
-    setMetaById((prev) => {
-      const existing = prev[groupId];
-      if (!existing) return prev;
-      return {
-        ...prev,
-        [groupId]: {
-          ...existing,
-          unreadCount: 0,
-          lastActivityAt: new Date(),
-        },
-      };
-    });
-  };
+      socket?.emit?.("groups:sync");
+      void refreshGroups();
+    },
+    [isAuthenticated, refreshGroups, socket, user?.id]
+  );
 
   const createGroup = (input: CreateGroupInput) => {
     const newId = `${Date.now()}`;
@@ -278,7 +343,7 @@ export function useGroups(initialGroups: Group[]) {
 
     setConversationsByGroupId((prev) => ({
       ...prev,
-      [newId]: seedMessagesForGroup(newGroup),
+      [newId]: [],
     }));
 
     return newId;
@@ -287,35 +352,92 @@ export function useGroups(initialGroups: Group[]) {
   const getMessagesForGroup = (groupId: string) =>
     conversationsByGroupId[groupId] ?? [];
 
-  const sendMessage = (groupId: string, content: string) => {
-    const message: GroupChatMessage = {
-      id: `${groupId}-m-${Date.now()}`,
-      groupId,
-      senderId: currentUser.id,
-      content,
-      timestamp: new Date(),
-      reactions: {},
-    };
+  const loadMessagesForGroup = useCallback(
+    async (groupId: string) => {
+      if (!isAuthenticated || !user?.id) return;
 
-    setConversationsByGroupId((prev) => {
-      const existing = prev[groupId] ?? [];
-      return { ...prev, [groupId]: [...existing, message] };
-    });
+      const res = await fetchGroupMessages({
+        userId: user.id,
+        groupId,
+        limit: 50,
+        markRead: true,
+      });
 
-    setMetaById((prev) => {
-      const existing = prev[groupId];
-      if (!existing) return prev;
-      return {
+      if (!res.success) return;
+
+      const nextThread = [...res.data.messages]
+        .reverse()
+        .map(mapServerMessageToClientMessage);
+
+      setConversationsByGroupId((prev) => ({
         ...prev,
-        [groupId]: {
-          ...existing,
-          lastActivityAt: new Date(),
-          lastMessagePreview: content,
-          unreadCount: 0,
-        },
+        [groupId]: nextThread,
+      }));
+
+      setMetaById((prev) => {
+        const existing = prev[groupId];
+        if (!existing) return prev;
+        const last = nextThread[nextThread.length - 1];
+        return {
+          ...prev,
+          [groupId]: {
+            ...existing,
+            unreadCount: 0,
+            lastActivityAt: last?.timestamp ?? existing.lastActivityAt,
+            lastMessagePreview: last?.content ?? existing.lastMessagePreview,
+          },
+        };
+      });
+
+      void refreshGroups();
+    },
+    [isAuthenticated, refreshGroups, user?.id]
+  );
+
+  const sendMessage = useCallback(
+    (groupId: string, content: string) => {
+      if (!currentUser.id) return;
+      const clientMessageId = makeClientMessageId();
+
+      const optimistic: GroupChatMessage = {
+        id: clientMessageId,
+        groupId,
+        senderId: currentUser.id,
+        content,
+        timestamp: new Date(),
+        reactions: {},
+        clientMessageId,
       };
-    });
-  };
+
+      setConversationsByGroupId((prev) => {
+        const existing = prev[groupId] ?? [];
+        return { ...prev, [groupId]: [...existing, optimistic] };
+      });
+
+      setMetaById((prev) => {
+        const existing = prev[groupId];
+        if (!existing) return prev;
+        return {
+          ...prev,
+          [groupId]: {
+            ...existing,
+            lastActivityAt: optimistic.timestamp,
+            lastMessagePreview: content,
+            unreadCount: 0,
+          },
+        };
+      });
+
+      if (socket && isSocketConnected) {
+        socket.emit("message:send", {
+          groupId,
+          body: content,
+          clientMessageId,
+        });
+      }
+    },
+    [currentUser.id, isSocketConnected, socket]
+  );
 
   const reactToMessage = (
     groupId: string,
@@ -337,6 +459,107 @@ export function useGroups(initialGroups: Group[]) {
     });
   };
 
+  // Realtime: merge message:new and reconcile message:ack.
+  useEffect(() => {
+    if (!socket || !currentUser.id) return;
+
+    const onMessageNew = (payload: any) => {
+      const groupId =
+        typeof payload?.groupId === "string" ? payload.groupId : "";
+      const message = payload?.message;
+      if (!groupId || !message) return;
+
+      const serverId = typeof message?.id === "string" ? message.id : "";
+      const clientMessageId =
+        typeof message?.clientMessageId === "string"
+          ? message.clientMessageId
+          : null;
+
+      const next: GroupChatMessage = {
+        id: serverId || clientMessageId || makeClientMessageId(),
+        groupId,
+        senderId: message.senderId,
+        content: message.body,
+        timestamp: new Date(message.createdAt),
+        reactions: {},
+        clientMessageId: clientMessageId ?? undefined,
+      };
+
+      setConversationsByGroupId((prev) => {
+        const existing = prev[groupId] ?? [];
+        const alreadyHasServer = serverId
+          ? existing.some((m) => m.id === serverId)
+          : false;
+        const alreadyHasClient = clientMessageId
+          ? existing.some(
+              (m) =>
+                m.clientMessageId === clientMessageId ||
+                m.id === clientMessageId
+            )
+          : false;
+
+        if (alreadyHasServer || alreadyHasClient) return prev;
+        return { ...prev, [groupId]: [...existing, next] };
+      });
+
+      setMetaById((prev) => {
+        const existing = prev[groupId];
+        if (!existing) return prev;
+
+        const isMine = next.senderId === currentUser.id;
+        return {
+          ...prev,
+          [groupId]: {
+            ...existing,
+            lastActivityAt: next.timestamp,
+            lastMessagePreview: next.content,
+            unreadCount: isMine ? 0 : existing.unreadCount + 1,
+          },
+        };
+      });
+    };
+
+    const onMessageAck = (payload: any) => {
+      const clientMessageId =
+        typeof payload?.clientMessageId === "string"
+          ? payload.clientMessageId
+          : "";
+      const serverMessageId =
+        typeof payload?.serverMessageId === "string"
+          ? payload.serverMessageId
+          : "";
+      const createdAt = payload?.createdAt ? new Date(payload.createdAt) : null;
+      if (!clientMessageId || !serverMessageId) return;
+
+      setConversationsByGroupId((prev) => {
+        const next: Record<string, GroupChatMessage[]> = { ...prev };
+        for (const [groupId, thread] of Object.entries(prev)) {
+          const idx = thread.findIndex(
+            (m) =>
+              m.id === clientMessageId || m.clientMessageId === clientMessageId
+          );
+          if (idx === -1) continue;
+          const updated = [...thread];
+          updated[idx] = {
+            ...updated[idx],
+            id: serverMessageId,
+            timestamp: createdAt ?? updated[idx].timestamp,
+          };
+          next[groupId] = updated;
+          break;
+        }
+        return next;
+      });
+    };
+
+    socket.on("message:new", onMessageNew);
+    socket.on("message:ack", onMessageAck);
+    return () => {
+      socket.off("message:new", onMessageNew);
+      socket.off("message:ack", onMessageAck);
+    };
+  }, [currentUser.id, socket]);
+
   return {
     currentUser,
     usersById,
@@ -350,11 +573,13 @@ export function useGroups(initialGroups: Group[]) {
     myGroups,
     availableGroups,
     stats,
+    refreshGroups,
     getGroupById,
     joinGroup,
     leaveGroup,
     createGroup,
     getMessagesForGroup,
+    loadMessagesForGroup,
     sendMessage,
     reactToMessage,
   };

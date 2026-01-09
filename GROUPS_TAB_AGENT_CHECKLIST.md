@@ -11,7 +11,7 @@ How to use
 ## Locked decisions
 
 - Transport: **socket.io**
-- WS auth: **JWT** (validated during socket.io handshake)
+- WS auth: **Firebase Auth ID token** (validated during socket.io handshake via Firebase Admin)
 - Presence store: **Redis** (TTL-based presence + socket.io Redis adapter for multi-instance)
 - DB: Postgres + Prisma
 
@@ -38,8 +38,10 @@ How to use
 - [ ] Confirm Prisma migrations run (`prisma migrate dev`) in Server
 - [ ] Add env vars (local dev)
   - [ ] `DATABASE_URL`
-  - [ ] `JWT_SECRET` (or equivalent)
   - [ ] `REDIS_URL`
+  - [ ] Firebase Admin credentials (`GOOGLE_APPLICATION_CREDENTIALS` or service-account env vars)
+
+_Note: Server DB connectivity now supports `DATABASE_URL` (preferred) in addition to the older `PGHOST/PGDATABASE/PGUSER/PGPASSWORD` style._
 
 **DoD**
 
@@ -47,26 +49,24 @@ How to use
 
 **Notes**
 
--
-
----
+- ***
 
 ## 1) Data model (Prisma schema)
 
-- [ ] Add Prisma models for groups + chat (v1 minimal)
-  - [ ] `Group`
-  - [ ] `GroupMembership`
-  - [ ] (Optional for v1) `GroupChannel` (or assume implicit “General”)
-  - [ ] `GroupMessage` (append-only)
-  - [ ] `Notification` (in-app)
-- [ ] Add enums (if needed)
-  - [ ] `GroupPrivacy` (PUBLIC/PRIVATE/INVITE)
-  - [ ] `GroupRole` (OWNER/MEMBER)
-  - [ ] `NotificationType` (GROUP_MESSAGE, etc.)
-- [ ] Add indexes + unique constraints
-  - [ ] Unique membership per (groupId, userId)
-  - [ ] Message indexes for pagination (groupId/channelId + createdAt)
-  - [ ] Notification indexes (userId + createdAt, userId + readAt)
+- [x] Add Prisma models for groups + chat (v1 minimal)
+  - [x] `Group`
+  - [x] `GroupMembership`
+  - [x] (Optional for v1) `GroupChannel` (or assume implicit “General”)
+  - [x] `GroupMessage` (append-only)
+  - [x] `Notification` (in-app)
+- [x] Add enums (if needed)
+  - [x] `GroupPrivacy` (PUBLIC/PRIVATE/INVITE)
+  - [x] `GroupRole` (OWNER/MEMBER)
+  - [x] `NotificationType` (GROUP_MESSAGE, etc.)
+- [x] Add indexes + unique constraints
+  - [x] Unique membership per (groupId, userId)
+  - [x] Message indexes for pagination (groupId/channelId + createdAt)
+  - [x] Notification indexes (userId + createdAt, userId + readAt)
 
 **DoD**
 
@@ -75,15 +75,13 @@ How to use
 
 **Notes**
 
--
-
----
+- ***
 
 ## 2) Migration + Prisma client
 
-- [ ] Run migration generation
-- [ ] Ensure Prisma Client generation succeeds
-- [ ] Verify tables exist (quick SQL sanity)
+- [x] Run migration generation
+- [x] Ensure Prisma Client generation succeeds
+- [x] Verify tables exist (quick SQL sanity)
 
 **DoD**
 
@@ -91,18 +89,20 @@ How to use
 
 **Notes**
 
--
-
----
+- ***
 
 ## 3) Seed data (for realistic testing)
 
-- [ ] Add deterministic seed script
+- [x] Add deterministic seed script
   - [ ] Create ~10–30 groups across languages
   - [ ] Create memberships for a few test users
   - [ ] Seed message history for 3–5 groups
 - [ ] Add a `package.json` script to run seed
 - [ ] Document seed accounts + group IDs in this file (or Server/README)
+
+Run command (local/dev):
+
+- `cd Server && npx ts-node prisma/seed-groups-only.ts`
 
 **DoD**
 
@@ -110,23 +110,22 @@ How to use
 
 **Notes**
 
--
-
----
+- ***
 
 ## 4) HTTP API (baseline, required even with WS)
 
-- [ ] Group discovery
-  - [ ] `GET /groups` (search/filter)
-  - [ ] `GET /groups/my`
-- [ ] Membership
-  - [ ] `POST /groups/:groupId/join`
-  - [ ] `POST /groups/:groupId/leave`
-- [ ] Messages
-  - [ ] `GET /groups/:groupId/messages?cursor=...` (cursor pagination)
+- [x] Group discovery
+  - [x] `GET /api/community/groups/discover/:userId` (search/filter)
+  - [x] `GET /api/community/groups/my/:userId`
+- [x] Membership
+  - [x] `POST /api/community/groups/:userId/join/:groupId`
+  - [x] `DELETE /api/community/groups/:userId/leave/:groupId`
+- [x] Messages
+  - [x] `GET /api/community/groups/:userId/:groupId/messages?cursor=...` (cursor pagination)
 - [ ] Notifications (in-app)
-  - [ ] `GET /notifications`
-  - [ ] `POST /notifications/:id/read`
+- [x] Notifications (in-app)
+  - [x] `GET /api/community/notifications/:userId`
+  - [x] `POST /api/community/notifications/:userId/read/:notificationId`
 
 **DoD**
 
@@ -134,22 +133,20 @@ How to use
 
 **Notes**
 
--
+- ***
 
----
+## 5) WebSocket foundation (socket.io + Firebase)
 
-## 5) WebSocket foundation (socket.io + JWT)
-
-- [ ] Add socket.io server
-- [ ] Implement JWT auth in handshake
-  - [ ] Reject invalid/expired tokens
-  - [ ] Attach `userId` to socket context
-- [ ] Room strategy
-  - [ ] Join `user:{userId}` room
-  - [ ] Join `group:{groupId}` rooms for memberships (on connect + when joining)
-- [ ] Version the protocol
-  - [ ] Define `protocolVersion` constant
-  - [ ] Include it in connect/hello event
+- [x] Add socket.io server
+- [x] Implement Firebase ID token auth in handshake (Firebase Admin verifies token)
+  - [x] Reject invalid/expired tokens
+  - [x] Attach `userId` to socket context
+- [x] Room strategy
+  - [x] Join `user:{userId}` room
+  - [x] Join `group:{groupId}` rooms for memberships (on connect + `groups:sync`)
+- [x] Version the protocol
+  - [x] Define `protocolVersion` constant
+  - [x] Include it in connect/hello event
 
 **DoD**
 
@@ -157,21 +154,19 @@ How to use
 
 **Notes**
 
--
-
----
+- ***
 
 ## 6) Redis presence + typing (ephemeral)
 
-- [ ] Add Redis client in server
-- [ ] Implement presence keys + TTL
-  - [ ] On connect: mark online in each group
-  - [ ] On disconnect: best-effort cleanup (optional; TTL is primary)
-  - [ ] Heartbeat/refresh: extend TTL periodically
-- [ ] Implement typing indicators (no persistence)
-  - [ ] Events: `typing:start`, `typing:stop`
-  - [ ] Broadcast to `group:{groupId}`
-- [ ] Add socket.io Redis adapter (for horizontal scaling)
+- [x] Add Redis client in server
+- [x] Implement presence keys + TTL
+  - [x] On connect: mark online in each group
+  - [x] On disconnect: best-effort cleanup (optional; TTL is primary)
+  - [x] Heartbeat/refresh: extend TTL periodically
+- [x] Implement typing indicators (no persistence)
+  - [x] Events: `typing:start`, `typing:stop`
+  - [x] Broadcast to `group:{groupId}`
+- [x] Add socket.io Redis adapter (for horizontal scaling)
 
 **DoD**
 
@@ -179,18 +174,16 @@ How to use
 
 **Notes**
 
--
-
----
+- ***
 
 ## 7) Real-time chat (store + broadcast + ack)
 
-- [ ] Event: `message:send`
-  - [ ] Validate membership
-  - [ ] Persist message
-  - [ ] Enforce idempotency (unique key per sender)
-  - [ ] Emit `message:ack` to sender
-  - [ ] Broadcast `message:new` to group room
+- [x] Event: `message:send`
+  - [x] Validate membership
+  - [x] Persist message (supports `channelId`)
+  - [x] Enforce idempotency (unique key per sender)
+  - [x] Emit `message:ack` to sender
+  - [x] Broadcast `message:new` to group room
 - [ ] Backfill strategy on reconnect
   - [ ] On reconnect: client refetches latest messages via HTTP
 
@@ -200,15 +193,13 @@ How to use
 
 **Notes**
 
--
-
----
+- ***
 
 ## 8) Notifications (in-app)
 
-- [ ] Create `Notification` records on relevant events
-  - [ ] New group message (based on preferences and/or “not currently viewing group” heuristic)
-- [ ] Emit `notification:new` over WS to `user:{userId}` room
+- [x] Create `Notification` records on relevant events
+  - [x] New group message (offline-only: recipients not present per Redis presence)
+- [x] Emit `notification:new` over WS to `user:{userId}` room
 - [ ] Unread counts
   - [ ] Add simple unread count calculation (v1 acceptable)
 
@@ -218,21 +209,21 @@ How to use
 
 **Notes**
 
--
-
----
+- ***
 
 ## 9) Client integration (Groups tab)
 
-- [ ] Wire Groups list screen to real API (replace/mock store as needed)
-- [ ] Add Group detail/chat screen
-  - [ ] Paginated history (HTTP)
-  - [ ] Live updates (WS)
-  - [ ] Composer with optimistic UI + ack reconciliation
+- [x] Wire Groups list screen to real API (replace/mock store as needed)
+- [x] Add Group detail/chat screen (baseline)
+  - [x] History fetch (HTTP)
+  - [x] Live updates (WS `message:new` + `message:ack`)
+  - [x] Composer with optimistic UI + ack reconciliation
   - [ ] Typing indicator
   - [ ] Presence indicator (online count)
-- [ ] Add join/leave UX
-- [ ] Add notification UI integration (if notifications tab exists)
+- [x] Add join/leave UX (HTTP + `groups:sync`)
+- [x] Add notification badge UI
+  - [x] Badge on Community bottom tab
+  - [x] Badge on Community→Groups top tab
 
 **DoD**
 
@@ -240,9 +231,7 @@ How to use
 
 **Notes**
 
--
-
----
+- ***
 
 ## 10) Guardrails: validation, rate limits, abuse hooks
 
@@ -256,9 +245,7 @@ How to use
 
 **Notes**
 
--
-
----
+- ***
 
 ## 11) Testing + observability
 
@@ -273,9 +260,7 @@ How to use
 
 **Notes**
 
--
-
----
+- ***
 
 # WS Event Contract (v1)
 

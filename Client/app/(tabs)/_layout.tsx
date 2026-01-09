@@ -6,10 +6,15 @@ import { HapticTab } from "@/components/HapticTab";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
+import { useNotificationBadge } from "@/contexts/community/NotificationBadgeContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { unreadCount } = useNotificationBadge();
+
+  const communityBadge =
+    unreadCount > 0 ? (unreadCount > 99 ? "99+" : unreadCount) : undefined;
 
   return (
     <Tabs
@@ -49,6 +54,7 @@ export default function TabLayout() {
         name="community"
         options={{
           title: "Community",
+          tabBarBadge: communityBadge,
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="globe" color={color} />
           ),

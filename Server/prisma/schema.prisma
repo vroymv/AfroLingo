@@ -25,6 +25,21 @@ enum CommunityUserType {
   TUTOR
 }
 
+enum GroupPrivacy {
+  PUBLIC
+  PRIVATE
+  INVITE
+}
+
+enum GroupRole {
+  OWNER
+  MEMBER
+}
+
+enum NotificationType {
+  GROUP_MESSAGE
+}
+
 model Tutor {
   id         String @id @default(uuid())
   externalId String @unique // Stable ID for seeding/syncing (maps to Client MOCK_TUTORS[].id)
@@ -114,6 +129,12 @@ model User {
   following UserFollow[] @relation("UserFollows")
   followers UserFollow[] @relation("UserFollowedBy")
 
+  // Groups
+  groupsCreated     Group[]           @relation("GroupsCreated")
+  groupMemberships  GroupMembership[]
+  groupMessages     GroupMessage[]
+  notifications     Notification[]
+
   @@map("users")
   @@index([userType])
   @@index([countryCode])
@@ -132,6 +153,124 @@ model UserFollow {
   @@index([followerId])
   @@index([followingId])
   @@map("user_follows")
+}
+
+model Group {
+  id         String  @id @default(uuid())
+  externalId String? @unique
+
+  name        String
+  description String? @db.Text
+
+  // Simple language targeting for discovery (e.g., "sw", "zu")
+  language String?
+  tags     String[] @default([])
+
+  privacy  GroupPrivacy @default(PUBLIC)
+  avatarUrl String?
+  coverImageUrl String?
+
+  createdByUserId String
+  createdByUser   User @relation("GroupsCreated", fields: [createdByUserId], references: [id], onDelete: Cascade)
+
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  memberships GroupMembership[]
+  channels    GroupChannel[]
+  messages    GroupMessage[]
+
+  @@index([language])
+  @@index([privacy])
+  @@index([isActive])
+  @@map("groups")
+}
+
+model GroupMembership {
+  id      String @id @default(uuid())
+  groupId String
+  userId  String
+
+  role GroupRole @default(MEMBER)
+
+  joinedAt DateTime @default(now())
+  leftAt   DateTime?
+
+  // Used for unread calculations (v1)
+  lastReadAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@index([userId])
+  @@index([groupId])
+  @@index([role])
+  @@map("group_memberships")
+}
+
+model GroupChannel {
+  id      String @id @default(uuid())
+  groupId String
+
+  name      String
+  isDefault Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  group    Group          @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  messages GroupMessage[]
+
+  @@index([groupId])
+  @@index([isDefault])
+  @@map("group_channels")
+}
+
+model GroupMessage {
+  id        String @id @default(uuid())
+  groupId   String
+  channelId String?
+  senderId  String
+
+  body     String @db.Text
+  metadata Json?
+
+  // Client-provided idempotency key (unique per sender)
+  clientMessageId String
+
+  createdAt DateTime @default(now())
+
+  group   Group         @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  channel GroupChannel? @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  sender  User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, clientMessageId])
+  @@index([groupId, createdAt(sort: Desc)])
+  @@index([channelId, createdAt(sort: Desc)])
+  @@index([senderId])
+  @@map("group_messages")
+}
+
+model Notification {
+  id     String @id @default(uuid())
+  userId String
+
+  type NotificationType
+  data Json
+
+  createdAt DateTime @default(now())
+  readAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, readAt])
+  @@map("notifications")
 }
 
 // Unit model - Represents a learning unit (e.g., "The Alphabet", "Numbers")

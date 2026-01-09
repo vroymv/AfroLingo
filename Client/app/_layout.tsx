@@ -11,6 +11,7 @@ import { LoadingScreen } from "@/components/LoadingScreen";
 import { AppLifecycleReporter } from "@/components/AppLifecycleReporter";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { GroupsProvider } from "@/contexts/community/GroupsContext";
+import { NotificationBadgeProvider } from "@/contexts/community/NotificationBadgeContext";
 import {
   OnboardingProvider,
   useOnboarding,
@@ -66,9 +67,11 @@ export default function RootLayout() {
           value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
         >
           <AppLifecycleReporter />
-          <GroupsProvider>
-            <AppNavigator />
-          </GroupsProvider>
+          <NotificationBadgeProvider>
+            <GroupsProvider>
+              <AppNavigator />
+            </GroupsProvider>
+          </NotificationBadgeProvider>
         </ThemeProvider>
       </OnboardingProvider>
     </AuthProvider>

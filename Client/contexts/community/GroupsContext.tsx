@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useMemo } from "react";
 
-import { mockGroups } from "@/data/community";
 import type { Group } from "@/data/community";
 import { useGroups } from "@/hooks/community/useGroups";
 
@@ -14,7 +13,7 @@ type Props = {
 };
 
 export function GroupsProvider({ children, initialGroups }: Props) {
-  const store = useGroups(initialGroups ?? mockGroups);
+  const store = useGroups(initialGroups ?? []);
   const value = useMemo(() => store, [store]);
 
   return (

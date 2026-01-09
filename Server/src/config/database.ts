@@ -1,17 +1,26 @@
 import { Pool } from "pg";
 
-const { PGHOST, PGDATABASE, PGUSER, PGPASSWORD } = process.env;
+const { DATABASE_URL, PGHOST, PGDATABASE, PGUSER, PGPASSWORD } = process.env;
 
-export const pool = new Pool({
-  host: PGHOST,
-  database: PGDATABASE,
-  user: PGUSER,
-  password: PGPASSWORD,
-  port: 5432,
-  ssl: {
-    rejectUnauthorized: false,
-  },
-});
+export const pool = new Pool(
+  DATABASE_URL
+    ? {
+        connectionString: DATABASE_URL,
+        ssl: {
+          rejectUnauthorized: false,
+        },
+      }
+    : {
+        host: PGHOST,
+        database: PGDATABASE,
+        user: PGUSER,
+        password: PGPASSWORD,
+        port: 5432,
+        ssl: {
+          rejectUnauthorized: false,
+        },
+      }
+);
 
 export const connectDB = async (): Promise<void> => {
   const client = await pool.connect();
