@@ -64,7 +64,8 @@ const startServer = async () => {
     await connectDB();
 
     // WebSockets (socket.io)
-    initSocketServer(httpServer);
+    const io = initSocketServer(httpServer);
+    app.set("io", io);
 
     httpServer.listen(PORT, () => {
       console.log(`AfroLingo Server running on port ${PORT}`);

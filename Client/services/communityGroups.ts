@@ -227,3 +227,45 @@ export async function fetchGroupMessages(params: {
     },
   };
 }
+
+export async function sendGroupMessage(params: {
+  userId: string;
+  groupId: string;
+  body: string;
+  clientMessageId: string;
+  channelId?: string;
+  metadata?: unknown;
+}) {
+  const baseUrl = requireApiBaseUrl();
+  const authHeader = await getAuthHeader();
+
+  const res = await fetch(
+    `${baseUrl}/community/groups/${params.userId}/${params.groupId}/messages`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeader,
+      },
+      body: JSON.stringify({
+        body: params.body,
+        clientMessageId: params.clientMessageId,
+        channelId: params.channelId,
+        metadata: params.metadata,
+      }),
+    }
+  );
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok || json?.success === false) {
+    return {
+      success: false as const,
+      message: json?.message || `Request failed with status ${res.status}`,
+    };
+  }
+
+  return {
+    success: true as const,
+    data: (json?.data?.message ?? null) as ServerGroupMessage | null,
+  };
+}

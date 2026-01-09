@@ -1,6 +1,8 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
 import { prisma } from "../config/prisma";
+import { getRedisClient } from "../config/redis";
+import type { Server as SocketIOServer } from "socket.io";
 
 const router = Router();
 
@@ -33,6 +35,98 @@ const groupsMessagesQuerySchema = z.object({
 const notificationsQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).optional(),
 });
+
+const groupMessageCreateBodySchema = z
+  .object({
+    body: z.string().trim().min(1).max(4000),
+    clientMessageId: z.string().trim().min(1).max(200),
+    channelId: z.string().trim().min(1).max(200).optional(),
+    metadata: z.unknown().optional(),
+  })
+  .strict();
+
+const PRESENCE_TTL_MS = 45_000;
+const PRESENCE_KEY_TTL_SEC = 120;
+
+function presenceKeyForGroup(groupId: string): string {
+  return `presence:group:${groupId}`;
+}
+
+async function getOnlineUserIdsForGroup(groupId: string): Promise<string[]> {
+  const redis = getRedisClient();
+  const key = presenceKeyForGroup(groupId);
+  const data = await redis.hgetall(key);
+  const now = Date.now();
+
+  const online: string[] = [];
+  const stale: string[] = [];
+
+  for (const [userId, lastSeenStr] of Object.entries(data)) {
+    const lastSeenMs = Number(lastSeenStr);
+    if (!Number.isFinite(lastSeenMs)) {
+      stale.push(userId);
+      continue;
+    }
+    if (now - lastSeenMs <= PRESENCE_TTL_MS) {
+      online.push(userId);
+    } else {
+      stale.push(userId);
+    }
+  }
+
+  if (stale.length > 0) {
+    await redis.hdel(key, ...stale);
+  }
+  await redis.expire(key, PRESENCE_KEY_TTL_SEC);
+
+  return online;
+}
+
+async function ensureChannelForGroup(params: {
+  groupId: string;
+  channelId?: string;
+}): Promise<
+  | { channelId: string | null }
+  | {
+      error: {
+        code: string;
+        message: string;
+        context?: Record<string, unknown>;
+      };
+    }
+> {
+  const { groupId, channelId } = params;
+  if (channelId) {
+    const exists = await prisma.groupChannel.findFirst({
+      where: { id: channelId, groupId },
+      select: { id: true },
+    });
+    if (!exists) {
+      return {
+        error: {
+          code: "INVALID_CHANNEL",
+          message: "Invalid channelId for group",
+          context: { groupId, channelId },
+        },
+      };
+    }
+    return { channelId };
+  }
+
+  let defaultChannel = await prisma.groupChannel.findFirst({
+    where: { groupId, isDefault: true },
+    select: { id: true },
+  });
+
+  if (!defaultChannel) {
+    defaultChannel = await prisma.groupChannel.create({
+      data: { groupId, name: "General", isDefault: true },
+      select: { id: true },
+    });
+  }
+
+  return { channelId: defaultChannel.id };
+}
 
 const groupReportBodySchema = z.object({
   reason: z.string().trim().min(1).max(500),
@@ -741,6 +835,207 @@ router.get(
       return res.status(500).json({
         success: false,
         message: "Failed to fetch messages",
+      });
+    }
+  }
+);
+
+// POST /api/community/groups/:userId/:groupId/messages
+// HTTP fallback for sending chat messages (idempotent). Also broadcasts over WS when available.
+router.post(
+  "/groups/:userId/:groupId/messages",
+  async (req: Request, res: Response) => {
+    try {
+      const userId = userIdSchema.parse(req.params.userId);
+      const groupId = userIdSchema.parse(req.params.groupId);
+      const { body, clientMessageId, channelId, metadata } =
+        groupMessageCreateBodySchema.parse(req.body ?? {});
+
+      const membership = await prisma.groupMembership.findUnique({
+        where: {
+          groupId_userId: { groupId, userId },
+        },
+        select: { id: true, leftAt: true },
+      });
+
+      if (!membership || membership.leftAt) {
+        return res.status(403).json({
+          success: false,
+          message: "You must be a member of this group to send messages",
+        });
+      }
+
+      const channelResult = await ensureChannelForGroup({ groupId, channelId });
+      if ("error" in channelResult) {
+        return res.status(400).json({
+          success: false,
+          message: channelResult.error.message,
+          code: channelResult.error.code,
+          context: channelResult.error.context,
+        });
+      }
+
+      let wasNewlyCreated = true;
+      let messageRecord: {
+        id: string;
+        groupId: string;
+        channelId: string | null;
+        senderId: string;
+        body: string;
+        metadata: unknown;
+        clientMessageId: string;
+        createdAt: Date;
+      } | null = null;
+
+      try {
+        messageRecord = await prisma.groupMessage.create({
+          data: {
+            groupId,
+            channelId: channelResult.channelId,
+            senderId: userId,
+            body,
+            clientMessageId,
+            metadata: metadata as any,
+          },
+          select: {
+            id: true,
+            groupId: true,
+            channelId: true,
+            senderId: true,
+            body: true,
+            metadata: true,
+            clientMessageId: true,
+            createdAt: true,
+          },
+        });
+      } catch (e: any) {
+        if (typeof e?.code === "string" && e.code === "P2002") {
+          wasNewlyCreated = false;
+          messageRecord = await prisma.groupMessage.findUnique({
+            where: {
+              senderId_clientMessageId: {
+                senderId: userId,
+                clientMessageId,
+              },
+            },
+            select: {
+              id: true,
+              groupId: true,
+              channelId: true,
+              senderId: true,
+              body: true,
+              metadata: true,
+              clientMessageId: true,
+              createdAt: true,
+            },
+          });
+        } else {
+          throw e;
+        }
+      }
+
+      if (!messageRecord) {
+        return res.status(500).json({
+          success: false,
+          message: "Failed to persist message",
+        });
+      }
+
+      // Consider sending a message as reading the group.
+      await prisma.groupMembership.update({
+        where: { id: membership.id },
+        data: { lastReadAt: new Date() },
+      });
+
+      // Broadcast over WS if available (only when newly created).
+      if (wasNewlyCreated) {
+        const io = req.app.get("io") as SocketIOServer | undefined;
+        io?.to(`group:${groupId}`).emit("message:new", {
+          groupId,
+          channelId: messageRecord.channelId,
+          message: messageRecord,
+        });
+
+        // Best-effort offline-only notifications.
+        try {
+          const [memberships, onlineUserIds] = await Promise.all([
+            prisma.groupMembership.findMany({
+              where: { groupId, leftAt: null },
+              select: { userId: true },
+            }),
+            getOnlineUserIdsForGroup(groupId),
+          ]);
+
+          const onlineSet = new Set(onlineUserIds);
+          const recipientUserIds = memberships
+            .map((m) => m.userId)
+            .filter((id) => id !== userId)
+            .filter((id) => !onlineSet.has(id));
+
+          if (recipientUserIds.length > 0) {
+            const preview =
+              messageRecord.body.length > 140
+                ? `${messageRecord.body.slice(0, 140)}…`
+                : messageRecord.body;
+
+            const createdNotifications = await prisma.$transaction(
+              recipientUserIds.map((recipientId) =>
+                prisma.notification.create({
+                  data: {
+                    userId: recipientId,
+                    type: "GROUP_MESSAGE",
+                    data: {
+                      groupId: messageRecord.groupId,
+                      channelId: messageRecord.channelId,
+                      messageId: messageRecord.id,
+                      senderId: messageRecord.senderId,
+                      preview,
+                      createdAt: messageRecord.createdAt,
+                    },
+                  },
+                  select: {
+                    id: true,
+                    userId: true,
+                    type: true,
+                    data: true,
+                    createdAt: true,
+                    readAt: true,
+                  },
+                })
+              )
+            );
+
+            for (const notification of createdNotifications) {
+              io?.to(`user:${notification.userId}`).emit("notification:new", {
+                notification,
+              });
+            }
+          }
+        } catch {
+          // best-effort
+        }
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          message: messageRecord,
+        },
+      });
+    } catch (error) {
+      console.error("Error sending group message:", error);
+
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          success: false,
+          message: "Validation error",
+          errors: error.issues,
+        });
+      }
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send message",
       });
     }
   }

@@ -11,6 +11,7 @@ import {
   fetchMyGroups,
   joinGroup as joinGroupApi,
   leaveGroup as leaveGroupApi,
+  sendGroupMessage,
   type DiscoverGroupRow,
   type MyGroupRow,
   type ServerGroupMessage,
@@ -476,9 +477,38 @@ export function useGroups(initialGroups: Group[] = []) {
           body: content,
           clientMessageId,
         });
+      } else if (isAuthenticated && user?.id) {
+        void sendGroupMessage({
+          userId: user.id,
+          groupId,
+          body: content,
+          clientMessageId,
+        }).then((res) => {
+          if (!res.success || !res.data) return;
+
+          const createdAt = new Date(res.data.createdAt);
+          const serverMessageId = res.data.id;
+
+          setConversationsByGroupId((prev) => {
+            const thread = prev[groupId] ?? [];
+            const idx = thread.findIndex(
+              (m) =>
+                m.id === clientMessageId ||
+                m.clientMessageId === clientMessageId
+            );
+            if (idx === -1) return prev;
+            const updated = [...thread];
+            updated[idx] = {
+              ...updated[idx],
+              id: serverMessageId,
+              timestamp: createdAt,
+            };
+            return { ...prev, [groupId]: updated };
+          });
+        });
       }
     },
-    [currentUser.id, isSocketConnected, socket]
+    [currentUser.id, isAuthenticated, isSocketConnected, socket, user?.id]
   );
 
   const reactToMessage = (
