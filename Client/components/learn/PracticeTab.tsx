@@ -2,6 +2,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { getPracticeActivitiesFeatured } from "@/services/practice";
+import { getKaraokeExercises } from "@/services/karaoke";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -66,6 +67,9 @@ export const PracticeTab: React.FC = () => {
   const colorScheme = useColorScheme() ?? "light";
   const [query, setQuery] = useState("");
   const [showKaraoke, setShowKaraoke] = useState(false);
+  const [selectedKaraokeId, setSelectedKaraokeId] = useState<string | null>(
+    null
+  );
 
   const [activities, setActivities] = useState<PracticeActivity[]>([]);
   const [loading, setLoading] = useState(false);
@@ -80,16 +84,28 @@ export const PracticeTab: React.FC = () => {
       setLoadError(null);
 
       try {
-        const result = await getPracticeActivitiesFeatured();
+        const [practiceResult, karaokeResult] = await Promise.all([
+          getPracticeActivitiesFeatured(),
+          getKaraokeExercises(),
+        ]);
 
-        if (!result.success || !result.data) {
-          setLoadError(result.message || "Failed to load practice activities");
-          setActivities([]);
-          return;
-        }
-
-        const mapped: PracticeActivity[] = result.data.map((a) => {
+        const mappedPractice: PracticeActivity[] = (
+          practiceResult.data ?? []
+        ).map((a) => {
           const kind = kindFromType(a.type);
+          const tags = [a.type, kind, a.componentKey].filter((t): t is string =>
+            Boolean(t)
+          );
+
+          const isKaraoke =
+            a.type.trim().toLowerCase() === "karaoke" ||
+            a.componentKey?.toLowerCase().includes("karaoke") === true;
+
+          if (isKaraoke) {
+            tags.push("karaoke");
+            if (a.contentRef) tags.push(`karaokeRef:${a.contentRef}`);
+          }
+
           return {
             id: a.id,
             title: titleFromId(a.id),
@@ -98,11 +114,37 @@ export const PracticeTab: React.FC = () => {
             emoji: emojiFromKind(kind),
             durationLabel: "",
             xpLabel: "",
-            tags: [a.type, kind, a.componentKey].filter(Boolean),
+            tags,
           };
         });
 
-        setActivities(mapped);
+        const mappedKaraoke: PracticeActivity[] = (
+          karaokeResult.data ?? []
+        ).map((e) => {
+          const kind: PracticeActivity["kind"] = "listening";
+          return {
+            id: e.id,
+            title: e.title || titleFromId(e.id),
+            description: e.subtitle || "Karaoke",
+            kind,
+            emoji: "🎵",
+            durationLabel: "",
+            xpLabel: "",
+            tags: ["karaoke", kind, ...(e.language ? [e.language] : [])],
+          };
+        });
+
+        if (!practiceResult.success && !karaokeResult.success) {
+          setLoadError(
+            practiceResult.message ||
+              karaokeResult.message ||
+              "Failed to load practice activities"
+          );
+          setActivities([]);
+          return;
+        }
+
+        setActivities([...mappedPractice, ...mappedKaraoke]);
       } catch (e: any) {
         setLoadError(e?.message || "Failed to load practice activities");
         setActivities([]);
@@ -142,7 +184,17 @@ export const PracticeTab: React.FC = () => {
   );
 
   const handlePressActivity = (activity: PracticeActivity) => {
-    if (activity.id === "karaoke-lyrics") {
+    if (activity.tags.includes("karaoke") || activity.id === "karaoke-lyrics") {
+      const contentRefTag = activity.tags.find((t) =>
+        t.startsWith("karaokeRef:")
+      );
+      const ref = contentRefTag?.slice("karaokeRef:".length) || null;
+
+      // If this is a direct karaoke exercise card, its id is the exercise id.
+      // If this is a seeded activity row, prefer the contentRef.
+      setSelectedKaraokeId(
+        ref ?? (activity.id === "karaoke-lyrics" ? null : activity.id)
+      );
       setShowKaraoke(true);
       return;
     }
@@ -205,7 +257,11 @@ export const PracticeTab: React.FC = () => {
 
       <KaraokeLyricsModal
         visible={showKaraoke}
-        onClose={() => setShowKaraoke(false)}
+        exerciseId={selectedKaraokeId}
+        onClose={() => {
+          setShowKaraoke(false);
+          setSelectedKaraokeId(null);
+        }}
       />
     </ThemedView>
   );

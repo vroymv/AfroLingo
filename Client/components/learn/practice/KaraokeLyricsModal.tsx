@@ -2,6 +2,7 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { ThemedText } from "@/components/ThemedText";
 import {
   getActiveKaraokeExercise,
+  getKaraokeExercise,
   type KaraokeExercise,
   type KaraokeLine,
   type KaraokeWord,
@@ -41,9 +42,11 @@ function findActiveWordIndex(words: KaraokeWord[], positionMs: number): number {
 export function KaraokeLyricsModal({
   visible,
   onClose,
+  exerciseId,
 }: {
   visible: boolean;
   onClose: () => void;
+  exerciseId?: string | null;
 }) {
   const colorScheme = useColorScheme() ?? "light";
 
@@ -94,7 +97,9 @@ export function KaraokeLyricsModal({
     setAudioUrl("");
 
     (async () => {
-      const result = await getActiveKaraokeExercise();
+      const result = exerciseId
+        ? await getKaraokeExercise(exerciseId)
+        : await getActiveKaraokeExercise();
       if (canceled) return;
 
       if (!result.success || !result.data) {
@@ -122,7 +127,7 @@ export function KaraokeLyricsModal({
     return () => {
       canceled = true;
     };
-  }, [visible]);
+  }, [exerciseId, visible]);
 
   useEffect(() => {
     if (!visible) return;
