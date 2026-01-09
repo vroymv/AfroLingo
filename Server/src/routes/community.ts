@@ -34,6 +34,11 @@ const notificationsQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).optional(),
 });
 
+const groupReportBodySchema = z.object({
+  reason: z.string().trim().min(1).max(500),
+  messageId: z.string().trim().min(1).max(100).optional(),
+});
+
 function decodeCursor(cursor: string): { createdAt: Date; id: string } | null {
   const parts = cursor.split("|");
   if (parts.length !== 2) return null;
@@ -838,6 +843,48 @@ router.post(
       return res.status(500).json({
         success: false,
         message: "Failed to mark notification read",
+      });
+    }
+  }
+);
+
+// POST /api/community/groups/:userId/:groupId/report
+// Minimal abuse/reporting stub (v1): accept a report and log it.
+router.post(
+  "/groups/:userId/:groupId/report",
+  async (req: Request, res: Response) => {
+    try {
+      const userId = userIdSchema.parse(req.params.userId);
+      const groupId = userIdSchema.parse(req.params.groupId);
+      const body = groupReportBodySchema.parse(req.body ?? {});
+
+      console.log("[community] group report", {
+        userId,
+        groupId,
+        messageId: body.messageId ?? null,
+        reason: body.reason,
+      });
+
+      return res.status(202).json({
+        success: true,
+        data: {
+          accepted: true,
+        },
+      });
+    } catch (error) {
+      console.error("Error reporting group content:", error);
+
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          success: false,
+          message: "Validation error",
+          errors: error.issues,
+        });
+      }
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to submit report",
       });
     }
   }

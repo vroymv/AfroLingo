@@ -12,6 +12,9 @@ const PROTOCOL_VERSION = 1;
 const PRESENCE_TTL_MS = 45_000;
 const PRESENCE_KEY_TTL_SEC = 120;
 
+const MESSAGE_RATE_LIMIT_WINDOW_SEC = 10;
+const MESSAGE_RATE_LIMIT_MAX = 12;
+
 type SocketAuthContext = {
   userId: string;
   groupIds: string[];
@@ -30,6 +33,30 @@ type SocketErrorPayload = {
   message: string;
   context?: Record<string, unknown>;
 };
+
+function messageRateLimitKey(userId: string): string {
+  return `ratelimit:groups:message:${userId}`;
+}
+
+async function isRateLimitedForMessage(params: {
+  redis: ReturnType<typeof getRedisClient>;
+  userId: string;
+}): Promise<{ limited: boolean; remaining: number; windowSec: number }> {
+  const { redis, userId } = params;
+  const key = messageRateLimitKey(userId);
+
+  const count = await redis.incr(key);
+  if (count === 1) {
+    await redis.expire(key, MESSAGE_RATE_LIMIT_WINDOW_SEC);
+  }
+
+  const remaining = Math.max(0, MESSAGE_RATE_LIMIT_MAX - count);
+  return {
+    limited: count > MESSAGE_RATE_LIMIT_MAX,
+    remaining,
+    windowSec: MESSAGE_RATE_LIMIT_WINDOW_SEC,
+  };
+}
 
 function presenceKeyForGroup(groupId: string): string {
   return `presence:group:${groupId}`;
@@ -251,6 +278,11 @@ export function initSocketServer(httpServer: HttpServer) {
       .filter((v): v is string => Boolean(v));
     (socket.data as SocketAuthContext).groupIds = groupIds;
 
+    console.log("[socket] connected", {
+      userId,
+      groupsCount: groupIds.length,
+    });
+
     socket.emit("hello", {
       protocolVersion: PROTOCOL_VERSION,
       userId,
@@ -285,6 +317,24 @@ export function initSocketServer(httpServer: HttpServer) {
           context: { groupId, clientMessageId },
         } satisfies SocketErrorPayload);
         return;
+      }
+
+      // Guardrail: rate limit message sends (best-effort; allow on Redis errors).
+      try {
+        const redis = getRedisClient();
+        const rl = await isRateLimitedForMessage({ redis, userId });
+        if (rl.limited) {
+          socket.emit("error", {
+            code: "RATE_LIMITED",
+            message: "Too many messages. Please slow down.",
+            context: {
+              windowSec: rl.windowSec,
+            },
+          } satisfies SocketErrorPayload);
+          return;
+        }
+      } catch {
+        // best-effort
       }
 
       // Authorization: must be an active member.
@@ -605,6 +655,7 @@ export function initSocketServer(httpServer: HttpServer) {
     });
 
     socket.on("disconnect", async () => {
+      console.log("[socket] disconnected", { userId });
       // Best-effort: mark offline + broadcast.
       try {
         const redis = getRedisClient();

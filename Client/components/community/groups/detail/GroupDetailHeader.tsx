@@ -8,12 +8,19 @@ type ThemeColors = (typeof Colors)["light"];
 
 type Props = {
   title: string;
+  subtitle?: string;
   colors: ThemeColors;
   onBack: () => void;
   right?: React.ReactNode;
 };
 
-export function GroupDetailHeader({ title, colors, onBack, right }: Props) {
+export function GroupDetailHeader({
+  title,
+  subtitle,
+  colors,
+  onBack,
+  right,
+}: Props) {
   return (
     <View
       style={[
@@ -37,9 +44,19 @@ export function GroupDetailHeader({ title, colors, onBack, right }: Props) {
         </ThemedText>
       </Pressable>
 
-      <ThemedText style={styles.headerTitle} numberOfLines={1}>
-        {title}
-      </ThemedText>
+      <View style={styles.headerTitleWrap}>
+        <ThemedText style={styles.headerTitle} numberOfLines={1}>
+          {title}
+        </ThemedText>
+        {subtitle ? (
+          <ThemedText
+            style={[styles.headerSubtitle, { color: colors.icon }]}
+            numberOfLines={1}
+          >
+            {subtitle}
+          </ThemedText>
+        ) : null}
+      </View>
 
       <View style={styles.headerRight}>
         {right ?? <View style={styles.headerIcon} />}
@@ -76,6 +93,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "800",
     textAlign: "center",
+  },
+  headerTitleWrap: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerSubtitle: {
+    marginTop: 2,
+    fontSize: 12,
+    fontWeight: "700",
+    opacity: 0.8,
   },
   headerRight: {
     width: 74,

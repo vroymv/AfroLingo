@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { Group } from "@/data/community";
 import { getLanguageFlag } from "@/utils/language";
@@ -35,6 +35,11 @@ export type GroupRow = Group & {
 };
 
 export type GroupsFilter = "all" | "my" | "public";
+
+export type GroupPresence = {
+  onlineUserIds: string[];
+  onlineCount: number;
+};
 
 type CreateGroupInput = {
   name: string;
@@ -151,6 +156,21 @@ export function useGroups(initialGroups: Group[] = []) {
   const [metaById, setMetaById] = useState(() => makeMeta(initialGroups));
   const [conversationsByGroupId, setConversationsByGroupId] = useState<
     Record<string, GroupChatMessage[]>
+  >({});
+
+  const [activeGroupId, setActiveGroupIdState] = useState<string | null>(null);
+  const activeGroupIdRef = useRef<string | null>(null);
+
+  const [presenceByGroupId, setPresenceByGroupId] = useState<
+    Record<string, GroupPresence>
+  >({});
+
+  const [typingUserIdsByGroupId, setTypingUserIdsByGroupId] = useState<
+    Record<string, string[]>
+  >({});
+
+  const markReadTimeoutsRef = useRef<
+    Record<string, ReturnType<typeof setTimeout> | undefined>
   >({});
 
   const { user, isAuthenticated } = useAuth();
@@ -394,6 +414,28 @@ export function useGroups(initialGroups: Group[] = []) {
     [isAuthenticated, refreshGroups, user?.id]
   );
 
+  const setActiveGroupId = useCallback(
+    (groupId: string | null) => {
+      activeGroupIdRef.current = groupId;
+      setActiveGroupIdState(groupId);
+
+      if (!groupId) return;
+
+      setMetaById((prev) => {
+        const existing = prev[groupId];
+        if (!existing) return prev;
+        return {
+          ...prev,
+          [groupId]: {
+            ...existing,
+            unreadCount: 0,
+          },
+        };
+      });
+    },
+    [setMetaById]
+  );
+
   const sendMessage = useCallback(
     (groupId: string, content: string) => {
       if (!currentUser.id) return;
@@ -507,16 +549,39 @@ export function useGroups(initialGroups: Group[] = []) {
         if (!existing) return prev;
 
         const isMine = next.senderId === currentUser.id;
+        const isActive = activeGroupIdRef.current === groupId;
         return {
           ...prev,
           [groupId]: {
             ...existing,
             lastActivityAt: next.timestamp,
             lastMessagePreview: next.content,
-            unreadCount: isMine ? 0 : existing.unreadCount + 1,
+            unreadCount: isMine || isActive ? 0 : existing.unreadCount + 1,
           },
         };
       });
+
+      // Best-effort: keep server unread count cleared while actively viewing.
+      if (
+        !isMine &&
+        activeGroupIdRef.current === groupId &&
+        isAuthenticated &&
+        user?.id
+      ) {
+        const existingTimeout = markReadTimeoutsRef.current[groupId];
+        if (existingTimeout) clearTimeout(existingTimeout);
+
+        markReadTimeoutsRef.current[groupId] = setTimeout(() => {
+          void fetchGroupMessages({
+            userId: user.id,
+            groupId,
+            limit: 1,
+            markRead: true,
+          }).then(() => {
+            void refreshGroups();
+          });
+        }, 350);
+      }
     };
 
     const onMessageAck = (payload: any) => {
@@ -558,11 +623,104 @@ export function useGroups(initialGroups: Group[] = []) {
       socket.off("message:new", onMessageNew);
       socket.off("message:ack", onMessageAck);
     };
+  }, [currentUser.id, isAuthenticated, refreshGroups, socket, user?.id]);
+
+  // Realtime: presence updates.
+  useEffect(() => {
+    if (!socket) return;
+
+    const onPresenceUpdate = (payload: any) => {
+      const groupId =
+        typeof payload?.groupId === "string" ? payload.groupId : "";
+      if (!groupId) return;
+
+      const onlineUserIds = Array.isArray(payload?.onlineUserIds)
+        ? payload.onlineUserIds.filter(
+            (v: unknown): v is string => typeof v === "string"
+          )
+        : [];
+      const onlineCountRaw = Number(payload?.onlineCount);
+      const onlineCount = Number.isFinite(onlineCountRaw)
+        ? onlineCountRaw
+        : onlineUserIds.length;
+
+      setPresenceByGroupId((prev) => ({
+        ...prev,
+        [groupId]: { onlineUserIds, onlineCount },
+      }));
+    };
+
+    socket.on("presence:update", onPresenceUpdate);
+    return () => {
+      socket.off("presence:update", onPresenceUpdate);
+    };
+  }, [socket]);
+
+  // Realtime: typing indicators.
+  useEffect(() => {
+    if (!socket || !currentUser.id) return;
+
+    const onTypingUpdate = (payload: any) => {
+      const groupId =
+        typeof payload?.groupId === "string" ? payload.groupId : "";
+      if (!groupId) return;
+
+      const userId = typeof payload?.userId === "string" ? payload.userId : "";
+      if (!userId || userId === currentUser.id) return;
+
+      const isTyping = Boolean(payload?.isTyping);
+
+      setTypingUserIdsByGroupId((prev) => {
+        const existing = new Set(prev[groupId] ?? []);
+        if (isTyping) existing.add(userId);
+        else existing.delete(userId);
+        return { ...prev, [groupId]: Array.from(existing) };
+      });
+    };
+
+    socket.on("typing:update", onTypingUpdate);
+    return () => {
+      socket.off("typing:update", onTypingUpdate);
+    };
   }, [currentUser.id, socket]);
+
+  // Presence heartbeats (TTL refresh).
+  useEffect(() => {
+    if (!socket || !isSocketConnected) return;
+
+    socket.emit("presence:heartbeat");
+    const id = setInterval(() => {
+      socket.emit("presence:heartbeat");
+    }, 25_000);
+
+    return () => clearInterval(id);
+  }, [isSocketConnected, socket]);
+
+  const startTyping = useCallback(
+    (groupId: string) => {
+      if (!socket || !isSocketConnected) return;
+      socket.emit("typing:start", { groupId });
+    },
+    [isSocketConnected, socket]
+  );
+
+  const stopTyping = useCallback(
+    (groupId: string) => {
+      if (!socket || !isSocketConnected) return;
+      socket.emit("typing:stop", { groupId });
+    },
+    [isSocketConnected, socket]
+  );
 
   return {
     currentUser,
     usersById,
+    activeGroupId,
+    setActiveGroupId,
+    presenceByGroupId,
+    typingUserIdsByGroupId,
+    startTyping,
+    stopTyping,
     query,
     setQuery,
     clearQuery,

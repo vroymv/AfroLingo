@@ -35,6 +35,11 @@ export default function GroupDetailScreen() {
     leaveGroup,
     currentUser,
     usersById,
+    setActiveGroupId,
+    presenceByGroupId,
+    typingUserIdsByGroupId,
+    startTyping,
+    stopTyping,
     getGroupById,
     getMessagesForGroup,
     loadMessagesForGroup,
@@ -53,6 +58,12 @@ export default function GroupDetailScreen() {
     void loadMessagesForGroup(activeGroupId);
   }, [activeGroupId, loadMessagesForGroup]);
 
+  useEffect(() => {
+    if (!activeGroupId) return;
+    setActiveGroupId(activeGroupId);
+    return () => setActiveGroupId(null);
+  }, [activeGroupId, setActiveGroupId]);
+
   const messages = useMemo(() => {
     return activeGroupId ? getMessagesForGroup(activeGroupId) : [];
   }, [activeGroupId, getMessagesForGroup]);
@@ -67,6 +78,20 @@ export default function GroupDetailScreen() {
       };
     });
   }, [messages, usersById]);
+
+  const presence = activeGroupId ? presenceByGroupId[activeGroupId] : undefined;
+  const onlineCount = presence?.onlineCount ?? 0;
+
+  const typingUserIds = activeGroupId
+    ? typingUserIdsByGroupId[activeGroupId] ?? []
+    : [];
+
+  const typingText =
+    typingUserIds.length === 1
+      ? "Someone is typing…"
+      : typingUserIds.length > 1
+      ? `${typingUserIds.length} people are typing…`
+      : "";
 
   if (!group) {
     return (
@@ -95,6 +120,7 @@ export default function GroupDetailScreen() {
       <ThemedView style={styles.container}>
         <GroupDetailHeader
           title={group.name}
+          subtitle={group.isMember ? `${onlineCount} online` : undefined}
           colors={colors}
           onBack={() => router.back()}
           right={
@@ -142,12 +168,23 @@ export default function GroupDetailScreen() {
             bottomInset={insets.bottom}
           />
 
+          {typingText ? (
+            <ThemedText
+              style={[styles.typing, { color: colors.icon }]}
+              numberOfLines={1}
+            >
+              {typingText}
+            </ThemedText>
+          ) : null}
+
           <GroupChatComposer
             enabled={group.isMember}
             bottomInset={insets.bottom}
             onSend={(text) => {
               sendMessage(group.id, text);
             }}
+            onTypingStart={() => startTyping(group.id)}
+            onTypingStop={() => stopTyping(group.id)}
           />
         </KeyboardAvoidingView>
       </ThemedView>
@@ -175,5 +212,13 @@ const styles = StyleSheet.create({
   },
   chatWrap: {
     flex: 1,
+  },
+  typing: {
+    paddingHorizontal: 12,
+    paddingTop: 6,
+    paddingBottom: 6,
+    fontSize: 12,
+    fontWeight: "700",
+    opacity: 0.75,
   },
 });

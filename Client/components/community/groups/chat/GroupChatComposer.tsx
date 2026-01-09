@@ -13,6 +13,8 @@ type Props = {
   enabled: boolean;
   placeholder?: string;
   onSend: (text: string) => void;
+  onTypingStart?: () => void;
+  onTypingStop?: () => void;
   bottomInset?: number;
 };
 
@@ -20,11 +22,17 @@ export function GroupChatComposer({
   enabled,
   placeholder = "Message",
   onSend,
+  onTypingStart,
+  onTypingStop,
 }: Props) {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? "light"];
 
   const [text, setText] = useState("");
+  const isTypingRef = React.useRef(false);
+  const stopTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
 
   const canSend = useMemo(
     () => enabled && text.trim().length > 0,
@@ -35,7 +43,54 @@ export function GroupChatComposer({
     if (!canSend) return;
     const trimmed = text.trim();
     setText("");
+
+    if (isTypingRef.current) {
+      isTypingRef.current = false;
+      if (stopTimeoutRef.current) clearTimeout(stopTimeoutRef.current);
+      stopTimeoutRef.current = null;
+      onTypingStop?.();
+    }
+
     onSend(trimmed);
+  };
+
+  React.useEffect(() => {
+    return () => {
+      if (stopTimeoutRef.current) clearTimeout(stopTimeoutRef.current);
+      stopTimeoutRef.current = null;
+      if (isTypingRef.current) {
+        isTypingRef.current = false;
+        onTypingStop?.();
+      }
+    };
+  }, [onTypingStop]);
+
+  const handleChangeText = (nextText: string) => {
+    setText(nextText);
+    if (!enabled) return;
+
+    const hasText = nextText.trim().length > 0;
+
+    if (hasText && !isTypingRef.current) {
+      isTypingRef.current = true;
+      onTypingStart?.();
+    }
+
+    if (!hasText && isTypingRef.current) {
+      isTypingRef.current = false;
+      onTypingStop?.();
+    }
+
+    if (stopTimeoutRef.current) clearTimeout(stopTimeoutRef.current);
+    stopTimeoutRef.current = null;
+
+    if (hasText) {
+      stopTimeoutRef.current = setTimeout(() => {
+        if (!isTypingRef.current) return;
+        isTypingRef.current = false;
+        onTypingStop?.();
+      }, 1200);
+    }
   };
 
   return (
@@ -53,7 +108,7 @@ export function GroupChatComposer({
         >
           <TextInput
             value={text}
-            onChangeText={setText}
+            onChangeText={handleChangeText}
             placeholder={placeholder}
             placeholderTextColor={colors.icon}
             style={[styles.input, { color: colors.text }]}

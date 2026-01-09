@@ -218,8 +218,9 @@ Run command (local/dev):
   - [x] History fetch (HTTP)
   - [x] Live updates (WS `message:new` + `message:ack`)
   - [x] Composer with optimistic UI + ack reconciliation
-  - [ ] Typing indicator
-  - [ ] Presence indicator (online count)
+  - [x] Typing indicator (WS `typing:start/stop` + `typing:update`)
+  - [x] Presence indicator (online count via `presence:update` + heartbeat)
+  - [x] Suppress unread while viewing active group
 - [x] Add join/leave UX (HTTP + `groups:sync`)
 - [x] Add notification badge UI
   - [x] Badge on Community bottom tab
@@ -235,9 +236,9 @@ Run command (local/dev):
 
 ## 10) Guardrails: validation, rate limits, abuse hooks
 
-- [ ] Input validation (message length, groupId shape)
-- [ ] Rate limit message sending
-- [ ] Add minimal reporting stub (optional v1)
+- [x] Input validation (message length, groupId shape)
+- [x] Rate limit message sending
+- [x] Add minimal reporting stub (optional v1)
 
 **DoD**
 
