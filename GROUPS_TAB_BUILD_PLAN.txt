@@ -1,0 +1,335 @@
+AfroLingo — Groups Tab Build Plan (DB + WebSockets + Presence + Chat + Notifications)
+Date: 2026-01-09
+Owner: (fill in)
+
+Context
+- Goal: Build the Community “Groups & Clubs” feature end-to-end with real-time chat, presence, and notifications.
+- Current state: Client UI scaffolding exists under Client/app/(tabs)/community/groups. Server uses Prisma + Postgres.
+- Non-goals (for v1): (fill in) e.g., end-to-end encryption, voice rooms, large-scale moderation tooling.
+
+Guiding Principles
+- Start with a safe v1: minimal schema + reliable message delivery + basic permissions.
+- Make presence ephemeral (not a source of truth); membership and messages are the source of truth.
+- Idempotent writes everywhere (especially message send + notification fanout).
+- Keep WebSocket protocol versioned and backwards-compatible.
+
+Deliverables (High-level)
+1) Database schema for groups, membership, channels, messages, and notifications
+2) Seed data for realistic test groups + memberships
+3) WebSocket layer (auth, rooms, events) powering:
+   - group chat
+   - presence (online/typing)
+   - notifications (push/in-app)
+4) Client integration (store, services, UI wiring)
+5) Observability + tests + rollout plan
+
+============================================================
+PHASE 0 — Requirements & Decisions (1–2 days)
+============================================================
+Define v1 requirements
+- Group types: public / private / invite-only?
+- Roles/permissions: owner, admin, moderator, member (v1 can be owner+member only).
+- Channels: single “General” channel only for v1, or multiple channels?
+- Message features: text only (v1), attachments later.
+- Notifications: in-app only (v1) and push later?
+- Moderation: reporting, blocking, profanity filter (v1 minimal).
+
+Key tech decisions (make explicit)
+- WebSockets library: socket.io
+- Auth on WS: JWT
+  - Pass JWT during the socket.io handshake (recommended) and validate server-side.
+  - Tie the decoded JWT subject to `User.id` and reject the connection if invalid.
+- Presence store: define what it is + choose an approach
+- Presence store (chosen): Redis
+  - What is a presence store?
+    - A fast, ephemeral state store used to answer questions like “who is online in group X right now?” and “is user Y currently typing?”.
+    - This data is NOT the source of truth (membership + messages are). Presence is best-effort and can be lost on restart.
+  - Why Redis?
+    - Presence is high-frequency and ephemeral; Redis is optimized for fast reads/writes and TTL-based state.
+    - Works cleanly for multi-instance servers when paired with the socket.io Redis adapter.
+  - Implementation approach:
+    - Dev (fastest): in-memory presence (single server instance)
+    - Dev/Stage/Prod (recommended + scalable): Redis for live online/typing + socket.io Redis adapter
+    - Optional hybrid: Postgres for durable `lastSeenAt`, Redis for live online/typing
+  - Infrastructure note:
+    - Add `REDIS_URL` (or host/port) to Server env.
+    - For local dev, run Redis via Docker (recommended) or a local Redis install.
+
+Output of Phase 0
+- A short “Groups v1 spec” doc (1–2 pages)
+- Chosen WS library + presence strategy
+- Event list (server<->client) + payload shapes (versioned)
+
+============================================================
+PHASE 1 — Database Schema (Prisma) (2–4 days)
+============================================================
+Design goals
+- Membership is authoritative: who is in a group and their role.
+- Messages are append-only; edits/deletes can be v2.
+- Read models support: (a) group list, (b) unread counts, (c) last message preview.
+
+Proposed core models (v1)
+- Group
+  - id, name, description, language tags, privacy, avatar/cover, createdAt
+  - createdByUserId
+  - isActive, archivedAt
+- GroupMembership
+  - id, groupId, userId
+  - role (OWNER/ADMIN/MEMBER)
+  - status (ACTIVE/LEFT/BANNED) OR deletedAt
+  - joinedAt
+  - lastReadAt (per group) OR per channel
+- GroupChannel (optional for v1; can default to one)
+  - id, groupId, name, type (GENERAL)
+- GroupMessage
+  - id, groupId, channelId (optional if single channel)
+  - senderUserId
+  - body (text), metadata (json)
+  - createdAt
+  - idempotencyKey (unique per sender) to avoid duplicates on retries
+- GroupMessageReceipt / ReadState (optional v1)
+  - For unread counts / read markers. If v1 is simple, store lastReadAt on membership.
+- Notification (in-app)
+  - id, userId
+  - type (GROUP_MESSAGE, GROUP_INVITE, etc.)
+  - payload JSON, createdAt, readAt
+
+Indexes to add (v1)
+- GroupMembership: unique(groupId, userId), index(userId), index(groupId)
+- GroupMessage: index(groupId, createdAt DESC), index(channelId, createdAt DESC)
+- Notification: index(userId, createdAt DESC), index(userId, readAt)
+- Optional: trigram index for search (later)
+
+Migration strategy
+- Implement models + relations in schema.prisma
+- Run prisma migrate dev
+- Add seed script (Phase 2)
+
+Output of Phase 1
+- Prisma schema updated + migration
+- Prisma client regenerated
+
+============================================================
+PHASE 2 — Seed Data (1–2 days)
+============================================================
+Goals
+- Enable fast local testing of:
+  - group list
+  - joining/leaving
+  - message history
+
+Seed approach
+- Add a deterministic seed script (Server/prisma/seed.ts)
+- Create:
+  - ~10–30 groups across languages (sw, zu, xh, ln, etc.)
+  - memberships for a few test users
+  - message history for 3–5 groups
+- Use stable externalIds for repeatable seeding
+
+Output of Phase 2
+- Seed script runnable via package.json
+- Document seed accounts and group IDs
+
+============================================================
+PHASE 3 — HTTP API (Baseline) (2–4 days)
+============================================================
+Even with WebSockets, you still need baseline HTTP for initial data.
+
+Endpoints (v1)
+- GET /groups (with query, filters) -> available groups
+- GET /groups/my -> memberships + last message preview
+- POST /groups/:groupId/join
+- POST /groups/:groupId/leave
+- GET /groups/:groupId/messages?cursor=
+- POST /groups/:groupId/messages (optional if you send via WS only)
+- GET /notifications
+- POST /notifications/:id/read
+
+Implementation notes
+- Use cursor pagination for messages (createdAt+id)
+- Enforce authorization with membership checks
+- Keep shapes aligned with client needs (avoid overfetch)
+
+Output of Phase 3
+- Stable REST surface that works without WS
+- Contract docs (routes + response samples)
+
+============================================================
+PHASE 4 — WebSocket Layer (Auth + Rooms + Presence) (4–7 days)
+============================================================
+Core WS features
+- Authentication during connection
+- Join user to rooms:
+  - user:{userId} (for direct notifications)
+  - group:{groupId} for each membership
+- Presence (ephemeral): online/offline per group
+- Typing indicators: typing:start/stop scoped to group/channel
+
+Implementation choice (locked in)
+- Use socket.io for transport/rooms/reconnect handling.
+- Use JWT for authentication in the socket.io handshake.
+
+Event protocol (versioned)
+- Client -> Server
+  - auth/connect (or token in handshake)
+  - group:join (explicit, if not auto)
+  - message:send { groupId, channelId?, body, clientMessageId/idempotencyKey }
+  - typing:start / typing:stop
+  - presence:ping (optional)
+- Server -> Client
+  - message:new { message, groupId, channelId? }
+  - message:ack { clientMessageId, serverMessageId, createdAt }
+  - presence:update { groupId, onlineUserIds? or deltas }
+  - typing:update { groupId, channelId?, userId, isTyping }
+  - notification:new { notification }
+  - error { code, message, context }
+
+Reliability requirements (v1)
+- Ack on send to allow client optimistic UI with reconciliation
+- Idempotency key enforced server-side
+- Reconnect behavior:
+  - On reconnect, client refreshes: my groups, latest messages, unread counts
+
+Presence implementation options
+- Dev: in-memory map keyed by groupId -> set(userId)
+- Production (chosen): Redis sets with TTL heartbeat + socket.io Redis adapter
+
+Output of Phase 4
+- WS server in Server/src (gateway/service)
+- Client WS service wrapper in Client/services (or equivalent)
+- Presence + typing working in at least one group
+
+============================================================
+PHASE 5 — Live Chat (4–7 days)
+============================================================
+Server
+- Validate membership before accepting message
+- Store message (transaction)
+- Broadcast message:new to group room
+- Create notifications for offline users OR create in-app notifications regardless
+- Update last message preview (derived query or materialized field)
+
+Client
+- Add a Group Chat screen (if not present):
+  - message list with pagination
+  - composer with send + pending state
+  - typing indicator
+  - “new messages” / scroll to bottom behavior
+
+Data model on client
+- Store messages per group in a local store (in-memory)
+- Maintain pagination cursor
+- Maintain optimistic pending messages keyed by clientMessageId
+
+Output of Phase 5
+- Real-time chat end-to-end with reconnection resilience
+
+============================================================
+PHASE 6 — Notifications System (In-app first, push later) (3–6 days)
+============================================================
+In-app notifications (v1)
+- Persist Notification rows for:
+  - new messages (optional: only when not viewing that group)
+  - group invites / join requests (if implemented)
+- Provide unread badge counts
+- Mark as read
+
+Push notifications (v2)
+- Integrate FCM/APNs
+- Add user device tokens table
+- Rate limit and preference checks
+
+Output of Phase 6
+- Notifications screen shows group activity
+- Badge counts driven by server
+
+============================================================
+PHASE 7 — Presence in UI + Group Management (2–5 days)
+============================================================
+Presence in UI
+- Show “online now” count on group header
+- Show typing indicator under message list
+
+Group management v1
+- Create group endpoint + UI (already have create.tsx scaffold)
+- Group settings: description, language tags, privacy
+- Leave group
+
+Optional v1.1
+- Invite links, join requests, moderation tools
+
+Output of Phase 7
+- Groups feel “alive” with online/typing signals
+
+============================================================
+PHASE 8 — Security, Rate Limiting, Abuse Controls (ongoing)
+============================================================
+Security basics
+- Authenticate every HTTP + WS action
+- Authorization: membership ensures access
+- Validate inputs (length limits, profanity optional)
+
+Rate limiting
+- Per-user message send limit
+- Per-connection event limit
+
+Abuse controls (v1 minimal)
+- Report message/user
+- Block user (hides content client-side; enforce server-side later)
+
+============================================================
+PHASE 9 — Testing, Observability, Rollout (2–6 days)
+============================================================
+Testing
+- Unit tests for services (message creation, membership checks)
+- Integration tests for key routes
+- WS smoke tests (connect, send, receive)
+
+Observability
+- Structured logs for WS connect/disconnect
+- Metrics: messages/min, active connections, errors
+- Tracing around send -> db write -> broadcast
+
+Rollout
+- Feature flag groups chat
+- Start with seeded groups only
+- Gradually enable creation and invites
+
+============================================================
+MILESTONES (Suggested)
+============================================================
+M1 — Schema + seed + group list (no WS)
+- Prisma models + migration
+- Seed groups
+- GET /groups + GET /groups/my
+
+M2 — WS foundation + presence
+- Authenticated WS
+- Join group rooms
+- presence:update + typing:update
+
+M3 — Real-time chat
+- message:send -> db -> broadcast -> ack
+- Group chat UI working
+
+M4 — Notifications
+- In-app notifications + unread counts
+
+============================================================
+OPEN QUESTIONS (Fill in)
+============================================================
+- Do we need multiple channels per group in v1?
+- Public group discovery: should non-members see any group content?
+- Unread count strategy: membership.lastReadAt vs message receipts?
+- Presence accuracy requirements: “last seen” persisted or ephemeral only?
+- Moderation: block/report requirements for launch?
+
+============================================================
+NEXT ACTIONS (Concrete)
+============================================================
+1) Confirm v1 scope decisions (privacy, roles, channels, notifications)
+2) Implement Prisma schema additions + migration
+3) Add seed script and populate groups
+4) Add baseline REST endpoints for group list and messages
+5) Build WS gateway (auth + rooms) and wire to client
+
