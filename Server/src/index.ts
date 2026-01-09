@@ -17,6 +17,7 @@ import {
   practiceRouter,
   tutorsRouter,
   profileRouter,
+  communityRouter,
 } from "./routes";
 
 dotenv.config();
@@ -43,6 +44,7 @@ app.use("/api/karaoke", karaokeRouter);
 app.use("/api/practice", practiceRouter);
 app.use("/api/tutors", tutorsRouter);
 app.use("/api/profile", profileRouter);
+app.use("/api/community", communityRouter);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {

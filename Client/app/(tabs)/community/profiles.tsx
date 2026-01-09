@@ -4,8 +4,8 @@ import { ThemedView } from "@/components/ThemedView";
 import { PeopleEmptyState } from "@/components/community/people/PeopleEmptyState";
 import { PeopleListItem } from "@/components/community/people/PeopleListItem";
 import { PeopleSearchBar } from "@/components/community/people/PeopleSearchBar";
-import { mockUsers } from "@/data/community";
 import { useDiscoverUsers } from "@/hooks/community/useDiscoverUsers";
+import { useAuth } from "@/contexts/AuthContext";
 import React from "react";
 import { FlatList, StyleSheet, useColorScheme, View } from "react-native";
 
@@ -13,8 +13,18 @@ export default function UserProfileScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? "light"];
 
-  const { query, setQuery, clearQuery, filteredUsers, toggleConnect } =
-    useDiscoverUsers(mockUsers);
+  const { user } = useAuth();
+
+  const {
+    query,
+    setQuery,
+    clearQuery,
+    filteredUsers,
+    toggleConnect,
+    isLoading,
+    error,
+    refresh,
+  } = useDiscoverUsers(user?.id);
 
   return (
     <ThemedView style={styles.container}>
@@ -39,6 +49,17 @@ export default function UserProfileScreen() {
         onClear={clearQuery}
       />
 
+      {error ? (
+        <View style={styles.errorWrap}>
+          <ThemedText
+            style={[styles.errorText, { color: colors.tint }]}
+            numberOfLines={2}
+          >
+            {error}
+          </ThemedText>
+        </View>
+      ) : null}
+
       <FlatList
         data={filteredUsers}
         keyExtractor={(item) => item.id}
@@ -51,7 +72,18 @@ export default function UserProfileScreen() {
         )}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
-        ListEmptyComponent={<PeopleEmptyState />}
+        refreshing={isLoading}
+        onRefresh={refresh}
+        ListEmptyComponent={
+          user?.id ? (
+            <PeopleEmptyState />
+          ) : (
+            <PeopleEmptyState
+              title="Sign in to find people"
+              message="Create an account or sign in to discover and connect with other learners."
+            />
+          )
+        }
       />
     </ThemedView>
   );
@@ -78,5 +110,13 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: 16,
+  },
+  errorWrap: {
+    paddingHorizontal: 16,
+    paddingBottom: 6,
+  },
+  errorText: {
+    fontSize: 12,
+    opacity: 0.9,
   },
 });

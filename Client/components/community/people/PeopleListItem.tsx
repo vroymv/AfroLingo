@@ -2,6 +2,7 @@ import { Colors } from "@/constants/Colors";
 import { ThemedText } from "@/components/ThemedText";
 import React from "react";
 import {
+  Image,
   StyleSheet,
   TouchableOpacity,
   useColorScheme,
@@ -39,6 +40,15 @@ export function PeopleListItem({
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? "light"];
 
+  const avatarStr = user.avatar ?? "";
+  const isAvatarUrl = /^https?:\/\//i.test(avatarStr);
+  const avatarFallback =
+    avatarStr.trim().length > 0
+      ? avatarStr
+      : user.name?.trim().length > 0
+      ? user.name.trim().charAt(0).toUpperCase()
+      : "👤";
+
   const separatorColor = `${colors.icon}20`;
   const subtleBg = `${colors.icon}12`;
 
@@ -50,7 +60,15 @@ export function PeopleListItem({
       disabled={!onPress}
     >
       <View style={[styles.avatar, { backgroundColor: subtleBg }]}>
-        <ThemedText style={styles.avatarEmoji}>{user.avatar}</ThemedText>
+        {isAvatarUrl ? (
+          <Image
+            source={{ uri: avatarStr }}
+            style={styles.avatarImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <ThemedText style={styles.avatarEmoji}>{avatarFallback}</ThemedText>
+        )}
       </View>
 
       <View style={styles.rowBody}>
@@ -128,6 +146,11 @@ const styles = StyleSheet.create({
   },
   avatarEmoji: {
     fontSize: 24,
+  },
+  avatarImage: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
   },
   rowBody: {
     flex: 1,
