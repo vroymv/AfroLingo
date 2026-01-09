@@ -36,8 +36,16 @@ enum GroupRole {
   MEMBER
 }
 
+enum GroupInviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  CANCELED
+}
+
 enum NotificationType {
   GROUP_MESSAGE
+  GROUP_INVITE
 }
 
 model Tutor {
@@ -133,6 +141,8 @@ model User {
   groupsCreated     Group[]           @relation("GroupsCreated")
   groupMemberships  GroupMembership[]
   groupMessages     GroupMessage[]
+  groupInvitesReceived GroupInvite[] @relation("GroupInviteInvitedUser")
+  groupInvitesSent     GroupInvite[] @relation("GroupInviteInvitedByUser")
   notifications     Notification[]
 
   @@map("users")
@@ -178,6 +188,7 @@ model Group {
   updatedAt  DateTime  @updatedAt
 
   memberships GroupMembership[]
+  invites     GroupInvite[]
   channels    GroupChannel[]
   messages    GroupMessage[]
 
@@ -211,6 +222,30 @@ model GroupMembership {
   @@index([groupId])
   @@index([role])
   @@map("group_memberships")
+}
+
+model GroupInvite {
+  id String @id @default(uuid())
+
+  groupId String
+  invitedUserId String
+  invitedByUserId String
+
+  status GroupInviteStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  respondedAt DateTime?
+  canceledAt DateTime?
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  invitedUser User @relation("GroupInviteInvitedUser", fields: [invitedUserId], references: [id], onDelete: Cascade)
+  invitedByUser User @relation("GroupInviteInvitedByUser", fields: [invitedByUserId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, invitedUserId])
+  @@index([invitedUserId, status])
+  @@index([groupId, status])
+  @@index([invitedByUserId])
+  @@map("group_invites")
 }
 
 model GroupChannel {

@@ -11,6 +11,7 @@ import {
   fetchMyGroups,
   joinGroup as joinGroupApi,
   leaveGroup as leaveGroupApi,
+  createGroupWithInvites,
   sendGroupMessage,
   type DiscoverGroupRow,
   type MyGroupRow,
@@ -48,6 +49,7 @@ type CreateGroupInput = {
   language: string;
   type: Group["type"];
   category: string;
+  invitedUserIds?: string[];
 };
 
 function toggleTapback(
@@ -333,42 +335,32 @@ export function useGroups(initialGroups: Group[] = []) {
     [isAuthenticated, refreshGroups, socket, user?.id]
   );
 
-  const createGroup = (input: CreateGroupInput) => {
-    const newId = `${Date.now()}`;
+  const createGroup = useCallback(
+    async (input: CreateGroupInput): Promise<string | null> => {
+      if (!isAuthenticated || !user?.id) return null;
 
-    const newGroup: Group = {
-      id: newId,
-      name: input.name,
-      description: input.description,
-      language: input.language,
-      avatar: "👥",
-      memberCount: 1,
-      weeklyXpGoal: 3000,
-      currentXp: 0,
-      groupStreak: 0,
-      type: input.type,
-      category: input.category,
-      isMember: true,
-      topMembers: [],
-    };
+      const privacy = input.type === "public" ? "PUBLIC" : "PRIVATE";
+      const tags = input.category?.trim() ? [input.category.trim()] : [];
 
-    setGroups((prev) => [newGroup, ...prev]);
-    setMetaById((prev) => ({
-      ...prev,
-      [newId]: {
-        lastActivityAt: new Date(),
-        unreadCount: 0,
-        lastMessagePreview: newGroup.description,
-      },
-    }));
+      const res = await createGroupWithInvites({
+        userId: user.id,
+        name: input.name.trim(),
+        description: input.description.trim(),
+        language: input.language.trim() || undefined,
+        privacy,
+        tags,
+        invitedUserIds: input.invitedUserIds ?? [],
+      });
 
-    setConversationsByGroupId((prev) => ({
-      ...prev,
-      [newId]: [],
-    }));
+      if (!res.success || !res.data?.group?.id) return null;
 
-    return newId;
-  };
+      socket?.emit?.("groups:sync");
+      await refreshGroups();
+
+      return res.data.group.id;
+    },
+    [isAuthenticated, refreshGroups, socket, user?.id]
+  );
 
   const getMessagesForGroup = (groupId: string) =>
     conversationsByGroupId[groupId] ?? [];

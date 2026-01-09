@@ -45,6 +45,17 @@ const groupMessageCreateBodySchema = z
   })
   .strict();
 
+const groupCreateBodySchema = z
+  .object({
+    name: z.string().trim().min(2).max(80),
+    description: z.string().trim().min(1).max(500).optional(),
+    language: z.string().trim().min(2).max(10).optional(),
+    tags: z.array(z.string().trim().min(1).max(30)).max(10).optional(),
+    privacy: z.enum(["PUBLIC", "PRIVATE", "INVITE"]).optional(),
+    invitedUserIds: z.array(z.string().min(1)).max(50).optional(),
+  })
+  .strict();
+
 const PRESENCE_TTL_MS = 45_000;
 const PRESENCE_KEY_TTL_SEC = 120;
 
@@ -405,6 +416,390 @@ router.delete(
 // Groups API (v1) — Option A: userId in path (no JWT for HTTP)
 // Base prefix: /api/community
 // ============================================================
+
+// POST /api/community/groups/:userId/create
+// Creates a group and (optionally) creates invite records for selected users.
+// IMPORTANT: Invites only (no auto-membership for invitees).
+router.post("/groups/:userId/create", async (req: Request, res: Response) => {
+  try {
+    const creatorUserId = userIdSchema.parse(req.params.userId);
+    const body = groupCreateBodySchema.parse(req.body);
+
+    const creator = await prisma.user.findUnique({
+      where: { id: creatorUserId },
+      select: { id: true, name: true },
+    });
+    if (!creator) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const requestedInviteIds = Array.from(
+      new Set((body.invitedUserIds ?? []).map((id) => String(id).trim()))
+    ).filter(Boolean);
+    const invitedUserIds = requestedInviteIds.filter(
+      (id) => id !== creatorUserId
+    );
+
+    const io = req.app.get("io") as SocketIOServer | undefined;
+
+    const result = await prisma.$transaction(async (tx) => {
+      const group = await tx.group.create({
+        data: {
+          name: body.name,
+          description: body.description,
+          language: body.language,
+          tags: body.tags ?? [],
+          privacy: body.privacy ?? "PRIVATE",
+          createdByUserId: creatorUserId,
+          memberships: {
+            create: {
+              userId: creatorUserId,
+              role: "OWNER",
+              lastReadAt: new Date(),
+              leftAt: null,
+            },
+          },
+          channels: {
+            create: {
+              name: "General",
+              isDefault: true,
+            },
+          },
+        },
+        select: {
+          id: true,
+          name: true,
+          privacy: true,
+          createdAt: true,
+        },
+      });
+
+      if (invitedUserIds.length === 0) {
+        return {
+          group,
+          invites: [] as Array<{ id: string; invitedUserId: string }>,
+        };
+      }
+
+      // Only invite users that exist.
+      const existingInvitees = await tx.user.findMany({
+        where: { id: { in: invitedUserIds } },
+        select: { id: true },
+      });
+      const existingInviteeIds = existingInvitees.map((u) => u.id);
+
+      if (existingInviteeIds.length === 0) {
+        return {
+          group,
+          invites: [] as Array<{ id: string; invitedUserId: string }>,
+        };
+      }
+
+      // Create invite records (best-effort skip duplicates).
+      const createdInvites: Array<{ id: string; invitedUserId: string }> = [];
+      for (const invitedUserId of existingInviteeIds) {
+        try {
+          const invite = await tx.groupInvite.create({
+            data: {
+              groupId: group.id,
+              invitedUserId,
+              invitedByUserId: creatorUserId,
+              status: "PENDING",
+            },
+            select: { id: true, invitedUserId: true },
+          });
+          createdInvites.push(invite);
+        } catch (e: any) {
+          // Ignore unique constraint conflicts (already invited).
+          if (typeof e?.code === "string" && e.code === "P2002") continue;
+          throw e;
+        }
+      }
+
+      // Create notifications for invitees (best-effort).
+      if (createdInvites.length > 0) {
+        const createdNotifications = await Promise.all(
+          createdInvites.map((inv) =>
+            tx.notification.create({
+              data: {
+                userId: inv.invitedUserId,
+                type: "GROUP_INVITE",
+                data: {
+                  inviteId: inv.id,
+                  groupId: group.id,
+                  groupName: group.name,
+                  invitedByUserId: creatorUserId,
+                  invitedByName: creator.name,
+                  createdAt: new Date(),
+                },
+              },
+              select: {
+                id: true,
+                userId: true,
+                type: true,
+                data: true,
+                createdAt: true,
+                readAt: true,
+              },
+            })
+          )
+        );
+
+        for (const notification of createdNotifications) {
+          io?.to(`user:${notification.userId}`).emit("notification:new", {
+            notification,
+          });
+        }
+      }
+
+      return { group, invites: createdInvites };
+    });
+
+    return res.status(201).json({
+      success: true,
+      data: {
+        group: result.group,
+        inviteCount: result.invites.length,
+      },
+    });
+  } catch (error) {
+    console.error("Error creating group:", error);
+
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation error",
+        errors: error.issues,
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create group",
+    });
+  }
+});
+
+// GET /api/community/groups/:userId/invites
+// Lists pending invites for the user.
+router.get("/groups/:userId/invites", async (req: Request, res: Response) => {
+  try {
+    const userId = userIdSchema.parse(req.params.userId);
+    const { limit } = notificationsQuerySchema.parse(req.query);
+    const take = limit ?? 50;
+
+    const invites = await prisma.groupInvite.findMany({
+      where: {
+        invitedUserId: userId,
+        status: "PENDING",
+        group: { isActive: true },
+      },
+      take,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        status: true,
+        createdAt: true,
+        group: {
+          select: {
+            id: true,
+            name: true,
+            privacy: true,
+            language: true,
+            tags: true,
+            avatarUrl: true,
+          },
+        },
+        invitedByUser: {
+          select: {
+            id: true,
+            name: true,
+            profileImageUrl: true,
+          },
+        },
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        invites,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching group invites:", error);
+
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation error",
+        errors: error.issues,
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch invites",
+    });
+  }
+});
+
+// POST /api/community/groups/:userId/invites/:inviteId/accept
+router.post(
+  "/groups/:userId/invites/:inviteId/accept",
+  async (req: Request, res: Response) => {
+    try {
+      const userId = userIdSchema.parse(req.params.userId);
+      const inviteId = userIdSchema.parse(req.params.inviteId);
+
+      const updated = await prisma.$transaction(async (tx) => {
+        const invite = await tx.groupInvite.findUnique({
+          where: { id: inviteId },
+          select: {
+            id: true,
+            groupId: true,
+            invitedUserId: true,
+            status: true,
+            group: { select: { isActive: true } },
+          },
+        });
+
+        if (!invite || invite.invitedUserId !== userId) {
+          return { kind: "NOT_FOUND" as const };
+        }
+
+        if (!invite.group.isActive) {
+          return { kind: "GONE" as const };
+        }
+
+        if (invite.status !== "PENDING") {
+          return { kind: "ALREADY" as const, groupId: invite.groupId };
+        }
+
+        await tx.groupMembership.upsert({
+          where: { groupId_userId: { groupId: invite.groupId, userId } },
+          create: {
+            groupId: invite.groupId,
+            userId,
+            role: "MEMBER",
+            lastReadAt: new Date(),
+            leftAt: null,
+          },
+          update: {
+            leftAt: null,
+          },
+          select: { id: true },
+        });
+
+        await tx.groupInvite.update({
+          where: { id: invite.id },
+          data: {
+            status: "ACCEPTED",
+            respondedAt: new Date(),
+          },
+          select: { id: true },
+        });
+
+        return { kind: "OK" as const, groupId: invite.groupId };
+      });
+
+      if (updated.kind === "NOT_FOUND") {
+        return res.status(404).json({
+          success: false,
+          message: "Invite not found",
+        });
+      }
+
+      if (updated.kind === "GONE") {
+        return res.status(410).json({
+          success: false,
+          message: "Group is no longer available",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          groupId: updated.groupId,
+        },
+      });
+    } catch (error) {
+      console.error("Error accepting group invite:", error);
+
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          success: false,
+          message: "Validation error",
+          errors: error.issues,
+        });
+      }
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to accept invite",
+      });
+    }
+  }
+);
+
+// POST /api/community/groups/:userId/invites/:inviteId/decline
+router.post(
+  "/groups/:userId/invites/:inviteId/decline",
+  async (req: Request, res: Response) => {
+    try {
+      const userId = userIdSchema.parse(req.params.userId);
+      const inviteId = userIdSchema.parse(req.params.inviteId);
+
+      const invite = await prisma.groupInvite.findUnique({
+        where: { id: inviteId },
+        select: { id: true, invitedUserId: true, status: true },
+      });
+
+      if (!invite || invite.invitedUserId !== userId) {
+        return res.status(404).json({
+          success: false,
+          message: "Invite not found",
+        });
+      }
+
+      if (invite.status === "PENDING") {
+        await prisma.groupInvite.update({
+          where: { id: invite.id },
+          data: {
+            status: "DECLINED",
+            respondedAt: new Date(),
+          },
+          select: { id: true },
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          inviteId: invite.id,
+        },
+      });
+    } catch (error) {
+      console.error("Error declining group invite:", error);
+
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          success: false,
+          message: "Validation error",
+          errors: error.issues,
+        });
+      }
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to decline invite",
+      });
+    }
+  }
+);
 
 // GET /api/community/groups/discover/:userId
 // Returns a list of groups the user can discover, with membership flags.

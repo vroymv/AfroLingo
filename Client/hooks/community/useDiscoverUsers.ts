@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { User } from "@/data/community";
 import {
@@ -45,6 +45,8 @@ export function useDiscoverUsers(viewerId: string | null | undefined) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const refresh = useCallback(async () => {
     if (!viewerId) {
       setUsers([]);
@@ -75,6 +77,55 @@ export function useDiscoverUsers(viewerId: string | null | undefined) {
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    if (!viewerId) return;
+
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+      searchTimerRef.current = null;
+    }
+
+    const trimmed = query.trim();
+
+    // Keep behavior stable: if user clears query, show default discover list.
+    if (!trimmed) {
+      searchTimerRef.current = setTimeout(() => {
+        refresh();
+      }, 200);
+      return;
+    }
+
+    searchTimerRef.current = setTimeout(async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const result = await fetchDiscoverPeople(viewerId, {
+          q: trimmed,
+          limit: 50,
+        });
+        if (!result.success) {
+          setUsers([]);
+          setError(result.message || "Failed to load people");
+          return;
+        }
+
+        setUsers(result.data.map(mapDbUserToCommunityUser));
+      } catch (e: any) {
+        setUsers([]);
+        setError(e?.message || "Failed to load people");
+      } finally {
+        setIsLoading(false);
+      }
+    }, 250);
+
+    return () => {
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current);
+        searchTimerRef.current = null;
+      }
+    };
+  }, [query, refresh, viewerId]);
 
   const filteredUsers = useMemo(() => {
     const trimmed = query.trim().toLowerCase();

@@ -35,6 +35,15 @@ export default function HomeScreen() {
     }
   }, [state.isCompleted, router]);
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    setRefreshSignal((prev) => prev + 1);
+
+    // Allow child components time to re-fetch.
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    setRefreshing(false);
+  }, []);
+
   if (!state.isCompleted) {
     return (
       <ThemedView style={styles.loadingContainer}>
@@ -76,15 +85,6 @@ export default function HomeScreen() {
   const handleNavigateToCommunity = () => {
     console.log("Navigate to Community tab");
   };
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    setRefreshSignal((prev) => prev + 1);
-
-    // Allow child components time to re-fetch.
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    setRefreshing(false);
-  }, []);
 
   return (
     <SafeAreaView

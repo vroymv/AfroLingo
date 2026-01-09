@@ -33,11 +33,20 @@ function requireApiBaseUrl(): string {
   return API_BASE_URL;
 }
 
-export async function fetchDiscoverPeople(viewerId: string) {
+export async function fetchDiscoverPeople(
+  viewerId: string,
+  params?: { q?: string; limit?: number }
+) {
   const baseUrl = requireApiBaseUrl();
 
   const token = auth.currentUser ? await auth.currentUser.getIdToken() : null;
-  const res = await fetch(`${baseUrl}/community/people/discover/${viewerId}`, {
+
+  const url = new URL(`${baseUrl}/community/people/discover/${viewerId}`);
+  if (params?.q) url.searchParams.set("q", params.q);
+  if (typeof params?.limit === "number")
+    url.searchParams.set("limit", String(params.limit));
+
+  const res = await fetch(url.toString(), {
     method: "GET",
     headers: {
       "Content-Type": "application/json",

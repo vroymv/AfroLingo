@@ -30,6 +30,45 @@ export type ServerGroup = {
   memberCount?: number;
 };
 
+export type CreateGroupWithInvitesInput = {
+  userId: string;
+  name: string;
+  description?: string;
+  language?: string;
+  tags?: string[];
+  privacy?: "PUBLIC" | "PRIVATE" | "INVITE";
+  invitedUserIds?: string[];
+};
+
+export type CreateGroupWithInvitesResponse = {
+  group: {
+    id: string;
+    name: string;
+    privacy: "PUBLIC" | "PRIVATE" | "INVITE";
+    createdAt: string;
+  };
+  inviteCount: number;
+};
+
+export type GroupInviteRow = {
+  id: string;
+  status: "PENDING" | "ACCEPTED" | "DECLINED" | "CANCELED";
+  createdAt: string;
+  group: {
+    id: string;
+    name: string;
+    privacy: "PUBLIC" | "PRIVATE" | "INVITE";
+    language: string | null;
+    tags: string[];
+    avatarUrl: string | null;
+  };
+  invitedByUser: {
+    id: string;
+    name: string;
+    profileImageUrl: string | null;
+  };
+};
+
 export type MyGroupRow = {
   membership: {
     id: string;
@@ -171,6 +210,142 @@ export async function leaveGroup(params: { userId: string; groupId: string }) {
   }
 
   return { success: true as const };
+}
+
+export async function createGroupWithInvites(
+  params: CreateGroupWithInvitesInput
+) {
+  const baseUrl = requireApiBaseUrl();
+  const authHeader = await getAuthHeader();
+
+  const res = await fetch(
+    `${baseUrl}/community/groups/${params.userId}/create`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeader,
+      },
+      body: JSON.stringify({
+        name: params.name,
+        description: params.description,
+        language: params.language,
+        tags: params.tags,
+        privacy: params.privacy,
+        invitedUserIds: params.invitedUserIds,
+      }),
+    }
+  );
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok || json?.success === false) {
+    return {
+      success: false as const,
+      message: json?.message || `Request failed with status ${res.status}`,
+    };
+  }
+
+  return {
+    success: true as const,
+    data: (json?.data ?? null) as CreateGroupWithInvitesResponse | null,
+  };
+}
+
+export async function fetchGroupInvites(params: {
+  userId: string;
+  limit?: number;
+}) {
+  const baseUrl = requireApiBaseUrl();
+  const authHeader = await getAuthHeader();
+
+  const url = new URL(`${baseUrl}/community/groups/${params.userId}/invites`);
+  if (typeof params.limit === "number")
+    url.searchParams.set("limit", String(params.limit));
+
+  const res = await fetch(url.toString(), {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeader,
+    },
+  });
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok || json?.success === false) {
+    return {
+      success: false as const,
+      message: json?.message || `Request failed with status ${res.status}`,
+    };
+  }
+
+  return {
+    success: true as const,
+    data: (json?.data?.invites ?? []) as GroupInviteRow[],
+  };
+}
+
+export async function acceptGroupInvite(params: {
+  userId: string;
+  inviteId: string;
+}) {
+  const baseUrl = requireApiBaseUrl();
+  const authHeader = await getAuthHeader();
+
+  const res = await fetch(
+    `${baseUrl}/community/groups/${params.userId}/invites/${params.inviteId}/accept`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeader,
+      },
+    }
+  );
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok || json?.success === false) {
+    return {
+      success: false as const,
+      message: json?.message || `Request failed with status ${res.status}`,
+    };
+  }
+
+  return {
+    success: true as const,
+    data: (json?.data ?? null) as { groupId: string } | null,
+  };
+}
+
+export async function declineGroupInvite(params: {
+  userId: string;
+  inviteId: string;
+}) {
+  const baseUrl = requireApiBaseUrl();
+  const authHeader = await getAuthHeader();
+
+  const res = await fetch(
+    `${baseUrl}/community/groups/${params.userId}/invites/${params.inviteId}/decline`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeader,
+      },
+    }
+  );
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok || json?.success === false) {
+    return {
+      success: false as const,
+      message: json?.message || `Request failed with status ${res.status}`,
+    };
+  }
+
+  return {
+    success: true as const,
+    data: (json?.data ?? null) as { inviteId: string } | null,
+  };
 }
 
 export type ServerGroupMessage = {

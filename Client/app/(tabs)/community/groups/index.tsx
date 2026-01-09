@@ -6,8 +6,11 @@ import { GroupsEmptyState } from "@/components/community/groups/GroupsEmptyState
 import { GroupsFilterPills } from "@/components/community/groups/GroupsFilterPills";
 import { GroupsSearchBar } from "@/components/community/groups/GroupsSearchBar";
 import { useGroupsStore } from "@/contexts/community/GroupsContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { fetchGroupInvites } from "@/services/communityGroups";
+import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import React, { useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   FlatList,
   StyleSheet,
@@ -29,6 +32,9 @@ export default function GroupsIndexScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? "light"];
 
+  const { user } = useAuth();
+  const [pendingInvitesCount, setPendingInvitesCount] = useState(0);
+
   const {
     query,
     setQuery,
@@ -37,9 +43,28 @@ export default function GroupsIndexScreen() {
     setFilter,
     myGroups,
     availableGroups,
-    stats,
     joinGroup,
   } = useGroupsStore();
+
+  const refreshInvitesBadge = useCallback(async () => {
+    if (!user?.id) {
+      setPendingInvitesCount(0);
+      return;
+    }
+
+    const res = await fetchGroupInvites({ userId: user.id, limit: 50 });
+    if (!res.success) {
+      setPendingInvitesCount(0);
+      return;
+    }
+    setPendingInvitesCount(res.data.length);
+  }, [user?.id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshInvitesBadge();
+    }, [refreshInvitesBadge])
+  );
 
   const sections = useMemo<Section[]>(() => {
     const s: Section[] = [];
@@ -101,15 +126,50 @@ export default function GroupsIndexScreen() {
           </ThemedText>
         </View>
 
-        <TouchableOpacity
-          style={styles.headerAction}
-          activeOpacity={0.85}
-          onPress={() => router.push("/(tabs)/community/groups/create" as any)}
-        >
-          <ThemedText style={[styles.headerActionText, { color: colors.tint }]}>
-            ➕
-          </ThemedText>
-        </TouchableOpacity>
+        <View style={styles.headerActionsRow}>
+          {pendingInvitesCount > 0 ? (
+            <TouchableOpacity
+              style={[
+                styles.invitesBtn,
+                {
+                  borderColor: `${colors.tint}35`,
+                  backgroundColor: `${colors.tint}15`,
+                },
+              ]}
+              activeOpacity={0.85}
+              onPress={() =>
+                router.push("/(tabs)/community/groups/invites" as any)
+              }
+            >
+              <ThemedText
+                style={[styles.invitesBtnText, { color: colors.tint }]}
+              >
+                Invites
+              </ThemedText>
+              <View
+                style={[styles.invitesBadge, { backgroundColor: colors.tint }]}
+              >
+                <ThemedText style={styles.invitesBadgeText}>
+                  {pendingInvitesCount > 99 ? "99+" : pendingInvitesCount}
+                </ThemedText>
+              </View>
+            </TouchableOpacity>
+          ) : null}
+
+          <TouchableOpacity
+            style={styles.headerAction}
+            activeOpacity={0.85}
+            onPress={() =>
+              router.push("/(tabs)/community/groups/create" as any)
+            }
+          >
+            <ThemedText
+              style={[styles.headerActionText, { color: colors.tint }]}
+            >
+              ➕
+            </ThemedText>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <GroupsFilterPills value={filter} onChange={setFilter} />
@@ -179,6 +239,11 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingRight: 12,
   },
+  headerActionsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
   headerTitle: {
     fontSize: 28,
     fontWeight: "700",
@@ -187,6 +252,32 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 13,
     opacity: 0.6,
+  },
+  invitesBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 1,
+  },
+  invitesBtnText: {
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  invitesBadge: {
+    marginLeft: 8,
+    minWidth: 18,
+    paddingHorizontal: 6,
+    height: 18,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  invitesBadgeText: {
+    color: "white",
+    fontSize: 11,
+    fontWeight: "800",
   },
   headerAction: {
     width: 40,

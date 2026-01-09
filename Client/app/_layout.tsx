@@ -6,6 +6,7 @@ import {
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import "react-native-reanimated";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { AppLifecycleReporter } from "@/components/AppLifecycleReporter";
@@ -61,19 +62,21 @@ export default function RootLayout() {
   if (!loaded) return null;
 
   return (
-    <AuthProvider>
-      <OnboardingProvider>
-        <ThemeProvider
-          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-        >
-          <AppLifecycleReporter />
-          <NotificationBadgeProvider>
-            <GroupsProvider>
-              <AppNavigator />
-            </GroupsProvider>
-          </NotificationBadgeProvider>
-        </ThemeProvider>
-      </OnboardingProvider>
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        <OnboardingProvider>
+          <ThemeProvider
+            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+          >
+            <AppLifecycleReporter />
+            <NotificationBadgeProvider>
+              <GroupsProvider>
+                <AppNavigator />
+              </GroupsProvider>
+            </NotificationBadgeProvider>
+          </ThemeProvider>
+        </OnboardingProvider>
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }
