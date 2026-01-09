@@ -14,6 +14,9 @@ export type PracticeActivity = {
   durationLabel: string;
   xpLabel: string;
   tags: string[];
+  componentKey?: string;
+  contentRef?: string;
+  sourceType?: string;
 };
 
 export type PracticeFeaturedMode = {

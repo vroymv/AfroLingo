@@ -3,6 +3,7 @@ import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { getPracticeActivitiesFeatured } from "@/services/practice";
 import { getKaraokeExercises } from "@/services/karaoke";
+import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -65,6 +66,7 @@ function emojiFromKind(kind: PracticeActivity["kind"]) {
 
 export const PracticeTab: React.FC = () => {
   const colorScheme = useColorScheme() ?? "light";
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [showKaraoke, setShowKaraoke] = useState(false);
   const [selectedKaraokeId, setSelectedKaraokeId] = useState<string | null>(
@@ -115,6 +117,9 @@ export const PracticeTab: React.FC = () => {
             durationLabel: "",
             xpLabel: "",
             tags,
+            componentKey: a.componentKey,
+            contentRef: a.contentRef,
+            sourceType: a.type,
           };
         });
 
@@ -131,6 +136,8 @@ export const PracticeTab: React.FC = () => {
             durationLabel: "",
             xpLabel: "",
             tags: ["karaoke", kind, ...(e.language ? [e.language] : [])],
+            componentKey: "karaoke",
+            sourceType: "karaoke",
           };
         });
 
@@ -199,9 +206,17 @@ export const PracticeTab: React.FC = () => {
       return;
     }
 
-    // Intentionally no navigation yet — this tab is the discovery surface.
-    // Hook this into your practice routes/lesson launcher when ready.
-    console.log("Selected practice activity:", activity.id);
+    router.push({
+      pathname: "/learn/practice/[activityId]",
+      params: {
+        activityId: activity.id,
+        componentKey: activity.componentKey || "",
+        type: activity.sourceType || activity.description || "",
+        contentRef: activity.contentRef || "",
+        title: activity.title,
+        subtitle: activity.description,
+      },
+    } as any);
   };
 
   const backgroundColor = Colors[colorScheme].background;
