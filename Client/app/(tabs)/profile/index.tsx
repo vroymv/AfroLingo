@@ -15,8 +15,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/contexts/AuthContext";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import LearningStats from "@/components/profile/LearningStats";
-import WeeklyGoals from "@/components/profile/WeeklyGoals";
-import Achievements from "@/components/profile/Achievements";
 import LanguageProgress from "@/components/profile/LanguageProgress";
 import SettingsDrawer from "@/components/profile/SettingsDrawer";
 import { Ionicons } from "@expo/vector-icons";
@@ -209,16 +207,6 @@ export default function ProfileScreen() {
             isLoading={isLoading}
           />
           <LearningStats
-            user={user}
-            profileStats={profileStats}
-            isLoading={isLoading}
-          />
-          <WeeklyGoals
-            user={user}
-            profileStats={profileStats}
-            isLoading={isLoading}
-          />
-          <Achievements
             user={user}
             profileStats={profileStats}
             isLoading={isLoading}

@@ -77,9 +77,12 @@ export default function HomeScreen() {
     console.log(`Starting ${action} practice...`);
   };
 
-  const handleLessonPress = (lessonName: string) => {
-    // Navigate to specific lesson
-    console.log(`Opening lesson: ${lessonName}`);
+  const handleLessonPress = (unitId: string) => {
+    // Navigate to specific unit lesson
+    router.push({
+      pathname: "/learn/lesson/[unitId]",
+      params: { unitId },
+    });
   };
 
   const handleNavigateToCommunity = () => {
@@ -126,6 +129,7 @@ export default function HomeScreen() {
           selectedLanguage={state.selectedLanguage}
           selectedLevel={state.selectedLevel}
           onLessonPress={handleLessonPress}
+          refreshSignal={refreshSignal}
         />
 
         <View style={styles.bottomPadding} />

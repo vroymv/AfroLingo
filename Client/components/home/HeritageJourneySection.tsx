@@ -1,97 +1,76 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  getHeritageJourney,
+  type HeritageJourneyLesson,
+} from "@/services/home";
+import { useFocusEffect } from "@react-navigation/native";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
-
-interface Lesson {
-  name: string;
-  progress: string;
-  xp: number;
-  isCompleted: boolean;
-}
 
 interface HeritageJourneySectionProps {
   selectedLanguage: string | null;
   selectedLevel: string | null;
-  onLessonPress: (lessonName: string) => void;
+  onLessonPress: (unitId: string) => void;
+  refreshSignal?: number;
 }
 
 export default function HeritageJourneySection({
   selectedLanguage,
   selectedLevel,
   onLessonPress,
+  refreshSignal,
 }: HeritageJourneySectionProps) {
-  const getPersonalizedLessons = (): Lesson[] => {
-    // Return different lessons based on level
-    if (selectedLevel === "absolute-beginner") {
-      return [
-        {
-          name: "Basic Greetings",
-          progress: "2/3 completed",
-          xp: 15,
-          isCompleted: false,
-        },
-        {
-          name: "Numbers 1-10",
-          progress: "Not started",
-          xp: 20,
-          isCompleted: false,
-        },
-        {
-          name: "Family Words",
-          progress: "Not started",
-          xp: 25,
-          isCompleted: false,
-        },
-      ];
-    } else if (selectedLevel === "beginner") {
-      return [
-        {
-          name: "Family Members",
-          progress: "3/5 completed",
-          xp: 20,
-          isCompleted: false,
-        },
-        {
-          name: "Numbers & Counting",
-          progress: "Not started",
-          xp: 25,
-          isCompleted: false,
-        },
-        {
-          name: "Food & Dining",
-          progress: "Not started",
-          xp: 30,
-          isCompleted: false,
-        },
-      ];
-    } else {
-      return [
-        {
-          name: "Advanced Conversations",
-          progress: "1/4 completed",
-          xp: 35,
-          isCompleted: false,
-        },
-        {
-          name: "Cultural Expressions",
-          progress: "Not started",
-          xp: 40,
-          isCompleted: false,
-        },
-        {
-          name: "Business Terms",
-          progress: "Not started",
-          xp: 45,
-          isCompleted: false,
-        },
-      ];
+  const { user } = useAuth();
+  const [lessons, setLessons] = useState<HeritageJourneyLesson[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const fetchJourney = useCallback(async () => {
+    if (!user?.id) return;
+
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    const result = await getHeritageJourney(user.id);
+    if (!result.success) {
+      setErrorMessage(result.message || "Failed to load your journey");
+      setIsLoading(false);
+      return;
     }
-  };
+
+    setLessons(result.data?.lessons ?? []);
+    setIsLoading(false);
+  }, [user?.id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchJourney();
+    }, [fetchJourney])
+  );
+
+  useEffect(() => {
+    if (typeof refreshSignal !== "number") return;
+    fetchJourney();
+  }, [fetchJourney, refreshSignal]);
 
   const getLanguageName = (language: string | null) => {
     if (!language) return "your chosen language";
     return language.charAt(0).toUpperCase() + language.slice(1);
   };
+
+  const effectiveLanguage = useMemo(() => {
+    return selectedLanguage;
+  }, [selectedLanguage]);
+
+  const emptySubtitle = useMemo(() => {
+    if (!selectedLevel) return "";
+    if (selectedLevel === "absolute-beginner")
+      return "Start with your first steps";
+    if (selectedLevel === "beginner") return "Keep building your foundation";
+    return "Keep sharpening your skills";
+  }, [selectedLevel]);
 
   return (
     <ThemedView style={styles.recentLessons}>
@@ -100,40 +79,74 @@ export default function HeritageJourneySection({
       </ThemedText>
       <ThemedText style={styles.heritageSubtitle}>
         Continue connecting with your roots through{" "}
-        {getLanguageName(selectedLanguage)}
+        {getLanguageName(effectiveLanguage)}
       </ThemedText>
 
-      {getPersonalizedLessons().map((lesson, index) => (
-        <TouchableOpacity
-          key={index}
-          style={styles.lessonItem}
-          onPress={() => onLessonPress(lesson.name)}
-        >
-          <View
-            style={[
-              styles.lessonDot,
-              {
-                backgroundColor: lesson.progress.includes("completed")
-                  ? "#34C759"
-                  : "#007AFF",
-                opacity: lesson.progress.includes("completed") ? 1 : 0.7,
-              },
-            ]}
-          />
-          <View style={styles.lessonDetails}>
-            <ThemedText style={styles.lessonName}>{lesson.name}</ThemedText>
-            <ThemedText style={styles.lessonProgress}>
-              {lesson.progress}
-            </ThemedText>
-          </View>
-          <View style={styles.lessonMeta}>
-            <ThemedText style={styles.lessonXP}>+{lesson.xp} XP</ThemedText>
-            {lesson.progress.includes("completed") && (
-              <ThemedText style={styles.completedCheck}>✓</ThemedText>
-            )}
-          </View>
-        </TouchableOpacity>
-      ))}
+      {!user?.id ? (
+        <ThemedText style={styles.helperText}>
+          Sign in to see your personalized journey.
+        </ThemedText>
+      ) : isLoading && lessons.length === 0 ? (
+        <ThemedText style={styles.helperText}>Loading your journey…</ThemedText>
+      ) : errorMessage ? (
+        <View style={styles.errorRow}>
+          <ThemedText style={styles.helperText}>{errorMessage}</ThemedText>
+          <TouchableOpacity onPress={fetchJourney} style={styles.retryButton}>
+            <ThemedText style={styles.retryButtonText}>Retry</ThemedText>
+          </TouchableOpacity>
+        </View>
+      ) : lessons.length === 0 ? (
+        <ThemedText style={styles.helperText}>
+          {emptySubtitle || "No lessons available yet."}
+        </ThemedText>
+      ) : (
+        lessons.map((lesson) => {
+          const isInProgress =
+            !lesson.isCompleted &&
+            lesson.progress !== "Not started" &&
+            lesson.completedActivities > 0;
+
+          const dotColor = lesson.isCompleted
+            ? "#34C759"
+            : isInProgress
+            ? "#007AFF"
+            : "#007AFF";
+
+          const dotOpacity = lesson.isCompleted ? 1 : isInProgress ? 0.9 : 0.65;
+
+          return (
+            <TouchableOpacity
+              key={lesson.unitId}
+              style={styles.lessonItem}
+              onPress={() => onLessonPress(lesson.unitId)}
+            >
+              <View
+                style={[
+                  styles.lessonDot,
+                  {
+                    backgroundColor: dotColor,
+                    opacity: dotOpacity,
+                  },
+                ]}
+              />
+              <View style={styles.lessonDetails}>
+                <ThemedText style={styles.lessonName}>
+                  {lesson.title}
+                </ThemedText>
+                <ThemedText style={styles.lessonProgress}>
+                  {lesson.progress}
+                </ThemedText>
+              </View>
+              <View style={styles.lessonMeta}>
+                <ThemedText style={styles.lessonXP}>+{lesson.xp} XP</ThemedText>
+                {lesson.isCompleted && (
+                  <ThemedText style={styles.completedCheck}>✓</ThemedText>
+                )}
+              </View>
+            </TouchableOpacity>
+          );
+        })
+      )}
     </ThemedView>
   );
 }
@@ -189,5 +202,27 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#34C759",
     marginTop: 2,
+  },
+  helperText: {
+    fontSize: 13,
+    opacity: 0.7,
+    lineHeight: 18,
+  },
+  errorRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  retryButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: "rgba(0, 122, 255, 0.12)",
+  },
+  retryButtonText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#007AFF",
   },
 });

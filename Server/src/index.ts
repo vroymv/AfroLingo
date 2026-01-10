@@ -21,6 +21,7 @@ import {
   tutorChatRouter,
   profileRouter,
   communityRouter,
+  homeRouter,
 } from "./routes";
 
 dotenv.config();
@@ -50,6 +51,7 @@ app.use("/api/tutors", tutorsRouter);
 app.use("/api/tutor-chat", tutorChatRouter);
 app.use("/api/profile", profileRouter);
 app.use("/api/community", communityRouter);
+app.use("/api/home", homeRouter);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {
