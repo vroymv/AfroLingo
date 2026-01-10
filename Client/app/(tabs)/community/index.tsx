@@ -1,30 +1,119 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import React, { useState } from "react";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  fetchCommunityFeed,
+  createCommunityPost,
+  toggleCommunityPostLike,
+  type FeedPost,
+} from "@/services/communityFeed";
 import {
   StyleSheet,
   ScrollView,
   View,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
   TouchableOpacity,
   useColorScheme,
   RefreshControl,
 } from "react-native";
-import { mockPosts, Post } from "@/data/community";
+import { mockPosts, Post, mockUsers } from "@/data/community";
 import { Colors } from "@/constants/Colors";
 
 export default function CommunityIndex() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? "light"];
+  const tabBarHeight = useBottomTabBarHeight();
   const [posts, setPosts] = useState<Post[]>(mockPosts);
   const [refreshing, setRefreshing] = useState(false);
+  const { user } = useAuth();
+
+  const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
+  const [draftTitle, setDraftTitle] = useState("");
+  const [draftContent, setDraftContent] = useState("");
+  const [draftTags, setDraftTags] = useState("");
+  const [draftCategory, setDraftCategory] =
+    useState<Post["category"]>("discussion");
+
+  const currentUser = user
+    ? {
+        id: user.id,
+        name: user.name,
+        avatar: user.avatar ?? "👤",
+        userType: "learner" as const,
+        languages: [],
+        xp: 0,
+        badges: [],
+      }
+    : mockUsers[0];
+
+  const loadFeed = React.useCallback(async () => {
+    const result = await fetchCommunityFeed({
+      limit: 20,
+      viewerId: user?.id,
+    });
+    if (!result.success) {
+      return;
+    }
+
+    const mapped: Post[] = result.data.posts.map((p: FeedPost) => {
+      const userType =
+        p.author.userType === "NATIVE"
+          ? "native"
+          : p.author.userType === "TUTOR"
+          ? "tutor"
+          : "learner";
+
+      const category =
+        p.category === "DISCUSSION"
+          ? "discussion"
+          : p.category === "QUESTION"
+          ? "question"
+          : p.category === "CULTURAL"
+          ? "cultural"
+          : "pronunciation";
+
+      return {
+        id: p.id,
+        title: p.title,
+        content: p.content,
+        author: {
+          id: p.author.id,
+          name: p.author.name,
+          avatar: p.author.avatar ?? "👤",
+          userType,
+          country: p.author.countryCode ?? undefined,
+          languages: p.author.languages,
+          xp: 0,
+          badges: [],
+        },
+        tags: p.tags,
+        timestamp: new Date(p.createdAt),
+        likes: p.counts.likes,
+        comments: p.counts.comments,
+        isLiked: p.isLiked,
+        language: p.language ?? "General",
+        category,
+        reactions: p.reactions,
+        trending: p.isTrending,
+      };
+    });
+
+    setPosts(mapped);
+  }, [user?.id]);
+
+  React.useEffect(() => {
+    loadFeed();
+  }, [loadFeed]);
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    // Simulate fetching new posts
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
-  }, []);
+    loadFeed().finally(() => setRefreshing(false));
+  }, [loadFeed]);
 
   const handleLike = (postId: string) => {
     setPosts((prevPosts) =>
@@ -38,6 +127,95 @@ export default function CommunityIndex() {
           : post
       )
     );
+
+    if (user?.id) {
+      toggleCommunityPostLike({ postId, userId: user.id }).then((r) => {
+        if (!r.success) return;
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === postId
+              ? {
+                  ...p,
+                  isLiked: r.data.isLiked,
+                  likes: r.data.likes,
+                }
+              : p
+          )
+        );
+      });
+    }
+  };
+
+  const resetDraft = () => {
+    setDraftTitle("");
+    setDraftContent("");
+    setDraftTags("");
+    setDraftCategory("discussion");
+  };
+
+  const parseTags = (raw: string) => {
+    const cleaned = raw
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean)
+      .slice(0, 6);
+
+    // De-dupe while preserving order
+    return Array.from(new Set(cleaned));
+  };
+
+  const createPost = () => {
+    const title = draftTitle.trim();
+    const content = draftContent.trim();
+    if (!title || !content) return;
+
+    const now = new Date();
+    const newPost: Post = {
+      id: `local-${now.getTime()}`,
+      title,
+      content,
+      author: currentUser,
+      tags: parseTags(draftTags),
+      timestamp: now,
+      likes: 0,
+      comments: 0,
+      isLiked: false,
+      language: "General",
+      category: draftCategory,
+      reactions: { "👍": 0 },
+      trending: false,
+    };
+
+    // If logged in, persist to server; otherwise fallback to local-only.
+    if (user?.id) {
+      const apiCategory =
+        draftCategory === "discussion"
+          ? "DISCUSSION"
+          : draftCategory === "question"
+          ? "QUESTION"
+          : draftCategory === "cultural"
+          ? "CULTURAL"
+          : "PRONUNCIATION";
+
+      createCommunityPost({
+        userId: user.id,
+        title,
+        content,
+        category: apiCategory,
+        tags: parseTags(draftTags),
+        language: "General",
+      })
+        .then(() => loadFeed())
+        .finally(() => {
+          setIsCreateModalVisible(false);
+          resetDraft();
+        });
+      return;
+    }
+
+    setPosts((prev) => [newPost, ...prev]);
+    setIsCreateModalVisible(false);
+    resetDraft();
   };
 
   const formatTimeAgo = (timestamp: Date) => {
@@ -280,8 +458,203 @@ export default function CommunityIndex() {
         </View>
       </ScrollView>
 
+      {/* Create Post Modal */}
+      <Modal
+        visible={isCreateModalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => {
+          setIsCreateModalVisible(false);
+        }}
+      >
+        <View style={styles.modalBackdrop}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            style={styles.modalContainer}
+          >
+            <View
+              style={[
+                styles.modalCard,
+                {
+                  backgroundColor:
+                    colorScheme === "dark" ? "#111827" : "#FFFFFF",
+                  borderColor: colors.icon + "20",
+                },
+              ]}
+            >
+              <View style={styles.modalHeader}>
+                <ThemedText style={styles.modalTitle}>Create a post</ThemedText>
+                <TouchableOpacity
+                  onPress={() => {
+                    setIsCreateModalVisible(false);
+                  }}
+                  style={styles.modalCloseButton}
+                >
+                  <ThemedText style={styles.modalCloseText}>✕</ThemedText>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.modalSection}>
+                <ThemedText style={styles.modalLabel}>Category</ThemedText>
+                <View style={styles.categoryPickerRow}>
+                  {(
+                    [
+                      "discussion",
+                      "question",
+                      "cultural",
+                      "pronunciation",
+                    ] as const
+                  ).map((cat) => {
+                    const isActive = draftCategory === cat;
+                    const accent = getCategoryColor(cat);
+                    return (
+                      <TouchableOpacity
+                        key={cat}
+                        onPress={() => setDraftCategory(cat)}
+                        style={[
+                          styles.categoryChip,
+                          {
+                            backgroundColor: isActive
+                              ? accent + "22"
+                              : colorScheme === "dark"
+                              ? "#1F2937"
+                              : "#F3F4F6",
+                            borderColor: isActive ? accent : "transparent",
+                          },
+                        ]}
+                      >
+                        <ThemedText style={styles.categoryChipIcon}>
+                          {getCategoryIcon(cat)}
+                        </ThemedText>
+                        <ThemedText
+                          style={[
+                            styles.categoryChipText,
+                            isActive && { color: accent, fontWeight: "700" },
+                          ]}
+                        >
+                          {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                        </ThemedText>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              <View style={styles.modalSection}>
+                <ThemedText style={styles.modalLabel}>Title</ThemedText>
+                <TextInput
+                  value={draftTitle}
+                  onChangeText={setDraftTitle}
+                  placeholder="What are you learning today?"
+                  placeholderTextColor={
+                    colorScheme === "dark" ? "#9CA3AF" : "#6B7280"
+                  }
+                  style={[
+                    styles.input,
+                    {
+                      color: colors.text,
+                      backgroundColor:
+                        colorScheme === "dark" ? "#0B1220" : "#F9FAFB",
+                      borderColor: colors.icon + "20",
+                    },
+                  ]}
+                />
+              </View>
+
+              <View style={styles.modalSection}>
+                <ThemedText style={styles.modalLabel}>Content</ThemedText>
+                <TextInput
+                  value={draftContent}
+                  onChangeText={setDraftContent}
+                  placeholder="Share your question, tip, or story…"
+                  placeholderTextColor={
+                    colorScheme === "dark" ? "#9CA3AF" : "#6B7280"
+                  }
+                  multiline
+                  textAlignVertical="top"
+                  style={[
+                    styles.textArea,
+                    {
+                      color: colors.text,
+                      backgroundColor:
+                        colorScheme === "dark" ? "#0B1220" : "#F9FAFB",
+                      borderColor: colors.icon + "20",
+                    },
+                  ]}
+                />
+              </View>
+
+              <View style={styles.modalSection}>
+                <ThemedText style={styles.modalLabel}>Tags</ThemedText>
+                <TextInput
+                  value={draftTags}
+                  onChangeText={setDraftTags}
+                  placeholder="Comma-separated (e.g. Yoruba, Beginner)"
+                  placeholderTextColor={
+                    colorScheme === "dark" ? "#9CA3AF" : "#6B7280"
+                  }
+                  style={[
+                    styles.input,
+                    {
+                      color: colors.text,
+                      backgroundColor:
+                        colorScheme === "dark" ? "#0B1220" : "#F9FAFB",
+                      borderColor: colors.icon + "20",
+                    },
+                  ]}
+                />
+              </View>
+
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setIsCreateModalVisible(false);
+                    resetDraft();
+                  }}
+                  style={[
+                    styles.secondaryButton,
+                    {
+                      backgroundColor:
+                        colorScheme === "dark" ? "#1F2937" : "#E5E7EB",
+                    },
+                  ]}
+                >
+                  <ThemedText style={styles.secondaryButtonText}>
+                    Cancel
+                  </ThemedText>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={createPost}
+                  disabled={!draftTitle.trim() || !draftContent.trim()}
+                  style={[
+                    styles.primaryButton,
+                    {
+                      backgroundColor: colors.tint,
+                      opacity:
+                        !draftTitle.trim() || !draftContent.trim() ? 0.5 : 1,
+                    },
+                  ]}
+                >
+                  <ThemedText style={styles.primaryButtonText}>Post</ThemedText>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+      </Modal>
+
       {/* Floating Action Button */}
-      <TouchableOpacity style={[styles.fab, { backgroundColor: colors.tint }]}>
+      <TouchableOpacity
+        style={[
+          styles.fab,
+          {
+            backgroundColor: colors.tint,
+            bottom: Math.max(20, tabBarHeight + 16),
+          },
+        ]}
+        onPress={() => setIsCreateModalVisible(true)}
+      >
         <ThemedText style={styles.fabIcon}>✏️</ThemedText>
       </TouchableOpacity>
     </ThemedView>
@@ -518,9 +891,122 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 8,
+    elevation: 12,
+    zIndex: 50,
   },
   fabIcon: {
     fontSize: 24,
+  },
+
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    justifyContent: "flex-end",
+  },
+  modalContainer: {
+    width: "100%",
+  },
+  modalCard: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  modalCloseButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalCloseText: {
+    fontSize: 18,
+    opacity: 0.7,
+  },
+  modalSection: {
+    marginTop: 10,
+  },
+  modalLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+    opacity: 0.75,
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
+  },
+  textArea: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
+    minHeight: 110,
+  },
+  categoryPickerRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  categoryChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  categoryChipIcon: {
+    fontSize: 14,
+  },
+  categoryChipText: {
+    fontSize: 13,
+    fontWeight: "600",
+    opacity: 0.9,
+  },
+  modalActions: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  secondaryButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  secondaryButtonText: {
+    fontSize: 14,
+    fontWeight: "700",
+    opacity: 0.9,
+  },
+  primaryButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  primaryButtonText: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#0B1220",
   },
 });

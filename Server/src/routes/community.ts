@@ -56,6 +56,33 @@ const groupCreateBodySchema = z
   })
   .strict();
 
+const feedQuerySchema = z.object({
+  cursor: z.string().trim().min(1).max(200).optional(),
+  limit: z.coerce.number().int().min(1).max(50).optional(),
+  category: z
+    .enum(["DISCUSSION", "QUESTION", "CULTURAL", "PRONUNCIATION"])
+    .optional(),
+  language: z.string().trim().min(1).max(40).optional(),
+  viewerId: z.string().trim().min(1).max(128).optional(),
+});
+
+const toggleLikeBodySchema = z
+  .object({
+    userId: z.string().min(1),
+  })
+  .strict();
+
+const createPostBodySchema = z
+  .object({
+    userId: z.string().min(1),
+    title: z.string().trim().min(2).max(120),
+    content: z.string().trim().min(1).max(4000),
+    language: z.string().trim().min(1).max(40).optional(),
+    category: z.enum(["DISCUSSION", "QUESTION", "CULTURAL", "PRONUNCIATION"]),
+    tags: z.array(z.string().trim().min(1).max(30)).max(10).optional(),
+  })
+  .strict();
+
 const PRESENCE_TTL_MS = 45_000;
 const PRESENCE_KEY_TTL_SEC = 120;
 
@@ -157,6 +184,273 @@ function decodeCursor(cursor: string): { createdAt: Date; id: string } | null {
 function encodeCursor(createdAt: Date, id: string): string {
   return `${createdAt.getTime()}|${id}`;
 }
+
+// ============================================================
+// Community Feed API (v1)
+// Base prefix: /api/community
+// ============================================================
+
+// GET /api/community/feed
+// Public feed list (optionally filtered by language/category)
+router.get("/feed", async (req: Request, res: Response) => {
+  try {
+    const { cursor, limit, category, language, viewerId } =
+      feedQuerySchema.parse(req.query);
+
+    const take = limit ?? 20;
+    const decoded = cursor ? decodeCursor(cursor) : null;
+
+    const posts = await prisma.communityPost.findMany({
+      where: {
+        isActive: true,
+        ...(category ? { category } : {}),
+        ...(language ? { language } : {}),
+      },
+      take: take + 1,
+      ...(decoded
+        ? {
+            cursor: { id: decoded.id },
+            skip: 1,
+          }
+        : {}),
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            profileImageUrl: true,
+            userType: true,
+            languages: true,
+            countryCode: true,
+          },
+        },
+        likes: viewerId
+          ? {
+              where: { userId: viewerId },
+              select: { id: true },
+            }
+          : false,
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+          },
+        },
+        reactions: {
+          select: { emoji: true },
+        },
+      },
+    });
+
+    const hasMore = posts.length > take;
+    const page = hasMore ? posts.slice(0, take) : posts;
+    const nextCursor =
+      hasMore && page.length > 0
+        ? encodeCursor(
+            page[page.length - 1].createdAt,
+            page[page.length - 1].id
+          )
+        : null;
+
+    // Aggregate reactions per post (emoji -> count)
+    const reactionAggByPostId = new Map<string, Record<string, number>>();
+    for (const p of page) {
+      const agg: Record<string, number> = {};
+      for (const r of p.reactions) {
+        agg[r.emoji] = (agg[r.emoji] ?? 0) + 1;
+      }
+      reactionAggByPostId.set(p.id, agg);
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        posts: page.map((p) => ({
+          id: p.id,
+          title: p.title,
+          content: p.content,
+          tags: p.tags,
+          language: p.language,
+          category: p.category,
+          isTrending: p.isTrending,
+          isLiked: viewerId
+            ? (p.likes as Array<{ id: string }>).length > 0
+            : false,
+          createdAt: p.createdAt.toISOString(),
+          author: {
+            id: p.author.id,
+            name: p.author.name,
+            avatar: p.author.profileImageUrl,
+            userType: p.author.userType,
+            languages: p.author.languages,
+            countryCode: p.author.countryCode,
+          },
+          counts: {
+            likes: p._count.likes,
+            comments: p._count.comments,
+          },
+          reactions: reactionAggByPostId.get(p.id) ?? {},
+        })),
+        pageInfo: {
+          hasMore,
+          nextCursor,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching community feed:", error);
+
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation error",
+        errors: error.issues,
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch community feed",
+    });
+  }
+});
+
+// POST /api/community/feed
+// Body: { userId, title, content, category, tags?, language? }
+router.post("/feed", async (req: Request, res: Response) => {
+  try {
+    const body = createPostBodySchema.parse(req.body);
+
+    const author = await prisma.user.findUnique({
+      where: { id: body.userId },
+      select: { id: true },
+    });
+    if (!author) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const post = await prisma.communityPost.create({
+      data: {
+        authorId: body.userId,
+        title: body.title,
+        content: body.content,
+        category: body.category,
+        tags: body.tags ?? [],
+        language: body.language,
+        isTrending: false,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        createdAt: true,
+      },
+    });
+
+    return res.status(201).json({
+      success: true,
+      data: {
+        id: post.id,
+        createdAt: post.createdAt.toISOString(),
+      },
+    });
+  } catch (error) {
+    console.error("Error creating community post:", error);
+
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation error",
+        errors: error.issues,
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create post",
+    });
+  }
+});
+
+// POST /api/community/feed/:postId/toggle-like
+// Body: { userId }
+router.post(
+  "/feed/:postId/toggle-like",
+  async (req: Request, res: Response) => {
+    try {
+      const postId = z.string().min(1).parse(req.params.postId);
+      const { userId } = toggleLikeBodySchema.parse(req.body);
+
+      // Ensure entities exist (best-effort)
+      const [post, user] = await Promise.all([
+        prisma.communityPost.findUnique({ where: { id: postId } }),
+        prisma.user.findUnique({ where: { id: userId }, select: { id: true } }),
+      ]);
+      if (!post || !post.isActive) {
+        return res.status(404).json({
+          success: false,
+          message: "Post not found",
+        });
+      }
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      const existing = await prisma.communityPostLike.findUnique({
+        where: { postId_userId: { postId, userId } },
+        select: { id: true },
+      });
+
+      if (existing) {
+        await prisma.communityPostLike.delete({
+          where: { postId_userId: { postId, userId } },
+        });
+      } else {
+        await prisma.communityPostLike
+          .create({ data: { postId, userId }, select: { id: true } })
+          .catch((e: any) => {
+            if (e?.code === "P2002") return null;
+            throw e;
+          });
+      }
+
+      const likeCount = await prisma.communityPostLike.count({
+        where: { postId },
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          postId,
+          userId,
+          isLiked: !existing,
+          likes: likeCount,
+        },
+      });
+    } catch (error) {
+      console.error("Error toggling post like:", error);
+
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          success: false,
+          message: "Validation error",
+          errors: error.issues,
+        });
+      }
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to toggle like",
+      });
+    }
+  }
+);
 
 // GET /api/community/people/discover/:userId
 // Returns a list of other users the viewer can connect with.

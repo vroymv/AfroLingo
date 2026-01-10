@@ -48,6 +48,13 @@ enum NotificationType {
   GROUP_INVITE
 }
 
+enum CommunityPostCategory {
+  DISCUSSION
+  QUESTION
+  CULTURAL
+  PRONUNCIATION
+}
+
 model Tutor {
   id         String @id @default(uuid())
   externalId String @unique // Stable ID for seeding/syncing (maps to Client MOCK_TUTORS[].id)
@@ -197,6 +204,12 @@ model User {
   tutorChatsAsTutor   TutorChatThread[] @relation("TutorChatTutor")
   tutorChatMessages   TutorChatMessage[]
 
+  // Community feed
+  communityPosts         CommunityPost[]
+  communityPostComments  CommunityPostComment[]
+  communityPostLikes     CommunityPostLike[]
+  communityPostReactions CommunityPostReaction[]
+
   // Groups
   groupsCreated     Group[]           @relation("GroupsCreated")
   groupMemberships  GroupMembership[]
@@ -208,6 +221,98 @@ model User {
   @@map("users")
   @@index([userType])
   @@index([countryCode])
+}
+
+model CommunityPost {
+  id String @id @default(uuid())
+
+  // Optional stable ID for idempotent seeds/sync.
+  externalId String? @unique
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  title   String
+  content String @db.Text
+
+  // Optional for filtering/discovery (e.g., "Yoruba", "Swahili", "General")
+  language String?
+
+  category CommunityPostCategory
+  tags     String[]              @default([])
+
+  isTrending Boolean @default(false)
+  isActive   Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  comments  CommunityPostComment[]
+  likes     CommunityPostLike[]
+  reactions CommunityPostReaction[]
+
+  @@index([authorId, createdAt(sort: Desc)])
+  @@index([category, createdAt(sort: Desc)])
+  @@index([isActive, createdAt(sort: Desc)])
+  @@map("community_posts")
+}
+
+model CommunityPostComment {
+  id String @id @default(uuid())
+
+  postId   String
+  authorId String
+  parentId String?
+
+  body      String  @db.Text
+  isDeleted Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  post   CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  parent  CommunityPostComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies CommunityPostComment[] @relation("CommentReplies")
+
+  @@index([postId, createdAt(sort: Desc)])
+  @@index([authorId, createdAt(sort: Desc)])
+  @@map("community_post_comments")
+}
+
+model CommunityPostLike {
+  id String @id @default(uuid())
+
+  postId String
+  userId String
+
+  createdAt DateTime @default(now())
+
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("community_post_likes")
+}
+
+model CommunityPostReaction {
+  id String @id @default(uuid())
+
+  postId String
+  userId String
+  emoji  String @db.VarChar(16)
+
+  createdAt DateTime @default(now())
+
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId, emoji])
+  @@index([postId, createdAt(sort: Desc)])
+  @@index([userId])
+  @@map("community_post_reactions")
 }
 
 model UserFollow {
