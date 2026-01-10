@@ -2,6 +2,7 @@ export type TutorAvailability = "online" | "away" | "offline";
 
 export type Tutor = {
   id: string;
+  userId?: string | null;
   name: string;
   language: string;
   rating: number;

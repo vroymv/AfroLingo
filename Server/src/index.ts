@@ -18,6 +18,7 @@ import {
   karaokeRouter,
   practiceRouter,
   tutorsRouter,
+  tutorChatRouter,
   profileRouter,
   communityRouter,
 } from "./routes";
@@ -46,6 +47,7 @@ app.use("/api/stories", storiesRouter);
 app.use("/api/karaoke", karaokeRouter);
 app.use("/api/practice", practiceRouter);
 app.use("/api/tutors", tutorsRouter);
+app.use("/api/tutor-chat", tutorChatRouter);
 app.use("/api/profile", profileRouter);
 app.use("/api/community", communityRouter);
 

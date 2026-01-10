@@ -1,6 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import {
+  Alert,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import { ThemedText } from "@/components/ThemedText";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Colors } from "@/constants/Colors";
@@ -12,10 +20,12 @@ import { TutorCard } from "@/components/tutors/TutorCard";
 import { BecomeTutorModal } from "@/components/tutors/BecomeTutorModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { fetchTutors } from "@/services/tutors";
+import { getOrCreateTutorChatThread } from "@/services/tutorChat";
 
 export default function TutorsScreen() {
   const colorScheme = useColorScheme() ?? "light";
-  const { user } = useAuth();
+  const { user, token } = useAuth();
+  const router = useRouter();
 
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,10 +94,39 @@ export default function TutorsScreen() {
     });
   }, [query, selectedLanguage, tutors]);
 
-  const handleChat = (tutor: Tutor) => {
-    console.log(`Starting chat with ${tutor.name}`);
-    // Navigate to chat screen
-  };
+  const handleChat = useCallback(
+    async (tutor: Tutor) => {
+      if (!user?.id) {
+        Alert.alert("Sign in required", "Please sign in to chat with tutors.");
+        return;
+      }
+
+      if (!tutor.userId) {
+        Alert.alert(
+          "Tutor not available",
+          "This tutor can't be chatted with yet."
+        );
+        return;
+      }
+
+      const res = await getOrCreateTutorChatThread({
+        learnerId: user.id,
+        tutorId: tutor.userId,
+        token: token ?? undefined,
+      });
+
+      if (!res.success || !res.data?.id) {
+        Alert.alert("Error", res.message ?? "Failed to start chat");
+        return;
+      }
+
+      router.push({
+        pathname: "/tutor-chat/[threadId]" as any,
+        params: { threadId: res.data.id, title: tutor.name },
+      });
+    },
+    [router, token, user?.id]
+  );
 
   const handleBecomeTutor = () => {
     setIsBecomeTutorModalVisible(true);
@@ -102,7 +141,16 @@ export default function TutorsScreen() {
     >
       {/* Header */}
       <View style={styles.header}>
-        <ThemedText type="title">Find a Tutor 👨‍🏫</ThemedText>
+        <View style={styles.headerTopRow}>
+          <ThemedText type="title">Find a Tutor 👨‍🏫</ThemedText>
+
+          <Pressable
+            onPress={() => router.push("/tutor-chat" as any)}
+            style={styles.headerAction}
+          >
+            <ThemedText style={styles.headerActionText}>Chats</ThemedText>
+          </Pressable>
+        </View>
         <ThemedText style={styles.headerSubtitle}>
           Connect with native speakers and expert teachers
         </ThemedText>
@@ -169,6 +217,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 16,
+  },
+  headerTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  headerAction: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
+  headerActionText: {
+    fontSize: 14,
+    fontWeight: "700",
+    opacity: 0.85,
   },
   headerSubtitle: {
     marginTop: 4,

@@ -52,6 +52,10 @@ model Tutor {
   id         String @id @default(uuid())
   externalId String @unique // Stable ID for seeding/syncing (maps to Client MOCK_TUTORS[].id)
 
+  // Linked app user identity (tutors are real users)
+  userId String? @unique
+  user   User?   @relation("TutorUser", fields: [userId], references: [id], onDelete: Cascade)
+
   name     String
   language String
 
@@ -72,7 +76,55 @@ model Tutor {
 
   @@index([language])
   @@index([isActive])
+  @@index([userId])
   @@map("tutors")
+}
+
+model TutorChatThread {
+  id String @id @default(uuid())
+
+  learnerId String
+  tutorId   String
+
+  // Read tracking (for unread counts)
+  learnerLastReadAt DateTime?
+  tutorLastReadAt   DateTime?
+
+  // Inbox ordering / previews
+  lastMessageAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  learner User @relation("TutorChatLearner", fields: [learnerId], references: [id], onDelete: Cascade)
+  tutor   User @relation("TutorChatTutor", fields: [tutorId], references: [id], onDelete: Cascade)
+
+  messages TutorChatMessage[]
+
+  @@unique([learnerId, tutorId])
+  @@index([learnerId, lastMessageAt(sort: Desc)])
+  @@index([tutorId, lastMessageAt(sort: Desc)])
+  @@map("tutor_chat_threads")
+}
+
+model TutorChatMessage {
+  id String @id @default(uuid())
+
+  threadId String
+  senderId String
+
+  body            String @db.Text
+  clientMessageId String
+
+  createdAt DateTime @default(now())
+
+  thread TutorChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender User           @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, clientMessageId])
+  @@index([threadId, createdAt(sort: Desc)])
+  @@index([senderId])
+  @@map("tutor_chat_messages")
 }
 
 // User model
@@ -80,6 +132,9 @@ model User {
   id    String @id @default(uuid())
   email String @unique
   name  String
+
+  // Tutor listing (optional; present when this user is a tutor)
+  tutorListing Tutor? @relation("TutorUser")
 
   // Community profile (used by Community/People UI)
   userType     CommunityUserType @default(LEARNER)
@@ -136,6 +191,11 @@ model User {
   // Community relationships
   following UserFollow[] @relation("UserFollows")
   followers UserFollow[] @relation("UserFollowedBy")
+
+  // Tutor chat
+  tutorChatsAsLearner TutorChatThread[] @relation("TutorChatLearner")
+  tutorChatsAsTutor   TutorChatThread[] @relation("TutorChatTutor")
+  tutorChatMessages   TutorChatMessage[]
 
   // Groups
   groupsCreated     Group[]           @relation("GroupsCreated")

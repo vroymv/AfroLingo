@@ -37,6 +37,7 @@ router.get("/", async (req: Request, res: Response) => {
     const tutors = await prisma.tutor.findMany({
       where: {
         isActive: true,
+        userId: { not: null },
         ...(language ? { language } : {}),
         ...(q
           ? {
@@ -51,6 +52,7 @@ router.get("/", async (req: Request, res: Response) => {
       take: limit,
       select: {
         externalId: true,
+        userId: true,
         name: true,
         language: true,
         rating: true,
@@ -68,6 +70,7 @@ router.get("/", async (req: Request, res: Response) => {
       success: true,
       data: tutors.map((t) => ({
         id: t.externalId,
+        userId: t.userId,
         name: t.name,
         language: t.language,
         rating: t.rating,
