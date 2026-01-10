@@ -5,13 +5,21 @@ import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   fetchCommunityFeed,
-  createCommunityPost,
   toggleCommunityPostLike,
+  fetchCommunityPostComments,
+  createCommunityPostComment,
+  type FeedComment,
   type FeedPost,
 } from "@/services/communityFeed";
+import { FeedHeader } from "@/components/community/feed/FeedHeader";
+import { CommunityPostCard } from "@/components/community/feed/CommunityPostCard";
+import { FeedEmptyState } from "@/components/community/feed/FeedEmptyState";
+import { FeedFooter } from "@/components/community/feed/FeedFooter";
+import { CreatePostModal } from "@/components/community/feed/CreatePostModal";
 import {
   StyleSheet,
   ScrollView,
+  FlatList,
   View,
   Modal,
   TextInput,
@@ -19,7 +27,6 @@ import {
   Platform,
   TouchableOpacity,
   useColorScheme,
-  RefreshControl,
   ActivityIndicator,
 } from "react-native";
 import type { CommunityPost as Post } from "@/types/communityFeed";
@@ -29,80 +36,160 @@ export default function CommunityIndex() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? "light"];
   const tabBarHeight = useBottomTabBarHeight();
+
+  const PAGE_SIZE = 20;
+
   const [posts, setPosts] = useState<Post[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
+
+  const listRef = React.useRef<FlatList<Post>>(null);
+  const endReachedDuringMomentumRef = React.useRef(false);
+
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
-  const [draftTitle, setDraftTitle] = useState("");
-  const [draftContent, setDraftContent] = useState("");
-  const [draftTags, setDraftTags] = useState("");
-  const [draftCategory, setDraftCategory] =
-    useState<Post["category"]>("discussion");
-  const [isPosting, setIsPosting] = useState(false);
-  const [postError, setPostError] = useState<string | null>(null);
+
+  const [isCommentsModalVisible, setIsCommentsModalVisible] = useState(false);
+  const [activePost, setActivePost] = useState<Post | null>(null);
+  const [comments, setComments] = useState<FeedComment[]>([]);
+  const [isCommentsLoading, setIsCommentsLoading] = useState(false);
+  const [commentsError, setCommentsError] = useState<string | null>(null);
+  const [draftComment, setDraftComment] = useState("");
+  const [isCommentPosting, setIsCommentPosting] = useState(false);
+
+  const mapFeedPostToPost = React.useCallback((p: FeedPost): Post => {
+    const userType =
+      p.author.userType === "NATIVE"
+        ? "native"
+        : p.author.userType === "TUTOR"
+        ? "tutor"
+        : "learner";
+
+    const category =
+      p.category === "DISCUSSION"
+        ? "discussion"
+        : p.category === "QUESTION"
+        ? "question"
+        : p.category === "CULTURAL"
+        ? "cultural"
+        : "pronunciation";
+
+    return {
+      id: p.id,
+      title: p.title,
+      content: p.content,
+      author: {
+        id: p.author.id,
+        name: p.author.name,
+        avatar: p.author.avatar ?? "👤",
+        userType,
+        country: p.author.countryCode ?? undefined,
+        languages: p.author.languages,
+        xp: 0,
+        badges: [],
+      },
+      tags: p.tags,
+      timestamp: new Date(p.createdAt),
+      likes: p.counts.likes,
+      comments: p.counts.comments,
+      isLiked: p.isLiked,
+      language: p.language ?? "General",
+      category,
+      reactions: p.reactions,
+      trending: p.isTrending,
+    };
+  }, []);
 
   const loadFeed = React.useCallback(async () => {
+    setIsLoading(true);
     setLoadError(null);
+    setLoadMoreError(null);
+
     const result = await fetchCommunityFeed({
-      limit: 20,
+      limit: PAGE_SIZE,
       viewerId: user?.id,
     });
     if (!result.success) {
       setPosts([]);
+      setHasMore(false);
+      setNextCursor(null);
       setLoadError(result.message);
       setIsLoading(false);
       return;
     }
 
-    const mapped: Post[] = result.data.posts.map((p: FeedPost) => {
-      const userType =
-        p.author.userType === "NATIVE"
-          ? "native"
-          : p.author.userType === "TUTOR"
-          ? "tutor"
-          : "learner";
+    setPosts(result.data.posts.map(mapFeedPostToPost));
+    setHasMore(result.data.pageInfo.hasMore);
+    setNextCursor(result.data.pageInfo.nextCursor);
+    setIsLoading(false);
+  }, [PAGE_SIZE, mapFeedPostToPost, user?.id]);
 
-      const category =
-        p.category === "DISCUSSION"
-          ? "discussion"
-          : p.category === "QUESTION"
-          ? "question"
-          : p.category === "CULTURAL"
-          ? "cultural"
-          : "pronunciation";
+  const refreshFeed = React.useCallback(async () => {
+    setLoadError(null);
+    setLoadMoreError(null);
 
-      return {
-        id: p.id,
-        title: p.title,
-        content: p.content,
-        author: {
-          id: p.author.id,
-          name: p.author.name,
-          avatar: p.author.avatar ?? "👤",
-          userType,
-          country: p.author.countryCode ?? undefined,
-          languages: p.author.languages,
-          xp: 0,
-          badges: [],
-        },
-        tags: p.tags,
-        timestamp: new Date(p.createdAt),
-        likes: p.counts.likes,
-        comments: p.counts.comments,
-        isLiked: p.isLiked,
-        language: p.language ?? "General",
-        category,
-        reactions: p.reactions,
-        trending: p.isTrending,
-      };
+    const result = await fetchCommunityFeed({
+      limit: PAGE_SIZE,
+      viewerId: user?.id,
     });
 
-    setPosts(mapped);
-    setIsLoading(false);
-  }, [user?.id]);
+    if (!result.success) {
+      if (posts.length === 0) {
+        setLoadError(result.message);
+      }
+      return;
+    }
+
+    setPosts(result.data.posts.map(mapFeedPostToPost));
+    setHasMore(result.data.pageInfo.hasMore);
+    setNextCursor(result.data.pageInfo.nextCursor);
+  }, [PAGE_SIZE, mapFeedPostToPost, posts.length, user?.id]);
+
+  const loadMore = React.useCallback(async () => {
+    if (isLoadingMore || isLoading || refreshing) return;
+    if (!hasMore || !nextCursor) return;
+
+    setIsLoadingMore(true);
+    setLoadMoreError(null);
+
+    const result = await fetchCommunityFeed({
+      cursor: nextCursor,
+      limit: PAGE_SIZE,
+      viewerId: user?.id,
+    });
+
+    if (!result.success) {
+      setLoadMoreError(result.message);
+      setIsLoadingMore(false);
+      return;
+    }
+
+    const mapped = result.data.posts.map(mapFeedPostToPost);
+    setPosts((prev) => {
+      if (mapped.length === 0) return prev;
+      const seen = new Set(prev.map((p) => p.id));
+      const unique = mapped.filter((p) => !seen.has(p.id));
+      return unique.length > 0 ? [...prev, ...unique] : prev;
+    });
+    setHasMore(result.data.pageInfo.hasMore);
+    setNextCursor(result.data.pageInfo.nextCursor);
+    setIsLoadingMore(false);
+  }, [
+    PAGE_SIZE,
+    hasMore,
+    isLoading,
+    isLoadingMore,
+    mapFeedPostToPost,
+    nextCursor,
+    refreshing,
+    user?.id,
+  ]);
 
   React.useEffect(() => {
     loadFeed();
@@ -110,110 +197,48 @@ export default function CommunityIndex() {
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    loadFeed().finally(() => setRefreshing(false));
-  }, [loadFeed]);
+    refreshFeed().finally(() => setRefreshing(false));
+  }, [refreshFeed]);
 
-  const handleLike = (postId: string) => {
-    if (!user?.id) return;
+  const handleLike = React.useCallback(
+    (postId: string) => {
+      if (!user?.id) return;
 
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              isLiked: !post.isLiked,
-              likes: post.isLiked ? post.likes - 1 : post.likes + 1,
-            }
-          : post
-      )
-    );
-
-    toggleCommunityPostLike({ postId, userId: user.id }).then((r) => {
-      if (!r.success) {
-        // Best-effort re-sync
-        loadFeed();
-        return;
-      }
-      setPosts((prev) =>
-        prev.map((p) =>
-          p.id === postId
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
             ? {
-                ...p,
-                isLiked: r.data.isLiked,
-                likes: r.data.likes,
+                ...post,
+                isLiked: !post.isLiked,
+                likes: post.isLiked ? post.likes - 1 : post.likes + 1,
               }
-            : p
+            : post
         )
       );
-    });
-  };
 
-  const resetDraft = () => {
-    setDraftTitle("");
-    setDraftContent("");
-    setDraftTags("");
-    setDraftCategory("discussion");
-    setPostError(null);
-  };
-
-  const parseTags = (raw: string) => {
-    const cleaned = raw
-      .split(",")
-      .map((t) => t.trim())
-      .filter(Boolean)
-      .slice(0, 6);
-
-    // De-dupe while preserving order
-    return Array.from(new Set(cleaned));
-  };
-
-  const createPost = () => {
-    if (!user?.id) return;
-
-    const title = draftTitle.trim();
-    const content = draftContent.trim();
-    if (!title || !content) return;
-
-    if (isPosting) return;
-    setPostError(null);
-    setIsPosting(true);
-
-    const apiCategory =
-      draftCategory === "discussion"
-        ? "DISCUSSION"
-        : draftCategory === "question"
-        ? "QUESTION"
-        : draftCategory === "cultural"
-        ? "CULTURAL"
-        : "PRONUNCIATION";
-
-    createCommunityPost({
-      userId: user.id,
-      title,
-      content,
-      category: apiCategory,
-      tags: parseTags(draftTags),
-      language: "General",
-    })
-      .then((result) => {
-        if (!result.success) {
-          setPostError(result.message);
+      toggleCommunityPostLike({ postId, userId: user.id }).then((r) => {
+        if (!r.success) {
+          // Best-effort re-sync
+          loadFeed();
           return;
         }
-
-        setIsCreateModalVisible(false);
-        resetDraft();
-        loadFeed();
-      })
-      .catch(() => {
-        setPostError("Something went wrong while posting. Please try again.");
-      })
-      .finally(() => {
-        setIsPosting(false);
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === postId
+              ? {
+                  ...p,
+                  isLiked: r.data.isLiked,
+                  likes: r.data.likes,
+                }
+              : p
+          )
+        );
       });
-  };
+    },
+    [loadFeed, user?.id]
+  );
 
-  const formatTimeAgo = (timestamp: Date) => {
+  const formatTimeAgo = React.useCallback((timestamp: Date) => {
     const now = new Date();
     const diff = Math.floor((now.getTime() - timestamp.getTime()) / 1000);
 
@@ -221,275 +246,142 @@ export default function CommunityIndex() {
     if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
     if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
     return `${Math.floor(diff / 86400)}d ago`;
-  };
+  }, []);
 
-  const getCategoryColor = (category: Post["category"]) => {
-    switch (category) {
-      case "discussion":
-        return "#3B82F6";
-      case "question":
-        return "#8B5CF6";
-      case "cultural":
-        return "#EC4899";
-      case "pronunciation":
-        return "#10B981";
-      default:
-        return colors.tint;
-    }
-  };
+  const loadComments = React.useCallback(async (postId: string) => {
+    setCommentsError(null);
+    setIsCommentsLoading(true);
 
-  const getCategoryIcon = (category: Post["category"]) => {
-    switch (category) {
-      case "discussion":
-        return "💬";
-      case "question":
-        return "❓";
-      case "cultural":
-        return "🌍";
-      case "pronunciation":
-        return "🗣️";
-      default:
-        return "📝";
+    const result = await fetchCommunityPostComments({ postId, limit: 50 });
+    if (!result.success) {
+      setComments([]);
+      setCommentsError(result.message);
+      setIsCommentsLoading(false);
+      return;
     }
-  };
+
+    setComments(result.data.comments);
+    setIsCommentsLoading(false);
+  }, []);
+
+  const openComments = React.useCallback(
+    (post: Post) => {
+      setActivePost(post);
+      setDraftComment("");
+      setIsCommentsModalVisible(true);
+      loadComments(post.id);
+    },
+    [loadComments]
+  );
+
+  const closeComments = React.useCallback(() => {
+    setIsCommentsModalVisible(false);
+    setActivePost(null);
+    setComments([]);
+    setCommentsError(null);
+    setDraftComment("");
+    setIsCommentPosting(false);
+  }, []);
+
+  const submitComment = React.useCallback(async () => {
+    if (!activePost) return;
+    if (!user?.id) return;
+
+    const body = draftComment.trim();
+    if (!body) return;
+
+    if (isCommentPosting) return;
+    setIsCommentPosting(true);
+    setCommentsError(null);
+
+    const result = await createCommunityPostComment({
+      postId: activePost.id,
+      userId: user.id,
+      body,
+    });
+
+    if (!result.success) {
+      setCommentsError(result.message);
+      setIsCommentPosting(false);
+      return;
+    }
+
+    setComments((prev) => [result.data, ...prev]);
+    setDraftComment("");
+
+    // Best-effort local comment count bump
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === activePost.id ? { ...p, comments: p.comments + 1 } : p
+      )
+    );
+
+    setIsCommentPosting(false);
+  }, [activePost, draftComment, isCommentPosting, user?.id]);
+
+  const renderPostItem = React.useCallback(
+    ({ item: post }: { item: Post }) => (
+      <CommunityPostCard
+        post={post}
+        onPressLike={() => handleLike(post.id)}
+        onPressComment={() => openComments(post)}
+      />
+    ),
+    [handleLike, openComments]
+  );
 
   return (
     <ThemedView style={styles.container}>
-      <ScrollView
+      <FlatList
+        ref={listRef}
         style={styles.scrollView}
+        contentContainerStyle={styles.feedContainer}
+        data={posts}
+        keyExtractor={(item) => item.id}
+        renderItem={renderPostItem}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        onEndReachedThreshold={0.4}
+        onEndReached={() => {
+          if (endReachedDuringMomentumRef.current) return;
+          endReachedDuringMomentumRef.current = true;
+          loadMore();
+        }}
+        onMomentumScrollBegin={() => {
+          endReachedDuringMomentumRef.current = false;
+        }}
+        ListHeaderComponent={<FeedHeader />}
+        ListEmptyComponent={
+          <FeedEmptyState
+            isLoading={isLoading}
+            loadError={loadError}
+            isSignedIn={Boolean(user)}
+            tintColor={colors.tint}
+            onRetry={loadFeed}
+          />
         }
-      >
-        {/* Header Section */}
-        <View
-          style={[
-            styles.header,
-            {
-              backgroundColor: colors.background,
-              borderBottomColor: colors.icon + "20",
-            },
-          ]}
-        >
-          <ThemedText style={styles.headerTitle}>Community Feed</ThemedText>
-          <ThemedText style={styles.headerSubtitle}>
-            Connect with learners worldwide
-          </ThemedText>
-        </View>
+        ListFooterComponent={
+          posts.length > 0 ? (
+            <FeedFooter
+              isLoadingMore={isLoadingMore}
+              loadMoreError={loadMoreError}
+              hasMore={hasMore}
+              tintColor={colors.tint}
+              onRetry={loadMore}
+            />
+          ) : (
+            <View style={styles.footerSpacer} />
+          )
+        }
+      />
 
-        {/* Feed Posts */}
-        <View style={styles.feedContainer}>
-          {isLoading ? (
-            <View style={styles.stateContainer}>
-              <ActivityIndicator />
-              <ThemedText style={styles.stateText}>Loading feed…</ThemedText>
-            </View>
-          ) : loadError ? (
-            <View style={styles.stateContainer}>
-              <ThemedText style={styles.stateTitle}>
-                Couldn’t load feed
-              </ThemedText>
-              <ThemedText style={styles.stateText}>{loadError}</ThemedText>
-              <TouchableOpacity
-                style={[styles.retryButton, { backgroundColor: colors.tint }]}
-                onPress={() => loadFeed()}
-              >
-                <ThemedText style={styles.retryText}>Retry</ThemedText>
-              </TouchableOpacity>
-            </View>
-          ) : posts.length === 0 ? (
-            <View style={styles.stateContainer}>
-              <ThemedText style={styles.stateTitle}>No posts yet</ThemedText>
-              <ThemedText style={styles.stateText}>
-                {user
-                  ? "Be the first to share something with the community."
-                  : "Sign in to create the first post."}
-              </ThemedText>
-            </View>
-          ) : null}
-
-          {posts.map((post) => (
-            <View
-              key={post.id}
-              style={[
-                styles.postCard,
-                {
-                  backgroundColor:
-                    colorScheme === "dark" ? "#1F2937" : "#FFFFFF",
-                  shadowColor: colorScheme === "dark" ? "#000" : "#000",
-                },
-              ]}
-            >
-              {/* Post Header */}
-              <View style={styles.postHeader}>
-                <View style={styles.authorInfo}>
-                  <View style={styles.avatarContainer}>
-                    <ThemedText style={styles.avatar}>
-                      {post.author.avatar}
-                    </ThemedText>
-                  </View>
-                  <View style={styles.authorDetails}>
-                    <View style={styles.authorNameRow}>
-                      <ThemedText style={styles.authorName}>
-                        {post.author.name}
-                      </ThemedText>
-                      {post.trending && (
-                        <View style={styles.trendingBadge}>
-                          <ThemedText style={styles.trendingText}>
-                            🔥 Trending
-                          </ThemedText>
-                        </View>
-                      )}
-                    </View>
-                    <View style={styles.metaInfo}>
-                      <ThemedText style={styles.metaText}>
-                        {post.author.userType === "native"
-                          ? "🌟 Native Speaker"
-                          : post.author.userType === "tutor"
-                          ? "👨‍🏫 Tutor"
-                          : "🎓 Learner"}
-                      </ThemedText>
-                      <ThemedText style={styles.metaDot}>•</ThemedText>
-                      <ThemedText style={styles.metaText}>
-                        {formatTimeAgo(post.timestamp)}
-                      </ThemedText>
-                    </View>
-                  </View>
-                </View>
-                <TouchableOpacity style={styles.moreButton}>
-                  <ThemedText style={styles.moreIcon}>⋯</ThemedText>
-                </TouchableOpacity>
-              </View>
-
-              {/* Category Badge */}
-              <View style={styles.categoryContainer}>
-                <View
-                  style={[
-                    styles.categoryBadge,
-                    { backgroundColor: getCategoryColor(post.category) + "15" },
-                  ]}
-                >
-                  <ThemedText style={styles.categoryIcon}>
-                    {getCategoryIcon(post.category)}
-                  </ThemedText>
-                  <ThemedText
-                    style={[
-                      styles.categoryText,
-                      { color: getCategoryColor(post.category) },
-                    ]}
-                  >
-                    {post.category.charAt(0).toUpperCase() +
-                      post.category.slice(1)}
-                  </ThemedText>
-                </View>
-              </View>
-
-              {/* Post Content */}
-              <View style={styles.postContent}>
-                <ThemedText style={styles.postTitle}>{post.title}</ThemedText>
-                <ThemedText style={styles.postText}>{post.content}</ThemedText>
-              </View>
-
-              {/* Tags */}
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.tagsContainer}
-              >
-                {post.tags.map((tag, index) => (
-                  <View
-                    key={index}
-                    style={[
-                      styles.tag,
-                      {
-                        backgroundColor:
-                          colorScheme === "dark" ? "#374151" : "#F3F4F6",
-                      },
-                    ]}
-                  >
-                    <ThemedText style={styles.tagText}>#{tag}</ThemedText>
-                  </View>
-                ))}
-              </ScrollView>
-
-              {/* Reactions Bar */}
-              <View style={styles.reactionsBar}>
-                <View style={styles.reactionsList}>
-                  {Object.entries(post.reactions).map(([emoji, count]) => (
-                    <View key={emoji} style={styles.reactionItem}>
-                      <ThemedText style={styles.reactionEmoji}>
-                        {emoji}
-                      </ThemedText>
-                      <ThemedText style={styles.reactionCount}>
-                        {count}
-                      </ThemedText>
-                    </View>
-                  ))}
-                </View>
-                <ThemedText style={styles.commentsCount}>
-                  {post.comments} comments
-                </ThemedText>
-              </View>
-
-              {/* Action Buttons */}
-              <View style={styles.actionsBar}>
-                <TouchableOpacity
-                  style={styles.actionButton}
-                  onPress={() => handleLike(post.id)}
-                >
-                  <ThemedText
-                    style={[
-                      styles.actionIcon,
-                      post.isLiked && { fontSize: 22 },
-                    ]}
-                  >
-                    {post.isLiked ? "❤️" : "🤍"}
-                  </ThemedText>
-                  <ThemedText
-                    style={[
-                      styles.actionText,
-                      post.isLiked && { color: "#EF4444", fontWeight: "600" },
-                    ]}
-                  >
-                    {post.likes}
-                  </ThemedText>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.actionButton}>
-                  <ThemedText style={styles.actionIcon}>💬</ThemedText>
-                  <ThemedText style={styles.actionText}>Comment</ThemedText>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.actionButton}>
-                  <ThemedText style={styles.actionIcon}>🔗</ThemedText>
-                  <ThemedText style={styles.actionText}>Share</ThemedText>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.actionButton}>
-                  <ThemedText style={styles.actionIcon}>🔖</ThemedText>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))}
-        </View>
-
-        {/* Load More Indicator */}
-        <View style={styles.loadMoreContainer}>
-          <TouchableOpacity style={styles.loadMoreButton}>
-            <ThemedText style={styles.loadMoreText}>Load More Posts</ThemedText>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-
-      {/* Create Post Modal */}
+      {/* Comments Modal */}
       <Modal
-        visible={isCreateModalVisible}
+        visible={isCommentsModalVisible}
         animationType="slide"
         transparent
-        onRequestClose={() => {
-          setIsCreateModalVisible(false);
-        }}
+        onRequestClose={closeComments}
       >
         <View style={styles.modalBackdrop}>
           <KeyboardAvoidingView
@@ -507,132 +399,141 @@ export default function CommunityIndex() {
               ]}
             >
               <View style={styles.modalHeader}>
-                <ThemedText style={styles.modalTitle}>Create a post</ThemedText>
+                <View style={{ flex: 1, paddingRight: 12 }}>
+                  <ThemedText style={styles.modalTitle}>Comments</ThemedText>
+                  {activePost ? (
+                    <ThemedText
+                      style={[styles.headerSubtitle, { marginTop: 2 }]}
+                      numberOfLines={1}
+                    >
+                      {activePost.title}
+                    </ThemedText>
+                  ) : null}
+                </View>
                 <TouchableOpacity
-                  onPress={() => {
-                    setIsCreateModalVisible(false);
-                  }}
+                  onPress={closeComments}
                   style={styles.modalCloseButton}
-                  disabled={isPosting}
                 >
                   <ThemedText style={styles.modalCloseText}>✕</ThemedText>
                 </TouchableOpacity>
               </View>
 
-              {postError ? (
+              {commentsError ? (
                 <View style={styles.modalErrorBox}>
                   <ThemedText style={styles.modalErrorText}>
-                    {postError}
+                    {commentsError}
                   </ThemedText>
                 </View>
               ) : null}
 
-              <View style={styles.modalSection}>
-                <ThemedText style={styles.modalLabel}>Category</ThemedText>
-                <View style={styles.categoryPickerRow}>
-                  {(
-                    [
-                      "discussion",
-                      "question",
-                      "cultural",
-                      "pronunciation",
-                    ] as const
-                  ).map((cat) => {
-                    const isActive = draftCategory === cat;
-                    const accent = getCategoryColor(cat);
-                    return (
-                      <TouchableOpacity
-                        key={cat}
-                        onPress={() => setDraftCategory(cat)}
-                        style={[
-                          styles.categoryChip,
-                          {
-                            backgroundColor: isActive
-                              ? accent + "22"
-                              : colorScheme === "dark"
-                              ? "#1F2937"
-                              : "#F3F4F6",
-                            borderColor: isActive ? accent : "transparent",
-                          },
-                        ]}
-                      >
-                        <ThemedText style={styles.categoryChipIcon}>
-                          {getCategoryIcon(cat)}
-                        </ThemedText>
-                        <ThemedText
-                          style={[
-                            styles.categoryChipText,
-                            isActive && { color: accent, fontWeight: "700" },
-                          ]}
+              <View style={{ maxHeight: 320 }}>
+                {isCommentsLoading ? (
+                  <View style={styles.stateContainer}>
+                    <ActivityIndicator />
+                    <ThemedText style={styles.stateText}>
+                      Loading comments…
+                    </ThemedText>
+                  </View>
+                ) : comments.length === 0 ? (
+                  <View style={styles.stateContainer}>
+                    <ThemedText style={styles.stateTitle}>
+                      No comments yet
+                    </ThemedText>
+                    <ThemedText style={styles.stateText}>
+                      {user ? "Be the first to reply." : "Sign in to comment."}
+                    </ThemedText>
+                  </View>
+                ) : (
+                  <ScrollView showsVerticalScrollIndicator={false}>
+                    {comments.map((c) => {
+                      const userType =
+                        c.author.userType === "NATIVE"
+                          ? "native"
+                          : c.author.userType === "TUTOR"
+                          ? "tutor"
+                          : "learner";
+
+                      return (
+                        <View
+                          key={c.id}
+                          style={{
+                            paddingVertical: 10,
+                            borderTopWidth: 1,
+                            borderTopColor: colors.icon + "10",
+                          }}
                         >
-                          {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                        </ThemedText>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
+                          <View style={{ flexDirection: "row", gap: 10 }}>
+                            <View
+                              style={[
+                                styles.avatarContainer,
+                                { width: 36, height: 36, borderRadius: 18 },
+                              ]}
+                            >
+                              <ThemedText
+                                style={[styles.avatar, { fontSize: 18 }]}
+                              >
+                                {c.author.avatar ?? "👤"}
+                              </ThemedText>
+                            </View>
+                            <View style={{ flex: 1 }}>
+                              <View
+                                style={{
+                                  flexDirection: "row",
+                                  gap: 8,
+                                  alignItems: "center",
+                                }}
+                              >
+                                <ThemedText
+                                  style={[styles.authorName, { fontSize: 14 }]}
+                                >
+                                  {c.author.name}
+                                </ThemedText>
+                                <ThemedText style={styles.metaText}>
+                                  {userType === "native"
+                                    ? "🌟"
+                                    : userType === "tutor"
+                                    ? "👨‍🏫"
+                                    : "🎓"}
+                                </ThemedText>
+                                <ThemedText style={styles.metaText}>
+                                  {formatTimeAgo(new Date(c.createdAt))}
+                                </ThemedText>
+                              </View>
+                              <ThemedText
+                                style={[styles.postText, { marginTop: 4 }]}
+                              >
+                                {c.body}
+                              </ThemedText>
+                            </View>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </ScrollView>
+                )}
               </View>
 
-              <View style={styles.modalSection}>
-                <ThemedText style={styles.modalLabel}>Title</ThemedText>
+              <View style={[styles.modalSection, { marginTop: 12 }]}>
+                <ThemedText style={styles.modalLabel}>Add a comment</ThemedText>
                 <TextInput
-                  value={draftTitle}
-                  onChangeText={setDraftTitle}
-                  placeholder="What are you learning today?"
+                  value={draftComment}
+                  onChangeText={setDraftComment}
+                  placeholder={user ? "Write a comment…" : "Sign in to comment"}
                   placeholderTextColor={
                     colorScheme === "dark" ? "#9CA3AF" : "#6B7280"
                   }
-                  style={[
-                    styles.input,
-                    {
-                      color: colors.text,
-                      backgroundColor:
-                        colorScheme === "dark" ? "#0B1220" : "#F9FAFB",
-                      borderColor: colors.icon + "20",
-                    },
-                  ]}
-                />
-              </View>
-
-              <View style={styles.modalSection}>
-                <ThemedText style={styles.modalLabel}>Content</ThemedText>
-                <TextInput
-                  value={draftContent}
-                  onChangeText={setDraftContent}
-                  placeholder="Share your question, tip, or story…"
-                  placeholderTextColor={
-                    colorScheme === "dark" ? "#9CA3AF" : "#6B7280"
-                  }
+                  editable={!!user && !isCommentPosting}
                   multiline
                   textAlignVertical="top"
                   style={[
                     styles.textArea,
                     {
+                      minHeight: 80,
                       color: colors.text,
                       backgroundColor:
                         colorScheme === "dark" ? "#0B1220" : "#F9FAFB",
                       borderColor: colors.icon + "20",
-                    },
-                  ]}
-                />
-              </View>
-
-              <View style={styles.modalSection}>
-                <ThemedText style={styles.modalLabel}>Tags</ThemedText>
-                <TextInput
-                  value={draftTags}
-                  onChangeText={setDraftTags}
-                  placeholder="Comma-separated (e.g. Yoruba, Beginner)"
-                  placeholderTextColor={
-                    colorScheme === "dark" ? "#9CA3AF" : "#6B7280"
-                  }
-                  style={[
-                    styles.input,
-                    {
-                      color: colors.text,
-                      backgroundColor:
-                        colorScheme === "dark" ? "#0B1220" : "#F9FAFB",
-                      borderColor: colors.icon + "20",
+                      opacity: user ? 1 : 0.7,
                     },
                   ]}
                 />
@@ -641,49 +542,46 @@ export default function CommunityIndex() {
               <View style={styles.modalActions}>
                 <TouchableOpacity
                   onPress={() => {
-                    setIsCreateModalVisible(false);
-                    resetDraft();
+                    if (activePost) loadComments(activePost.id);
                   }}
-                  disabled={isPosting}
+                  disabled={!activePost || isCommentsLoading}
                   style={[
                     styles.secondaryButton,
                     {
                       backgroundColor:
                         colorScheme === "dark" ? "#1F2937" : "#E5E7EB",
-                      opacity: isPosting ? 0.6 : 1,
+                      opacity: !activePost || isCommentsLoading ? 0.6 : 1,
                     },
                   ]}
                 >
                   <ThemedText style={styles.secondaryButtonText}>
-                    Cancel
+                    Refresh
                   </ThemedText>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  onPress={createPost}
-                  disabled={
-                    isPosting || !draftTitle.trim() || !draftContent.trim()
-                  }
+                  onPress={submitComment}
+                  disabled={!user || !draftComment.trim() || isCommentPosting}
                   style={[
                     styles.primaryButton,
                     {
                       backgroundColor: colors.tint,
                       opacity:
-                        isPosting || !draftTitle.trim() || !draftContent.trim()
+                        !user || !draftComment.trim() || isCommentPosting
                           ? 0.5
                           : 1,
                     },
                   ]}
                 >
                   <View style={styles.primaryButtonInner}>
-                    {isPosting ? (
+                    {isCommentPosting ? (
                       <ActivityIndicator
                         size="small"
                         color={colorScheme === "dark" ? "#111827" : "#FFFFFF"}
                       />
                     ) : null}
                     <ThemedText style={styles.primaryButtonText}>
-                      {isPosting ? "Posting…" : "Post"}
+                      {isCommentPosting ? "Posting…" : "Post"}
                     </ThemedText>
                   </View>
                 </TouchableOpacity>
@@ -693,7 +591,16 @@ export default function CommunityIndex() {
         </View>
       </Modal>
 
-      {/* Floating Action Button */}
+      <CreatePostModal
+        visible={isCreateModalVisible}
+        userId={user?.id}
+        onClose={() => setIsCreateModalVisible(false)}
+        onPostCreated={() => {
+          listRef.current?.scrollToOffset({ offset: 0, animated: true });
+          loadFeed();
+        }}
+      />
+
       {user ? (
         <TouchableOpacity
           style={[
@@ -719,17 +626,6 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
   headerSubtitle: {
     fontSize: 14,
     opacity: 0.6,
@@ -738,25 +634,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 80,
-  },
-  postCard: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  postHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 12,
-  },
-  authorInfo: {
-    flexDirection: "row",
-    flex: 1,
   },
   avatarContainer: {
     width: 48,
@@ -770,164 +647,22 @@ const styles = StyleSheet.create({
   avatar: {
     fontSize: 24,
   },
-  authorDetails: {
-    flex: 1,
-    justifyContent: "center",
-  },
-  authorNameRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 2,
-  },
   authorName: {
     fontSize: 16,
     fontWeight: "700",
     marginRight: 8,
   },
-  trendingBadge: {
-    backgroundColor: "#FEE2E2",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  trendingText: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#EF4444",
-  },
-  metaInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
   metaText: {
     fontSize: 13,
     opacity: 0.6,
-  },
-  metaDot: {
-    fontSize: 13,
-    opacity: 0.6,
-    marginHorizontal: 6,
-  },
-  moreButton: {
-    padding: 4,
-  },
-  moreIcon: {
-    fontSize: 24,
-    opacity: 0.4,
-  },
-  categoryContainer: {
-    marginBottom: 12,
-  },
-  categoryBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "flex-start",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  categoryIcon: {
-    fontSize: 14,
-    marginRight: 4,
-  },
-  categoryText: {
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  postContent: {
-    marginBottom: 12,
-  },
-  postTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 8,
-    lineHeight: 24,
   },
   postText: {
     fontSize: 15,
     lineHeight: 22,
     opacity: 0.8,
   },
-  tagsContainer: {
-    marginBottom: 12,
-  },
-  tag: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    marginRight: 8,
-  },
-  tagText: {
-    fontSize: 13,
-    fontWeight: "500",
-    opacity: 0.7,
-  },
-  reactionsBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#E5E7EB20",
-    marginBottom: 8,
-  },
-  reactionsList: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  reactionItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  reactionEmoji: {
-    fontSize: 14,
-  },
-  reactionCount: {
-    fontSize: 13,
-    fontWeight: "600",
-    opacity: 0.7,
-  },
-  commentsCount: {
-    fontSize: 13,
-    opacity: 0.6,
-  },
-  actionsBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: "#E5E7EB20",
-  },
-  actionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-  },
-  actionIcon: {
-    fontSize: 18,
-  },
-  actionText: {
-    fontSize: 14,
-    fontWeight: "600",
-    opacity: 0.7,
-  },
-  loadMoreContainer: {
-    alignItems: "center",
-    paddingVertical: 20,
-  },
-  loadMoreButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: "#E5E7EB",
-  },
-  loadMoreText: {
-    fontSize: 14,
-    fontWeight: "600",
+  footerSpacer: {
+    height: 1,
   },
   stateContainer: {
     paddingVertical: 28,
@@ -945,17 +680,6 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     textAlign: "center",
     paddingHorizontal: 24,
-  },
-  retryButton: {
-    marginTop: 8,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 12,
-  },
-  retryText: {
-    fontSize: 14,
-    fontWeight: "800",
-    color: "#0B1220",
   },
   fab: {
     position: "absolute",

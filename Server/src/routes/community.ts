@@ -83,6 +83,19 @@ const createPostBodySchema = z
   })
   .strict();
 
+const commentsQuerySchema = z.object({
+  cursor: z.string().trim().min(1).max(200).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+});
+
+const createCommentBodySchema = z
+  .object({
+    userId: z.string().min(1),
+    body: z.string().trim().min(1).max(2000),
+    parentId: z.string().trim().min(1).max(200).optional(),
+  })
+  .strict();
+
 const PRESENCE_TTL_MS = 45_000;
 const PRESENCE_KEY_TTL_SEC = 120;
 
@@ -451,6 +464,211 @@ router.post(
     }
   }
 );
+
+// GET /api/community/feed/:postId/comments
+// Returns top-level comments (parentId=null) newest-first.
+router.get("/feed/:postId/comments", async (req: Request, res: Response) => {
+  try {
+    const postId = z.string().min(1).parse(req.params.postId);
+    const { cursor, limit } = commentsQuerySchema.parse(req.query);
+
+    const post = await prisma.communityPost.findUnique({
+      where: { id: postId },
+      select: { id: true, isActive: true },
+    });
+    if (!post || !post.isActive) {
+      return res.status(404).json({
+        success: false,
+        message: "Post not found",
+      });
+    }
+
+    const take = limit ?? 30;
+    const decoded = cursor ? decodeCursor(cursor) : null;
+
+    const comments = await prisma.communityPostComment.findMany({
+      where: {
+        postId,
+        parentId: null,
+      },
+      take: take + 1,
+      ...(decoded
+        ? {
+            cursor: { id: decoded.id },
+            skip: 1,
+          }
+        : {}),
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            profileImageUrl: true,
+            userType: true,
+            languages: true,
+            countryCode: true,
+          },
+        },
+      },
+    });
+
+    const hasMore = comments.length > take;
+    const page = hasMore ? comments.slice(0, take) : comments;
+    const nextCursor =
+      hasMore && page.length > 0
+        ? encodeCursor(
+            page[page.length - 1].createdAt,
+            page[page.length - 1].id
+          )
+        : null;
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        comments: page.map((c) => ({
+          id: c.id,
+          body: c.isDeleted ? "[deleted]" : c.body,
+          parentId: c.parentId,
+          isDeleted: c.isDeleted,
+          createdAt: c.createdAt.toISOString(),
+          author: {
+            id: c.author.id,
+            name: c.author.name,
+            avatar: c.author.profileImageUrl,
+            userType: c.author.userType,
+            languages: c.author.languages,
+            countryCode: c.author.countryCode,
+          },
+        })),
+        pageInfo: {
+          hasMore,
+          nextCursor,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching community post comments:", error);
+
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation error",
+        errors: error.issues,
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch comments",
+    });
+  }
+});
+
+// POST /api/community/feed/:postId/comments
+// Body: { userId, body, parentId? }
+router.post("/feed/:postId/comments", async (req: Request, res: Response) => {
+  try {
+    const postId = z.string().min(1).parse(req.params.postId);
+    const body = createCommentBodySchema.parse(req.body);
+
+    const [post, author] = await Promise.all([
+      prisma.communityPost.findUnique({
+        where: { id: postId },
+        select: { id: true, isActive: true },
+      }),
+      prisma.user.findUnique({
+        where: { id: body.userId },
+        select: {
+          id: true,
+          name: true,
+          profileImageUrl: true,
+          userType: true,
+          languages: true,
+          countryCode: true,
+        },
+      }),
+    ]);
+
+    if (!post || !post.isActive) {
+      return res.status(404).json({
+        success: false,
+        message: "Post not found",
+      });
+    }
+
+    if (!author) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (body.parentId) {
+      const parent = await prisma.communityPostComment.findUnique({
+        where: { id: body.parentId },
+        select: { id: true, postId: true },
+      });
+      if (!parent || parent.postId !== postId) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid parentId",
+        });
+      }
+    }
+
+    const created = await prisma.communityPostComment.create({
+      data: {
+        postId,
+        authorId: author.id,
+        parentId: body.parentId ?? null,
+        body: body.body,
+        isDeleted: false,
+      },
+      select: {
+        id: true,
+        body: true,
+        parentId: true,
+        isDeleted: true,
+        createdAt: true,
+      },
+    });
+
+    return res.status(201).json({
+      success: true,
+      data: {
+        id: created.id,
+        body: created.isDeleted ? "[deleted]" : created.body,
+        parentId: created.parentId,
+        isDeleted: created.isDeleted,
+        createdAt: created.createdAt.toISOString(),
+        author: {
+          id: author.id,
+          name: author.name,
+          avatar: author.profileImageUrl,
+          userType: author.userType,
+          languages: author.languages,
+          countryCode: author.countryCode,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Error creating community post comment:", error);
+
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation error",
+        errors: error.issues,
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create comment",
+    });
+  }
+});
 
 // GET /api/community/people/discover/:userId
 // Returns a list of other users the viewer can connect with.

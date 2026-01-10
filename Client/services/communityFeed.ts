@@ -172,3 +172,99 @@ export async function toggleCommunityPostLike(params: {
     },
   };
 }
+
+export type FeedComment = {
+  id: string;
+  body: string;
+  parentId: string | null;
+  isDeleted: boolean;
+  createdAt: string;
+  author: {
+    id: string;
+    name: string;
+    avatar: string | null;
+    userType: "LEARNER" | "NATIVE" | "TUTOR";
+    languages: string[];
+    countryCode: string | null;
+  };
+};
+
+export type FeedCommentsResponse = {
+  comments: FeedComment[];
+  pageInfo: {
+    hasMore: boolean;
+    nextCursor: string | null;
+  };
+};
+
+export async function fetchCommunityPostComments(params: {
+  postId: string;
+  cursor?: string;
+  limit?: number;
+}) {
+  const baseUrl = requireApiBaseUrl();
+  const url = new URL(`${baseUrl}/community/feed/${params.postId}/comments`);
+  if (params.cursor) url.searchParams.set("cursor", params.cursor);
+  if (params.limit) url.searchParams.set("limit", String(params.limit));
+
+  const authHeader = await getAuthHeader();
+  const res = await fetch(url.toString(), {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeader,
+    },
+  });
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok || json?.success === false) {
+    return {
+      success: false as const,
+      message: json?.message || `Request failed with status ${res.status}`,
+    };
+  }
+
+  return {
+    success: true as const,
+    data: json.data as FeedCommentsResponse,
+  };
+}
+
+export async function createCommunityPostComment(params: {
+  postId: string;
+  userId: string;
+  body: string;
+  parentId?: string;
+}) {
+  const baseUrl = requireApiBaseUrl();
+  const authHeader = await getAuthHeader();
+
+  const res = await fetch(
+    `${baseUrl}/community/feed/${params.postId}/comments`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeader,
+      },
+      body: JSON.stringify({
+        userId: params.userId,
+        body: params.body,
+        parentId: params.parentId,
+      }),
+    }
+  );
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok || json?.success === false) {
+    return {
+      success: false as const,
+      message: json?.message || `Request failed with status ${res.status}`,
+    };
+  }
+
+  return {
+    success: true as const,
+    data: json.data as FeedComment,
+  };
+}
