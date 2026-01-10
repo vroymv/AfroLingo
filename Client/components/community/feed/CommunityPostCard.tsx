@@ -190,15 +190,6 @@ export function CommunityPostCard({
           <ThemedText style={styles.actionIcon}>💬</ThemedText>
           <ThemedText style={styles.actionText}>Comment</ThemedText>
         </TouchableOpacity>
-
-        <TouchableOpacity style={styles.actionButton}>
-          <ThemedText style={styles.actionIcon}>🔗</ThemedText>
-          <ThemedText style={styles.actionText}>Share</ThemedText>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.actionButton}>
-          <ThemedText style={styles.actionIcon}>🔖</ThemedText>
-        </TouchableOpacity>
       </View>
     </View>
   );

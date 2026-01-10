@@ -6,9 +6,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   fetchCommunityFeed,
   toggleCommunityPostLike,
-  fetchCommunityPostComments,
-  createCommunityPostComment,
-  type FeedComment,
   type FeedPost,
 } from "@/services/communityFeed";
 import { FeedHeader } from "@/components/community/feed/FeedHeader";
@@ -16,18 +13,13 @@ import { CommunityPostCard } from "@/components/community/feed/CommunityPostCard
 import { FeedEmptyState } from "@/components/community/feed/FeedEmptyState";
 import { FeedFooter } from "@/components/community/feed/FeedFooter";
 import { CreatePostModal } from "@/components/community/feed/CreatePostModal";
+import { CommentsModal } from "@/components/community/feed/CommentsModal";
 import {
   StyleSheet,
-  ScrollView,
   FlatList,
   View,
-  Modal,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
   TouchableOpacity,
   useColorScheme,
-  ActivityIndicator,
 } from "react-native";
 import type { CommunityPost as Post } from "@/types/communityFeed";
 import { Colors } from "@/constants/Colors";
@@ -57,11 +49,6 @@ export default function CommunityIndex() {
 
   const [isCommentsModalVisible, setIsCommentsModalVisible] = useState(false);
   const [activePost, setActivePost] = useState<Post | null>(null);
-  const [comments, setComments] = useState<FeedComment[]>([]);
-  const [isCommentsLoading, setIsCommentsLoading] = useState(false);
-  const [commentsError, setCommentsError] = useState<string | null>(null);
-  const [draftComment, setDraftComment] = useState("");
-  const [isCommentPosting, setIsCommentPosting] = useState(false);
 
   const mapFeedPostToPost = React.useCallback((p: FeedPost): Post => {
     const userType =
@@ -238,86 +225,15 @@ export default function CommunityIndex() {
     [loadFeed, user?.id]
   );
 
-  const formatTimeAgo = React.useCallback((timestamp: Date) => {
-    const now = new Date();
-    const diff = Math.floor((now.getTime() - timestamp.getTime()) / 1000);
-
-    if (diff < 60) return "just now";
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    return `${Math.floor(diff / 86400)}d ago`;
+  const openComments = React.useCallback((post: Post) => {
+    setActivePost(post);
+    setIsCommentsModalVisible(true);
   }, []);
-
-  const loadComments = React.useCallback(async (postId: string) => {
-    setCommentsError(null);
-    setIsCommentsLoading(true);
-
-    const result = await fetchCommunityPostComments({ postId, limit: 50 });
-    if (!result.success) {
-      setComments([]);
-      setCommentsError(result.message);
-      setIsCommentsLoading(false);
-      return;
-    }
-
-    setComments(result.data.comments);
-    setIsCommentsLoading(false);
-  }, []);
-
-  const openComments = React.useCallback(
-    (post: Post) => {
-      setActivePost(post);
-      setDraftComment("");
-      setIsCommentsModalVisible(true);
-      loadComments(post.id);
-    },
-    [loadComments]
-  );
 
   const closeComments = React.useCallback(() => {
     setIsCommentsModalVisible(false);
     setActivePost(null);
-    setComments([]);
-    setCommentsError(null);
-    setDraftComment("");
-    setIsCommentPosting(false);
   }, []);
-
-  const submitComment = React.useCallback(async () => {
-    if (!activePost) return;
-    if (!user?.id) return;
-
-    const body = draftComment.trim();
-    if (!body) return;
-
-    if (isCommentPosting) return;
-    setIsCommentPosting(true);
-    setCommentsError(null);
-
-    const result = await createCommunityPostComment({
-      postId: activePost.id,
-      userId: user.id,
-      body,
-    });
-
-    if (!result.success) {
-      setCommentsError(result.message);
-      setIsCommentPosting(false);
-      return;
-    }
-
-    setComments((prev) => [result.data, ...prev]);
-    setDraftComment("");
-
-    // Best-effort local comment count bump
-    setPosts((prev) =>
-      prev.map((p) =>
-        p.id === activePost.id ? { ...p, comments: p.comments + 1 } : p
-      )
-    );
-
-    setIsCommentPosting(false);
-  }, [activePost, draftComment, isCommentPosting, user?.id]);
 
   const renderPostItem = React.useCallback(
     ({ item: post }: { item: Post }) => (
@@ -376,220 +292,21 @@ export default function CommunityIndex() {
         }
       />
 
-      {/* Comments Modal */}
-      <Modal
+      <CommentsModal
         visible={isCommentsModalVisible}
-        animationType="slide"
-        transparent
-        onRequestClose={closeComments}
-      >
-        <View style={styles.modalBackdrop}>
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : undefined}
-            style={styles.modalContainer}
-          >
-            <View
-              style={[
-                styles.modalCard,
-                {
-                  backgroundColor:
-                    colorScheme === "dark" ? "#111827" : "#FFFFFF",
-                  borderColor: colors.icon + "20",
-                },
-              ]}
-            >
-              <View style={styles.modalHeader}>
-                <View style={{ flex: 1, paddingRight: 12 }}>
-                  <ThemedText style={styles.modalTitle}>Comments</ThemedText>
-                  {activePost ? (
-                    <ThemedText
-                      style={[styles.headerSubtitle, { marginTop: 2 }]}
-                      numberOfLines={1}
-                    >
-                      {activePost.title}
-                    </ThemedText>
-                  ) : null}
-                </View>
-                <TouchableOpacity
-                  onPress={closeComments}
-                  style={styles.modalCloseButton}
-                >
-                  <ThemedText style={styles.modalCloseText}>✕</ThemedText>
-                </TouchableOpacity>
-              </View>
-
-              {commentsError ? (
-                <View style={styles.modalErrorBox}>
-                  <ThemedText style={styles.modalErrorText}>
-                    {commentsError}
-                  </ThemedText>
-                </View>
-              ) : null}
-
-              <View style={{ maxHeight: 320 }}>
-                {isCommentsLoading ? (
-                  <View style={styles.stateContainer}>
-                    <ActivityIndicator />
-                    <ThemedText style={styles.stateText}>
-                      Loading comments…
-                    </ThemedText>
-                  </View>
-                ) : comments.length === 0 ? (
-                  <View style={styles.stateContainer}>
-                    <ThemedText style={styles.stateTitle}>
-                      No comments yet
-                    </ThemedText>
-                    <ThemedText style={styles.stateText}>
-                      {user ? "Be the first to reply." : "Sign in to comment."}
-                    </ThemedText>
-                  </View>
-                ) : (
-                  <ScrollView showsVerticalScrollIndicator={false}>
-                    {comments.map((c) => {
-                      const userType =
-                        c.author.userType === "NATIVE"
-                          ? "native"
-                          : c.author.userType === "TUTOR"
-                          ? "tutor"
-                          : "learner";
-
-                      return (
-                        <View
-                          key={c.id}
-                          style={{
-                            paddingVertical: 10,
-                            borderTopWidth: 1,
-                            borderTopColor: colors.icon + "10",
-                          }}
-                        >
-                          <View style={{ flexDirection: "row", gap: 10 }}>
-                            <View
-                              style={[
-                                styles.avatarContainer,
-                                { width: 36, height: 36, borderRadius: 18 },
-                              ]}
-                            >
-                              <ThemedText
-                                style={[styles.avatar, { fontSize: 18 }]}
-                              >
-                                {c.author.avatar ?? "👤"}
-                              </ThemedText>
-                            </View>
-                            <View style={{ flex: 1 }}>
-                              <View
-                                style={{
-                                  flexDirection: "row",
-                                  gap: 8,
-                                  alignItems: "center",
-                                }}
-                              >
-                                <ThemedText
-                                  style={[styles.authorName, { fontSize: 14 }]}
-                                >
-                                  {c.author.name}
-                                </ThemedText>
-                                <ThemedText style={styles.metaText}>
-                                  {userType === "native"
-                                    ? "🌟"
-                                    : userType === "tutor"
-                                    ? "👨‍🏫"
-                                    : "🎓"}
-                                </ThemedText>
-                                <ThemedText style={styles.metaText}>
-                                  {formatTimeAgo(new Date(c.createdAt))}
-                                </ThemedText>
-                              </View>
-                              <ThemedText
-                                style={[styles.postText, { marginTop: 4 }]}
-                              >
-                                {c.body}
-                              </ThemedText>
-                            </View>
-                          </View>
-                        </View>
-                      );
-                    })}
-                  </ScrollView>
-                )}
-              </View>
-
-              <View style={[styles.modalSection, { marginTop: 12 }]}>
-                <ThemedText style={styles.modalLabel}>Add a comment</ThemedText>
-                <TextInput
-                  value={draftComment}
-                  onChangeText={setDraftComment}
-                  placeholder={user ? "Write a comment…" : "Sign in to comment"}
-                  placeholderTextColor={
-                    colorScheme === "dark" ? "#9CA3AF" : "#6B7280"
-                  }
-                  editable={!!user && !isCommentPosting}
-                  multiline
-                  textAlignVertical="top"
-                  style={[
-                    styles.textArea,
-                    {
-                      minHeight: 80,
-                      color: colors.text,
-                      backgroundColor:
-                        colorScheme === "dark" ? "#0B1220" : "#F9FAFB",
-                      borderColor: colors.icon + "20",
-                      opacity: user ? 1 : 0.7,
-                    },
-                  ]}
-                />
-              </View>
-
-              <View style={styles.modalActions}>
-                <TouchableOpacity
-                  onPress={() => {
-                    if (activePost) loadComments(activePost.id);
-                  }}
-                  disabled={!activePost || isCommentsLoading}
-                  style={[
-                    styles.secondaryButton,
-                    {
-                      backgroundColor:
-                        colorScheme === "dark" ? "#1F2937" : "#E5E7EB",
-                      opacity: !activePost || isCommentsLoading ? 0.6 : 1,
-                    },
-                  ]}
-                >
-                  <ThemedText style={styles.secondaryButtonText}>
-                    Refresh
-                  </ThemedText>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={submitComment}
-                  disabled={!user || !draftComment.trim() || isCommentPosting}
-                  style={[
-                    styles.primaryButton,
-                    {
-                      backgroundColor: colors.tint,
-                      opacity:
-                        !user || !draftComment.trim() || isCommentPosting
-                          ? 0.5
-                          : 1,
-                    },
-                  ]}
-                >
-                  <View style={styles.primaryButtonInner}>
-                    {isCommentPosting ? (
-                      <ActivityIndicator
-                        size="small"
-                        color={colorScheme === "dark" ? "#111827" : "#FFFFFF"}
-                      />
-                    ) : null}
-                    <ThemedText style={styles.primaryButtonText}>
-                      {isCommentPosting ? "Posting…" : "Post"}
-                    </ThemedText>
-                  </View>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </KeyboardAvoidingView>
-        </View>
-      </Modal>
+        post={
+          activePost ? { id: activePost.id, title: activePost.title } : null
+        }
+        userId={user?.id}
+        onClose={closeComments}
+        onCommentCreated={(postId) => {
+          setPosts((prev) =>
+            prev.map((p) =>
+              p.id === postId ? { ...p, comments: p.comments + 1 } : p
+            )
+          );
+        }}
+      />
 
       <CreatePostModal
         visible={isCreateModalVisible}
@@ -626,60 +343,13 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  headerSubtitle: {
-    fontSize: 14,
-    opacity: 0.6,
-  },
   feedContainer: {
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 80,
   },
-  avatarContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "#F3F4F6",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  avatar: {
-    fontSize: 24,
-  },
-  authorName: {
-    fontSize: 16,
-    fontWeight: "700",
-    marginRight: 8,
-  },
-  metaText: {
-    fontSize: 13,
-    opacity: 0.6,
-  },
-  postText: {
-    fontSize: 15,
-    lineHeight: 22,
-    opacity: 0.8,
-  },
   footerSpacer: {
     height: 1,
-  },
-  stateContainer: {
-    paddingVertical: 28,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-  },
-  stateTitle: {
-    fontSize: 16,
-    fontWeight: "800",
-    textAlign: "center",
-  },
-  stateText: {
-    fontSize: 13,
-    opacity: 0.7,
-    textAlign: "center",
-    paddingHorizontal: 24,
   },
   fab: {
     position: "absolute",
@@ -699,137 +369,5 @@ const styles = StyleSheet.create({
   },
   fabIcon: {
     fontSize: 24,
-  },
-
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.55)",
-    justifyContent: "flex-end",
-  },
-  modalContainer: {
-    width: "100%",
-  },
-  modalCard: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 16,
-    borderWidth: 1,
-  },
-  modalHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 12,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-  },
-  modalCloseButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  modalCloseText: {
-    fontSize: 18,
-    opacity: 0.7,
-  },
-  modalErrorBox: {
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: "#FEE2E2",
-    borderWidth: 1,
-    borderColor: "#FCA5A5",
-    marginBottom: 4,
-  },
-  modalErrorText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#991B1B",
-  },
-  modalSection: {
-    marginTop: 10,
-  },
-  modalLabel: {
-    fontSize: 13,
-    fontWeight: "700",
-    opacity: 0.75,
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 15,
-  },
-  textArea: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 15,
-    minHeight: 110,
-  },
-  categoryPickerRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  categoryChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderRadius: 999,
-    borderWidth: 1,
-  },
-  categoryChipIcon: {
-    fontSize: 14,
-  },
-  categoryChipText: {
-    fontSize: 13,
-    fontWeight: "600",
-    opacity: 0.9,
-  },
-  modalActions: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  secondaryButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  secondaryButtonText: {
-    fontSize: 14,
-    fontWeight: "700",
-    opacity: 0.9,
-  },
-  primaryButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  primaryButtonInner: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  primaryButtonText: {
-    fontSize: 14,
-    fontWeight: "800",
-    color: "#0B1220",
   },
 });
