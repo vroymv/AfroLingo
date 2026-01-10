@@ -20,17 +20,20 @@ import {
   TouchableOpacity,
   useColorScheme,
   RefreshControl,
+  ActivityIndicator,
 } from "react-native";
-import { mockPosts, Post, mockUsers } from "@/data/community";
+import type { CommunityPost as Post } from "@/types/communityFeed";
 import { Colors } from "@/constants/Colors";
 
 export default function CommunityIndex() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? "light"];
   const tabBarHeight = useBottomTabBarHeight();
-  const [posts, setPosts] = useState<Post[]>(mockPosts);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
   const [draftTitle, setDraftTitle] = useState("");
@@ -38,25 +41,19 @@ export default function CommunityIndex() {
   const [draftTags, setDraftTags] = useState("");
   const [draftCategory, setDraftCategory] =
     useState<Post["category"]>("discussion");
-
-  const currentUser = user
-    ? {
-        id: user.id,
-        name: user.name,
-        avatar: user.avatar ?? "👤",
-        userType: "learner" as const,
-        languages: [],
-        xp: 0,
-        badges: [],
-      }
-    : mockUsers[0];
+  const [isPosting, setIsPosting] = useState(false);
+  const [postError, setPostError] = useState<string | null>(null);
 
   const loadFeed = React.useCallback(async () => {
+    setLoadError(null);
     const result = await fetchCommunityFeed({
       limit: 20,
       viewerId: user?.id,
     });
     if (!result.success) {
+      setPosts([]);
+      setLoadError(result.message);
+      setIsLoading(false);
       return;
     }
 
@@ -104,6 +101,7 @@ export default function CommunityIndex() {
     });
 
     setPosts(mapped);
+    setIsLoading(false);
   }, [user?.id]);
 
   React.useEffect(() => {
@@ -116,6 +114,8 @@ export default function CommunityIndex() {
   }, [loadFeed]);
 
   const handleLike = (postId: string) => {
+    if (!user?.id) return;
+
     setPosts((prevPosts) =>
       prevPosts.map((post) =>
         post.id === postId
@@ -128,22 +128,24 @@ export default function CommunityIndex() {
       )
     );
 
-    if (user?.id) {
-      toggleCommunityPostLike({ postId, userId: user.id }).then((r) => {
-        if (!r.success) return;
-        setPosts((prev) =>
-          prev.map((p) =>
-            p.id === postId
-              ? {
-                  ...p,
-                  isLiked: r.data.isLiked,
-                  likes: r.data.likes,
-                }
-              : p
-          )
-        );
-      });
-    }
+    toggleCommunityPostLike({ postId, userId: user.id }).then((r) => {
+      if (!r.success) {
+        // Best-effort re-sync
+        loadFeed();
+        return;
+      }
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === postId
+            ? {
+                ...p,
+                isLiked: r.data.isLiked,
+                likes: r.data.likes,
+              }
+            : p
+        )
+      );
+    });
   };
 
   const resetDraft = () => {
@@ -151,6 +153,7 @@ export default function CommunityIndex() {
     setDraftContent("");
     setDraftTags("");
     setDraftCategory("discussion");
+    setPostError(null);
   };
 
   const parseTags = (raw: string) => {
@@ -165,57 +168,49 @@ export default function CommunityIndex() {
   };
 
   const createPost = () => {
+    if (!user?.id) return;
+
     const title = draftTitle.trim();
     const content = draftContent.trim();
     if (!title || !content) return;
 
-    const now = new Date();
-    const newPost: Post = {
-      id: `local-${now.getTime()}`,
+    if (isPosting) return;
+    setPostError(null);
+    setIsPosting(true);
+
+    const apiCategory =
+      draftCategory === "discussion"
+        ? "DISCUSSION"
+        : draftCategory === "question"
+        ? "QUESTION"
+        : draftCategory === "cultural"
+        ? "CULTURAL"
+        : "PRONUNCIATION";
+
+    createCommunityPost({
+      userId: user.id,
       title,
       content,
-      author: currentUser,
+      category: apiCategory,
       tags: parseTags(draftTags),
-      timestamp: now,
-      likes: 0,
-      comments: 0,
-      isLiked: false,
       language: "General",
-      category: draftCategory,
-      reactions: { "👍": 0 },
-      trending: false,
-    };
+    })
+      .then((result) => {
+        if (!result.success) {
+          setPostError(result.message);
+          return;
+        }
 
-    // If logged in, persist to server; otherwise fallback to local-only.
-    if (user?.id) {
-      const apiCategory =
-        draftCategory === "discussion"
-          ? "DISCUSSION"
-          : draftCategory === "question"
-          ? "QUESTION"
-          : draftCategory === "cultural"
-          ? "CULTURAL"
-          : "PRONUNCIATION";
-
-      createCommunityPost({
-        userId: user.id,
-        title,
-        content,
-        category: apiCategory,
-        tags: parseTags(draftTags),
-        language: "General",
+        setIsCreateModalVisible(false);
+        resetDraft();
+        loadFeed();
       })
-        .then(() => loadFeed())
-        .finally(() => {
-          setIsCreateModalVisible(false);
-          resetDraft();
-        });
-      return;
-    }
-
-    setPosts((prev) => [newPost, ...prev]);
-    setIsCreateModalVisible(false);
-    resetDraft();
+      .catch(() => {
+        setPostError("Something went wrong while posting. Please try again.");
+      })
+      .finally(() => {
+        setIsPosting(false);
+      });
   };
 
   const formatTimeAgo = (timestamp: Date) => {
@@ -285,6 +280,35 @@ export default function CommunityIndex() {
 
         {/* Feed Posts */}
         <View style={styles.feedContainer}>
+          {isLoading ? (
+            <View style={styles.stateContainer}>
+              <ActivityIndicator />
+              <ThemedText style={styles.stateText}>Loading feed…</ThemedText>
+            </View>
+          ) : loadError ? (
+            <View style={styles.stateContainer}>
+              <ThemedText style={styles.stateTitle}>
+                Couldn’t load feed
+              </ThemedText>
+              <ThemedText style={styles.stateText}>{loadError}</ThemedText>
+              <TouchableOpacity
+                style={[styles.retryButton, { backgroundColor: colors.tint }]}
+                onPress={() => loadFeed()}
+              >
+                <ThemedText style={styles.retryText}>Retry</ThemedText>
+              </TouchableOpacity>
+            </View>
+          ) : posts.length === 0 ? (
+            <View style={styles.stateContainer}>
+              <ThemedText style={styles.stateTitle}>No posts yet</ThemedText>
+              <ThemedText style={styles.stateText}>
+                {user
+                  ? "Be the first to share something with the community."
+                  : "Sign in to create the first post."}
+              </ThemedText>
+            </View>
+          ) : null}
+
           {posts.map((post) => (
             <View
               key={post.id}
@@ -489,10 +513,19 @@ export default function CommunityIndex() {
                     setIsCreateModalVisible(false);
                   }}
                   style={styles.modalCloseButton}
+                  disabled={isPosting}
                 >
                   <ThemedText style={styles.modalCloseText}>✕</ThemedText>
                 </TouchableOpacity>
               </View>
+
+              {postError ? (
+                <View style={styles.modalErrorBox}>
+                  <ThemedText style={styles.modalErrorText}>
+                    {postError}
+                  </ThemedText>
+                </View>
+              ) : null}
 
               <View style={styles.modalSection}>
                 <ThemedText style={styles.modalLabel}>Category</ThemedText>
@@ -611,11 +644,13 @@ export default function CommunityIndex() {
                     setIsCreateModalVisible(false);
                     resetDraft();
                   }}
+                  disabled={isPosting}
                   style={[
                     styles.secondaryButton,
                     {
                       backgroundColor:
                         colorScheme === "dark" ? "#1F2937" : "#E5E7EB",
+                      opacity: isPosting ? 0.6 : 1,
                     },
                   ]}
                 >
@@ -626,17 +661,31 @@ export default function CommunityIndex() {
 
                 <TouchableOpacity
                   onPress={createPost}
-                  disabled={!draftTitle.trim() || !draftContent.trim()}
+                  disabled={
+                    isPosting || !draftTitle.trim() || !draftContent.trim()
+                  }
                   style={[
                     styles.primaryButton,
                     {
                       backgroundColor: colors.tint,
                       opacity:
-                        !draftTitle.trim() || !draftContent.trim() ? 0.5 : 1,
+                        isPosting || !draftTitle.trim() || !draftContent.trim()
+                          ? 0.5
+                          : 1,
                     },
                   ]}
                 >
-                  <ThemedText style={styles.primaryButtonText}>Post</ThemedText>
+                  <View style={styles.primaryButtonInner}>
+                    {isPosting ? (
+                      <ActivityIndicator
+                        size="small"
+                        color={colorScheme === "dark" ? "#111827" : "#FFFFFF"}
+                      />
+                    ) : null}
+                    <ThemedText style={styles.primaryButtonText}>
+                      {isPosting ? "Posting…" : "Post"}
+                    </ThemedText>
+                  </View>
                 </TouchableOpacity>
               </View>
             </View>
@@ -645,18 +694,20 @@ export default function CommunityIndex() {
       </Modal>
 
       {/* Floating Action Button */}
-      <TouchableOpacity
-        style={[
-          styles.fab,
-          {
-            backgroundColor: colors.tint,
-            bottom: Math.max(20, tabBarHeight + 16),
-          },
-        ]}
-        onPress={() => setIsCreateModalVisible(true)}
-      >
-        <ThemedText style={styles.fabIcon}>✏️</ThemedText>
-      </TouchableOpacity>
+      {user ? (
+        <TouchableOpacity
+          style={[
+            styles.fab,
+            {
+              backgroundColor: colors.tint,
+              bottom: Math.max(20, tabBarHeight + 16),
+            },
+          ]}
+          onPress={() => setIsCreateModalVisible(true)}
+        >
+          <ThemedText style={styles.fabIcon}>＋</ThemedText>
+        </TouchableOpacity>
+      ) : null}
     </ThemedView>
   );
 }
@@ -878,6 +929,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
+  stateContainer: {
+    paddingVertical: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
+  stateTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+  stateText: {
+    fontSize: 13,
+    opacity: 0.7,
+    textAlign: "center",
+    paddingHorizontal: 24,
+  },
+  retryButton: {
+    marginTop: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+  retryText: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#0B1220",
+  },
   fab: {
     position: "absolute",
     right: 20,
@@ -932,6 +1011,20 @@ const styles = StyleSheet.create({
   modalCloseText: {
     fontSize: 18,
     opacity: 0.7,
+  },
+  modalErrorBox: {
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: "#FEE2E2",
+    borderWidth: 1,
+    borderColor: "#FCA5A5",
+    marginBottom: 4,
+  },
+  modalErrorText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#991B1B",
   },
   modalSection: {
     marginTop: 10,
@@ -1003,6 +1096,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
+  },
+  primaryButtonInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
   },
   primaryButtonText: {
     fontSize: 14,
