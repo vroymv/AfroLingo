@@ -6,6 +6,62 @@ import { seedTutors } from "./seed-tutors";
 
 const prisma = new PrismaClient();
 
+async function seedLessonUnit(
+  prisma: PrismaClient,
+  unitSeed: typeof UNIT_2_NUMBERS_SW
+) {
+  const unit = await prisma.unit.upsert({
+    where: { externalId: unitSeed.externalId },
+    create: {
+      externalId: unitSeed.externalId,
+      title: unitSeed.title,
+      level: unitSeed.level,
+      icon: unitSeed.icon,
+      color: unitSeed.color,
+      xpReward: unitSeed.xpReward,
+      order: unitSeed.order,
+      isActive: unitSeed.isActive,
+    },
+    update: {
+      title: unitSeed.title,
+      level: unitSeed.level,
+      icon: unitSeed.icon,
+      color: unitSeed.color,
+      xpReward: unitSeed.xpReward,
+      order: unitSeed.order,
+      isActive: unitSeed.isActive,
+    },
+    include: {
+      activities: true,
+    },
+  });
+
+  for (const activity of unitSeed.activities) {
+    await prisma.activity.upsert({
+      where: { externalId: activity.externalId },
+      create: {
+        externalId: activity.externalId,
+        unitId: unit.id,
+        type: activity.type,
+        componentKey: activity.componentKey ?? "generic-activity",
+        contentRef: activity.contentRef ?? activity.externalId,
+        order: activity.order,
+        isActive: true,
+      },
+      update: {
+        unitId: unit.id,
+        type: activity.type,
+        componentKey: activity.componentKey ?? "generic-activity",
+        contentRef: activity.contentRef ?? activity.externalId,
+        order: activity.order,
+        isActive: true,
+      },
+    });
+  }
+
+  return unit;
+}
+
 const GRAMMAR_TIPS: Array<{
   language: string;
   sortOrder: number;
@@ -113,54 +169,7 @@ async function main() {
     console.log(`✅ Using existing user: ${user.email}`);
 
     console.log("📚 Seeding Unit 2: Numbers...");
-    const unit = await prisma.unit.upsert({
-      where: { externalId: UNIT_2_NUMBERS_SW.externalId },
-      create: {
-        externalId: UNIT_2_NUMBERS_SW.externalId,
-        title: UNIT_2_NUMBERS_SW.title,
-        level: UNIT_2_NUMBERS_SW.level,
-        icon: UNIT_2_NUMBERS_SW.icon,
-        color: UNIT_2_NUMBERS_SW.color,
-        xpReward: UNIT_2_NUMBERS_SW.xpReward,
-        order: UNIT_2_NUMBERS_SW.order,
-        isActive: UNIT_2_NUMBERS_SW.isActive,
-      },
-      update: {
-        title: UNIT_2_NUMBERS_SW.title,
-        level: UNIT_2_NUMBERS_SW.level,
-        icon: UNIT_2_NUMBERS_SW.icon,
-        color: UNIT_2_NUMBERS_SW.color,
-        xpReward: UNIT_2_NUMBERS_SW.xpReward,
-        order: UNIT_2_NUMBERS_SW.order,
-        isActive: UNIT_2_NUMBERS_SW.isActive,
-      },
-      include: {
-        activities: true,
-      },
-    });
-
-    for (const activity of UNIT_2_NUMBERS_SW.activities) {
-      await prisma.activity.upsert({
-        where: { externalId: activity.externalId },
-        create: {
-          externalId: activity.externalId,
-          unitId: unit.id,
-          type: activity.type,
-          componentKey: activity.componentKey ?? "generic-activity",
-          contentRef: activity.contentRef ?? activity.externalId,
-          order: activity.order,
-          isActive: true,
-        },
-        update: {
-          unitId: unit.id,
-          type: activity.type,
-          componentKey: activity.componentKey ?? "generic-activity",
-          contentRef: activity.contentRef ?? activity.externalId,
-          order: activity.order,
-          isActive: true,
-        },
-      });
-    }
+    const unit = await seedLessonUnit(prisma, UNIT_2_NUMBERS_SW);
 
     const unitWithActivities = await prisma.unit.findUnique({
       where: { id: unit.id },

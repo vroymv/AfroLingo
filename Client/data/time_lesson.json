@@ -1,0 +1,414 @@
+{
+      "id": "unit-3",
+      "title": "Days, Months, and Seasons",
+      "level": "Absolute Beginner",
+      "icon": "📅",
+      "color": "#9C27B0",
+      "phrase": "Siku, Miezi, na Majira",
+      "meaning": "Days, Months, and Seasons",
+      "pronunciation": "see-koo, mee-eh-zee, nah mah-jee-rah",
+      "audio": "/assets/audio/Karaoke-type-test-audio.mp3",
+      "activities": [
+        {
+          "id": "activity-time-1",
+          "type": "introduction",
+          "question": "Let's learn how to talk about days, months, and seasons in Swahili!"
+        },
+        {
+          "id": "activity-time-2",
+          "type": "vocabulary-table",
+          "question": "Days of the Week",
+          "description": "Learn the seven days",
+          "audio": "/assets/audio/Karaoke-type-test-audio.mp3",
+          "items": [
+            {
+              "swahili": "Jumatatu",
+              "english": "Monday",
+              "pronunciation": "joo-mah-tah-too"
+            },
+            {
+              "swahili": "Jumanne",
+              "english": "Tuesday",
+              "pronunciation": "joo-mah-neh"
+            },
+            {
+              "swahili": "Jumatano",
+              "english": "Wednesday",
+              "pronunciation": "joo-mah-tah-no"
+            },
+            {
+              "swahili": "Alhamisi",
+              "english": "Thursday",
+              "pronunciation": "al-hah-mee-see"
+            },
+            {
+              "swahili": "Ijumaa",
+              "english": "Friday",
+              "pronunciation": "ee-joo-mah"
+            },
+            {
+              "swahili": "Jumamosi",
+              "english": "Saturday",
+              "pronunciation": "joo-mah-mo-see"
+            },
+            {
+              "swahili": "Jumapili",
+              "english": "Sunday",
+              "pronunciation": "joo-mah-pee-lee"
+            }
+          ]
+        },
+        {
+          "id": "activity-time-3",
+          "type": "vocabulary-table",
+          "question": "Months of the Year",
+          "description": "Learn all twelve months",
+          "audio": "/assets/audio/Karaoke-type-test-audio.mp3",
+          "items": [
+            {
+              "swahili": "Januari",
+              "english": "January",
+              "pronunciation": "jah-noo-ah-ree"
+            },
+            {
+              "swahili": "Februari",
+              "english": "February",
+              "pronunciation": "feh-broo-ah-ree"
+            },
+            {
+              "swahili": "Machi",
+              "english": "March",
+              "pronunciation": "mah-chee"
+            },
+            {
+              "swahili": "Aprili",
+              "english": "April",
+              "pronunciation": "ah-pree-lee"
+            },
+            {
+              "swahili": "Mei",
+              "english": "May",
+              "pronunciation": "meh-ee"
+            },
+            {
+              "swahili": "Juni",
+              "english": "June",
+              "pronunciation": "joo-nee"
+            },
+            {
+              "swahili": "Julai",
+              "english": "July",
+              "pronunciation": "joo-lah-ee"
+            },
+            {
+              "swahili": "Agosti",
+              "english": "August",
+              "pronunciation": "ah-go-stee"
+            },
+            {
+              "swahili": "Septemba",
+              "english": "September",
+              "pronunciation": "seh-ptem-bah"
+            },
+            {
+              "swahili": "Oktoba",
+              "english": "October",
+              "pronunciation": "ok-to-bah"
+            },
+            {
+              "swahili": "Novemba",
+              "english": "November",
+              "pronunciation": "no-vem-bah"
+            },
+            {
+              "swahili": "Desemba",
+              "english": "December",
+              "pronunciation": "deh-sem-bah"
+            }
+          ]
+        },
+        {
+          "id": "activity-time-4",
+          "type": "vocabulary-table",
+          "question": "Seasons",
+          "description": "Learn about the seasons",
+          "audio": "/assets/audio/Karaoke-type-test-audio.mp3",
+          "items": [
+            {
+              "swahili": "Kiangazi",
+              "english": "Summer/Dry Season",
+              "pronunciation": "kee-ah-ngah-zee"
+            },
+            {
+              "swahili": "Masika",
+              "english": "Rainy Season",
+              "pronunciation": "mah-see-kah"
+            },
+            {
+              "swahili": "Kipupwe",
+              "english": "Cool Season",
+              "pronunciation": "kee-poo-pweh"
+            },
+            {
+              "swahili": "Majira",
+              "english": "Seasons (general)",
+              "pronunciation": "mah-jee-rah"
+            }
+          ]
+        },
+        {
+          "id": "activity-time-5",
+          "type": "multiple-choice",
+          "question": "What day comes after 'Jumanne'?",
+          "options": ["Jumatatu", "Jumatano", "Alhamisi", "Ijumaa"],
+          "correctAnswer": 1,
+          "explanation": "Jumatano (Wednesday) comes after Jumanne (Tuesday)"
+        },
+        {
+          "id": "activity-time-6",
+          "type": "multiple-choice",
+          "question": "Which month is 'Machi'?",
+          "options": ["February", "March", "April", "May"],
+          "correctAnswer": 1,
+          "explanation": "Machi is March in Swahili"
+        },
+        {
+          "id": "activity-time-7",
+          "type": "multiple-choice",
+          "question": "What is the Swahili word for Friday?",
+          "options": ["Jumamosi", "Jumapili", "Ijumaa", "Alhamisi"],
+          "correctAnswer": 2,
+          "explanation": "Ijumaa means Friday in Swahili"
+        },
+        {
+          "id": "activity-time-8",
+          "type": "spelling-completion",
+          "question": "Complete the Days of the Week",
+          "description": "Fill in the missing letters to complete each day",
+          "items": [
+            {
+              "word": "Jumatatu",
+              "blanks": "Juma_a_u",
+              "meaning": "Monday"
+            },
+            {
+              "word": "Jumanne",
+              "blanks": "Juma_ _e",
+              "meaning": "Tuesday"
+            },
+            {
+              "word": "Jumatano",
+              "blanks": "Juma_an_",
+              "meaning": "Wednesday"
+            },
+            {
+              "word": "Alhamisi",
+              "blanks": "Al_ami_i",
+              "meaning": "Thursday"
+            },
+            {
+              "word": "Ijumaa",
+              "blanks": "I_um_a",
+              "meaning": "Friday"
+            },
+            {
+              "word": "Jumamosi",
+              "blanks": "Juma_o_i",
+              "meaning": "Saturday"
+            },
+            {
+              "word": "Jumapili",
+              "blanks": "Juma_i_i",
+              "meaning": "Sunday"
+            }
+          ]
+        },
+        {
+          "id": "activity-time-9",
+          "type": "spelling-completion",
+          "question": "Complete the Months of the Year",
+          "description": "Fill in the missing letters to complete each month",
+          "items": [
+            {
+              "word": "Januari",
+              "blanks": "Jan_a_i",
+              "meaning": "January"
+            },
+            {
+              "word": "Februari",
+              "blanks": "Feb_ua_i",
+              "meaning": "February"
+            },
+            {
+              "word": "Machi",
+              "blanks": "Ma_h_",
+              "meaning": "March"
+            },
+            {
+              "word": "Aprili",
+              "blanks": "Ap_i_i",
+              "meaning": "April"
+            },
+            {
+              "word": "Mei",
+              "blanks": "M_i",
+              "meaning": "May"
+            },
+            {
+              "word": "Juni",
+              "blanks": "Ju_i",
+              "meaning": "June"
+            },
+            {
+              "word": "Julai",
+              "blanks": "Jul_i",
+              "meaning": "July"
+            },
+            {
+              "word": "Agosti",
+              "blanks": "Ago_t_",
+              "meaning": "August"
+            },
+            {
+              "word": "Septemba",
+              "blanks": "Sep_em_a",
+              "meaning": "September"
+            },
+            {
+              "word": "Oktoba",
+              "blanks": "Ok_o_a",
+              "meaning": "October"
+            },
+            {
+              "word": "Novemba",
+              "blanks": "Nov_m_a",
+              "meaning": "November"
+            },
+            {
+              "word": "Desemba",
+              "blanks": "Des_m_a",
+              "meaning": "December"
+            }
+          ]
+        },
+        {
+          "id": "activity-time-10",
+          "type": "multiple-choice",
+          "question": "What is 'Jumapili'?",
+          "options": ["Saturday", "Sunday", "Friday", "Monday"],
+          "correctAnswer": 1,
+          "explanation": "Jumapili means Sunday in Swahili"
+        },
+        {
+          "id": "activity-time-11",
+          "type": "multiple-choice",
+          "question": "Which season is 'Masika'?",
+          "options": ["Summer", "Rainy Season", "Cool Season", "Winter"],
+          "correctAnswer": 1,
+          "explanation": "Masika is the rainy season in East Africa"
+        },
+        {
+          "id": "activity-time-12",
+          "type": "matching",
+          "question": "Match Days to English",
+          "description": "Connect the Swahili days with their English translations",
+          "pairs": [
+            { "left": "Jumatatu", "right": "Monday" },
+            { "left": "Jumanne", "right": "Tuesday" },
+            { "left": "Jumatano", "right": "Wednesday" },
+            { "left": "Alhamisi", "right": "Thursday" },
+            { "left": "Ijumaa", "right": "Friday" },
+            { "left": "Jumamosi", "right": "Saturday" },
+            { "left": "Jumapili", "right": "Sunday" }
+          ]
+        },
+        {
+          "id": "activity-time-13",
+          "type": "matching",
+          "question": "Match Months to English",
+          "description": "Connect the Swahili months with their English translations",
+          "pairs": [
+            { "left": "Januari", "right": "January" },
+            { "left": "Februari", "right": "February" },
+            { "left": "Machi", "right": "March" },
+            { "left": "Aprili", "right": "April" },
+            { "left": "Mei", "right": "May" },
+            { "left": "Juni", "right": "June" }
+          ]
+        },
+        {
+          "id": "activity-time-14",
+          "type": "listening-dictation",
+          "question": "Listening Exercise: Days and Months",
+          "description": "Write the days and months you hear",
+          "audio": "/assets/audio/Karaoke-type-test-audio.mp3"
+        },
+        {
+          "id": "activity-time-15",
+          "type": "conversation-practice",
+          "question": "Practice Talking About Days",
+          "description": "Practice asking and answering about days of the week",
+          "conversation": [
+            {
+              "speaker": "Person A",
+              "text": "Leo ni siku gani?",
+              "translation": "What day is it today?"
+            },
+            {
+              "speaker": "Person B",
+              "text": "Leo ni Jumatatu",
+              "translation": "Today is Monday"
+            },
+            {
+              "speaker": "Person A",
+              "text": "Kesho ni siku gani?",
+              "translation": "What day is tomorrow?"
+            },
+            {
+              "speaker": "Person B",
+              "text": "Kesho ni Jumanne",
+              "translation": "Tomorrow is Tuesday"
+            }
+          ]
+        },
+        {
+          "id": "activity-time-16",
+          "type": "dialogue",
+          "question": "Planning a Meeting",
+          "description": "Listen to people planning when to meet",
+          "audio": "/assets/audio/Karaoke-type-test-audio.mp3",
+          "dialogue": [
+            {
+              "speaker": "Amina",
+              "text": "Tutakutana siku gani?",
+              "translation": "What day shall we meet?",
+              "audio": "/assets/audio/Karaoke-type-test-audio.mp3"
+            },
+            {
+              "speaker": "Juma",
+              "text": "Tutakutana Ijumaa",
+              "translation": "We'll meet on Friday",
+              "audio": "/assets/audio/Karaoke-type-test-audio.mp3"
+            },
+            {
+              "speaker": "Amina",
+              "text": "Mwezi gani?",
+              "translation": "Which month?",
+              "audio": "/assets/audio/Karaoke-type-test-audio.mp3"
+            },
+            {
+              "speaker": "Juma",
+              "text": "Mwezi wa Machi",
+              "translation": "The month of March",
+              "audio": "/assets/audio/Karaoke-type-test-audio.mp3"
+            },
+            {
+              "speaker": "Amina",
+              "text": "Sawa, nitakuona Ijumaa",
+              "translation": "Okay, I'll see you on Friday",
+              "audio": "/assets/audio/Karaoke-type-test-audio.mp3"
+            }
+          ]
+        }
+      ]
+    },
