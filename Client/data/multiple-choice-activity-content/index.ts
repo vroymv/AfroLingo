@@ -41,5 +41,16 @@ export const multipleChoiceActivityMap: Record<string, any[]> = {
  * @returns Array of multiple choice activities or empty array if not found
  */
 export function getMultipleChoiceActivities(activityId: string): any[] {
-  return multipleChoiceActivityMap[activityId] || [];
+  // Primary lookup: parent activity UUID used by the lesson runtime.
+  const direct = multipleChoiceActivityMap[activityId];
+  if (direct) return direct;
+
+  // Fallback lookup: practice often passes a content id like "activity-counting-5".
+  // Search all grouped activities for a matching child id.
+  for (const group of Object.values(multipleChoiceActivityMap)) {
+    const match = group.find((a) => a?.id === activityId);
+    if (match) return [match];
+  }
+
+  return [];
 }

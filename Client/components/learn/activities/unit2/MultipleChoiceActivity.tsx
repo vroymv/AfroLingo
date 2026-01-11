@@ -30,7 +30,8 @@ export default function MultipleChoiceActivity({
   console.log("MultipleChoiceActivity activity:", activity); // --- IGNORE ---
 
   // Get multiple choice activities and use the first one
-  const activities = getMultipleChoiceActivities(activity.id);
+  const contentKey = activity.contentRef || activity.id;
+  const activities = getMultipleChoiceActivities(contentKey);
   const currentActivity = activities.length > 0 ? activities[0] : activity;
 
   // Reset state when the activity changes so previous answers don't persist
