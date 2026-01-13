@@ -1,8 +1,6 @@
 import AlphabetVocabularyTableActivity, {
   componentKey as alphabetVocabularyTableKey,
 } from "@/components/learn/practiceActivities/unit1/AlphabetVocabularyTableActivity";
-import ConversationPracticeActivity from "@/components/learn/practiceActivities/ConversationPracticeActivity";
-import DialogueActivity from "@/components/learn/practiceActivities/DialogueActivity";
 import FlashcardActivity from "@/components/learn/practiceActivities/FlashcardActivity";
 import ListeningDictationActivity, {
   componentKey as listeningDictationKey,
@@ -14,7 +12,6 @@ import TimeMatchingActivity from "@/components/learn/practiceActivities/unit3/Ma
 import TimeListeningDictationActivity from "@/components/learn/practiceActivities/unit3/ListeningDictationActivity";
 import TimeConversationPracticeActivity from "@/components/learn/practiceActivities/unit3/ConversationPracticeActivity";
 import TimeDialogueActivity from "@/components/learn/practiceActivities/unit3/DialogueActivity";
-import MatchingActivity from "@/components/learn/practiceActivities/MatchingActivity";
 import MultipleChoiceActivity, {
   componentKey as multipleChoiceKey,
 } from "@/components/learn/practiceActivities/unit2/MultipleChoiceActivity";
@@ -30,11 +27,9 @@ import NumbersTableActivity, {
 import NumbersTranslationActivity, {
   componentKey as numbersTranslationKey,
 } from "@/components/learn/practiceActivities/unit2/NumbersTranslationActivity";
-import SpellingCompletionActivity from "@/components/learn/practiceActivities/SpellingCompletionActivity";
 import VocabularyFillInActivity, {
   componentKey as vocabularyFillInKey,
 } from "@/components/learn/practiceActivities/unit1/VocabularyFillInActivity";
-import VocabularyTableActivity from "@/components/learn/practiceActivities/VocabularyTableActivity";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import type { Activity } from "@/data/lessons";
@@ -92,6 +87,7 @@ export default function PracticeActivityRenderer({
   ) {
     return (
       <TimeListeningDictationActivity
+        key={activityAsActivity.id}
         activity={activityAsActivity}
         onComplete={onActivityComplete}
       />
@@ -113,6 +109,7 @@ export default function PracticeActivityRenderer({
   if (selectionKey === "flashcard") {
     return (
       <FlashcardActivity
+        key={activityAsActivity.id}
         activity={activityAsActivity}
         phrase={title || "Practice"}
         meaning={""}
@@ -122,7 +119,11 @@ export default function PracticeActivityRenderer({
   }
 
   return (
-    <Component activity={activityAsActivity} onComplete={onActivityComplete} />
+    <Component
+      key={activityAsActivity.id}
+      activity={activityAsActivity}
+      onComplete={onActivityComplete}
+    />
   );
 }
 

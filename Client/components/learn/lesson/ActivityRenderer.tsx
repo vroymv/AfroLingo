@@ -4,8 +4,6 @@ import AlphabetActivity, {
 import AlphabetVocabularyTableActivity, {
   componentKey as alphabetVocabularyTableKey,
 } from "@/components/learn/activities/unit1/AlphabetVocabularyTableActivity";
-import ConversationPracticeActivity from "@/components/learn/activities/ConversationPracticeActivity";
-import DialogueActivity from "@/components/learn/activities/DialogueActivity";
 import FlashcardActivity from "@/components/learn/activities/FlashcardActivity";
 import AlphabetIntroductionActivity, {
   componentKey as introductionKey,
@@ -13,7 +11,6 @@ import AlphabetIntroductionActivity, {
 import ListeningDictationActivity, {
   componentKey as listeningDictationKey,
 } from "@/components/learn/activities/unit1/ListeningDictationActivity";
-import MatchingActivity from "@/components/learn/activities/MatchingActivity";
 import MultipleChoiceActivity from "@/components/learn/activities/unit2/MultipleChoiceActivity";
 import NumbersIntroductionActivity, {
   componentKey as numbersIntroductionKey,
@@ -21,12 +18,9 @@ import NumbersIntroductionActivity, {
 import NumbersListeningActivity from "@/components/learn/activities/unit2/NumbersListeningActivity";
 import NumbersTableActivity from "@/components/learn/activities/unit2/NumbersTableActivity";
 import NumbersTranslationActivity from "@/components/learn/activities/unit2/NumbersTranslationActivity";
-import SpellingCompletionActivity from "@/components/learn/activities/SpellingCompletionActivity";
 import VocabularyFillInActivity, {
   componentKey as vocabularyFillInKey,
 } from "@/components/learn/activities/unit1/VocabularyFillInActivity";
-import VocabularyTableActivity from "@/components/learn/activities/VocabularyTableActivity";
-
 import TimeIntroductionActivity, {
   componentKey as timeIntroductionKey,
 } from "@/components/learn/activities/unit3/IntroductionActivity";
@@ -104,6 +98,7 @@ export default function ActivityRenderer({
   ) {
     return (
       <TimeListeningDictationActivity
+        key={(extended as any).id}
         activity={extended as any}
         onComplete={onActivityComplete}
       />
@@ -124,6 +119,7 @@ export default function ActivityRenderer({
   if (key === "flashcard") {
     return (
       <FlashcardActivity
+        key={(extended as any).id}
         activity={activity}
         phrase={lessonMeta.phrase}
         meaning={lessonMeta.meaning}
@@ -132,7 +128,14 @@ export default function ActivityRenderer({
     );
   }
 
-  return <Component activity={extended} onComplete={onActivityComplete} />;
+  // Keyed by activity id to avoid state bleed between activities of same type.
+  return (
+    <Component
+      key={(extended as any).id}
+      activity={extended}
+      onComplete={onActivityComplete}
+    />
+  );
 }
 
 const styles = StyleSheet.create({
