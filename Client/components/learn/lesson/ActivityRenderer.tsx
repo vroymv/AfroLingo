@@ -26,6 +26,26 @@ import VocabularyFillInActivity, {
   componentKey as vocabularyFillInKey,
 } from "@/components/learn/activities/unit1/VocabularyFillInActivity";
 import VocabularyTableActivity from "@/components/learn/activities/VocabularyTableActivity";
+
+import TimeIntroductionActivity, {
+  componentKey as timeIntroductionKey,
+} from "@/components/learn/activities/unit3/IntroductionActivity";
+import TimeListeningDictationActivity from "@/components/learn/activities/unit3/ListeningDictationActivity";
+import TimeMatchingActivity, {
+  componentKey as timeMatchingKey,
+} from "@/components/learn/activities/unit3/MatchingActivity";
+import TimeSpellingCompletionActivity, {
+  componentKey as timeSpellingCompletionKey,
+} from "@/components/learn/activities/unit3/SpellingCompletionActivity";
+import TimeVocabularyTableActivity, {
+  componentKey as timeVocabularyTableKey,
+} from "@/components/learn/activities/unit3/VocabularyTableActivity";
+import TimeConversationPracticeActivity, {
+  componentKey as timeConversationPracticeKey,
+} from "@/components/learn/activities/unit3/ConversationPracticeActivity";
+import TimeDialogueActivity, {
+  componentKey as timeDialogueKey,
+} from "@/components/learn/activities/unit3/DialogueActivity";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Activity } from "@/data/lessons";
@@ -55,6 +75,7 @@ export default function ActivityRenderer({
   const registry: Record<string, React.ComponentType<any>> = {
     [introductionKey]: AlphabetIntroductionActivity,
     [alphabetKey]: AlphabetActivity,
+    [timeIntroductionKey]: TimeIntroductionActivity,
     flashcard: FlashcardActivity,
     "multiple-choice": MultipleChoiceActivity,
     [listeningDictationKey]: ListeningDictationActivity,
@@ -64,16 +85,31 @@ export default function ActivityRenderer({
     "numbers-table": NumbersTableActivity,
     "numbers-listening": NumbersListeningActivity,
     "numbers-translation": NumbersTranslationActivity,
-    "vocabulary-table": VocabularyTableActivity,
-    matching: MatchingActivity,
-    "spelling-completion": SpellingCompletionActivity,
-    "conversation-practice": ConversationPracticeActivity,
-    dialogue: DialogueActivity,
+    [timeVocabularyTableKey]: TimeVocabularyTableActivity,
+    [timeMatchingKey]: TimeMatchingActivity,
+    [timeSpellingCompletionKey]: TimeSpellingCompletionActivity,
+    [timeConversationPracticeKey]: TimeConversationPracticeActivity,
+    [timeDialogueKey]: TimeDialogueActivity,
   };
 
   // Support newly added componentKey coming from backend seed. Extend type locally.
   const extended = activity as Activity & { componentKey?: string };
   const key = extended.componentKey || extended.type;
+
+  // Special routing: Unit 3 uses listening-dictation with contentRef like "activity-time-14".
+  if (
+    key === "listening-dictation" &&
+    typeof (extended as any)?.contentRef === "string" &&
+    String((extended as any).contentRef).startsWith("activity-time-")
+  ) {
+    return (
+      <TimeListeningDictationActivity
+        activity={extended as any}
+        onComplete={onActivityComplete}
+      />
+    );
+  }
+
   const Component = registry[key];
 
   if (!Component) {

@@ -66,9 +66,17 @@ export default function LessonPlayerScreen() {
     return unit.activities
       .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0))
       .map((a: any) => ({
-        id: a.id,
+        // Prefer stable external ids so client-side content maps can match.
+        id: a.externalId || a.id,
         type: (a.type as Activity["type"]) || "introduction",
-      }));
+        // These come from seed and are used by ActivityRenderer.
+        componentKey: a.componentKey,
+        contentRef: a.contentRef,
+        // Optional fields if server starts returning them later.
+        question: a.question,
+        description: a.description,
+        audio: a.audio,
+      })) as any;
   }, [unit]);
 
   // Meta fallback. Phrase/meaning may not exist on server yet.

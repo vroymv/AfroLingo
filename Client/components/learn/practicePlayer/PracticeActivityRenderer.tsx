@@ -7,6 +7,13 @@ import FlashcardActivity from "@/components/learn/practiceActivities/FlashcardAc
 import ListeningDictationActivity, {
   componentKey as listeningDictationKey,
 } from "@/components/learn/practiceActivities/unit1/ListeningDictationActivity";
+import TimeIntroductionActivity from "@/components/learn/practiceActivities/unit3/IntroductionActivity";
+import TimeVocabularyTableActivity from "@/components/learn/practiceActivities/unit3/VocabularyTableActivity";
+import TimeSpellingCompletionActivity from "@/components/learn/practiceActivities/unit3/SpellingCompletionActivity";
+import TimeMatchingActivity from "@/components/learn/practiceActivities/unit3/MatchingActivity";
+import TimeListeningDictationActivity from "@/components/learn/practiceActivities/unit3/ListeningDictationActivity";
+import TimeConversationPracticeActivity from "@/components/learn/practiceActivities/unit3/ConversationPracticeActivity";
+import TimeDialogueActivity from "@/components/learn/practiceActivities/unit3/DialogueActivity";
 import MatchingActivity from "@/components/learn/practiceActivities/MatchingActivity";
 import MultipleChoiceActivity, {
   componentKey as multipleChoiceKey,
@@ -59,15 +66,38 @@ export default function PracticeActivityRenderer({
     [numbersTableKey]: NumbersTableActivity,
     [numbersListeningKey]: NumbersListeningActivity,
     [numbersTranslationKey]: NumbersTranslationActivity,
-    "vocabulary-table": VocabularyTableActivity,
-    matching: MatchingActivity,
-    "spelling-completion": SpellingCompletionActivity,
-    "conversation-practice": ConversationPracticeActivity,
-    dialogue: DialogueActivity,
+    introduction: TimeIntroductionActivity,
+    "vocabulary-table": TimeVocabularyTableActivity,
+    matching: TimeMatchingActivity,
+    "spelling-completion": TimeSpellingCompletionActivity,
+    "conversation-practice": TimeConversationPracticeActivity,
+    dialogue: TimeDialogueActivity,
     flashcard: FlashcardActivity,
   };
 
   const selectionKey = activity.componentKey || activity.type || "";
+
+  // The existing activity components are typed around the local Activity model.
+  // For practice we pass a minimal shape and allow components to fetch/use contentRef later.
+  const activityAsActivity = activity as unknown as Activity & {
+    componentKey?: string;
+    contentRef?: string;
+  };
+
+  // Special routing: unit-3 listening dictation uses contentRef like "activity-time-14".
+  if (
+    selectionKey === listeningDictationKey &&
+    typeof activity.contentRef === "string" &&
+    activity.contentRef.startsWith("activity-time-")
+  ) {
+    return (
+      <TimeListeningDictationActivity
+        activity={activityAsActivity}
+        onComplete={onActivityComplete}
+      />
+    );
+  }
+
   const Component = registry[selectionKey];
 
   if (!Component) {
@@ -79,13 +109,6 @@ export default function PracticeActivityRenderer({
       </ThemedView>
     );
   }
-
-  // The existing activity components are typed around the local Activity model.
-  // For practice we pass a minimal shape and allow components to fetch/use contentRef later.
-  const activityAsActivity = activity as unknown as Activity & {
-    componentKey?: string;
-    contentRef?: string;
-  };
 
   if (selectionKey === "flashcard") {
     return (
