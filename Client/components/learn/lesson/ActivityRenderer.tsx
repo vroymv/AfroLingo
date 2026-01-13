@@ -40,6 +40,30 @@ import TimeConversationPracticeActivity, {
 import TimeDialogueActivity, {
   componentKey as timeDialogueKey,
 } from "@/components/learn/activities/unit3/DialogueActivity";
+import GreetingsIntroductionActivity, {
+  componentKey as greetingsIntroductionKey,
+} from "@/components/learn/activities/unit4/IntroductionActivity";
+import GreetingsVocabularyTableActivity, {
+  componentKey as greetingsVocabularyTableKey,
+} from "@/components/learn/activities/unit4/VocabularyTableActivity";
+import GreetingsMultipleChoiceActivity, {
+  componentKey as greetingsMultipleChoiceKey,
+} from "@/components/learn/activities/unit4/MultipleChoiceActivity";
+import GreetingsSpellingCompletionActivity, {
+  componentKey as greetingsSpellingCompletionKey,
+} from "@/components/learn/activities/unit4/SpellingCompletionActivity";
+import GreetingsListeningDictationActivity, {
+  componentKey as greetingsListeningDictationKey,
+} from "@/components/learn/activities/unit4/ListeningDictationActivity";
+import GreetingsMatchingActivity, {
+  componentKey as greetingsMatchingKey,
+} from "@/components/learn/activities/unit4/MatchingActivity";
+import GreetingsConversationPracticeActivity, {
+  componentKey as greetingsConversationPracticeKey,
+} from "@/components/learn/activities/unit4/ConversationPracticeActivity";
+import GreetingsDialogueActivity, {
+  componentKey as greetingsDialogueKey,
+} from "@/components/learn/activities/unit4/DialogueActivity";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Activity } from "@/data/lessons";
@@ -84,6 +108,16 @@ export default function ActivityRenderer({
     [timeSpellingCompletionKey]: TimeSpellingCompletionActivity,
     [timeConversationPracticeKey]: TimeConversationPracticeActivity,
     [timeDialogueKey]: TimeDialogueActivity,
+
+    // Unit 4 (Greetings)
+    [greetingsIntroductionKey]: GreetingsIntroductionActivity,
+    [greetingsVocabularyTableKey]: GreetingsVocabularyTableActivity,
+    [greetingsMultipleChoiceKey]: GreetingsMultipleChoiceActivity,
+    [greetingsSpellingCompletionKey]: GreetingsSpellingCompletionActivity,
+    [greetingsListeningDictationKey]: GreetingsListeningDictationActivity,
+    [greetingsMatchingKey]: GreetingsMatchingActivity,
+    [greetingsConversationPracticeKey]: GreetingsConversationPracticeActivity,
+    [greetingsDialogueKey]: GreetingsDialogueActivity,
   };
 
   // Support newly added componentKey coming from backend seed. Extend type locally.

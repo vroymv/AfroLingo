@@ -16,7 +16,7 @@ export const UNIT_4_GREETINGS_SW: SeedLessonUnit = {
       question:
         "Welcome! Let's learn how to greet people in Swahili - an essential part of African culture!",
       order: 1,
-      componentKey: "introduction",
+      componentKey: "greetings-introduction",
       contentRef: "activity-greetings-1",
     },
     {
@@ -24,7 +24,7 @@ export const UNIT_4_GREETINGS_SW: SeedLessonUnit = {
       type: "vocabulary-table",
       question: "Basic Greetings",
       order: 2,
-      componentKey: "vocabulary-table",
+      componentKey: "greetings-vocabulary-table",
       contentRef: "activity-greetings-2",
     },
     {
@@ -32,7 +32,7 @@ export const UNIT_4_GREETINGS_SW: SeedLessonUnit = {
       type: "vocabulary-table",
       question: "Common Responses",
       order: 3,
-      componentKey: "vocabulary-table",
+      componentKey: "greetings-vocabulary-table",
       contentRef: "activity-greetings-3",
     },
     {
@@ -40,7 +40,7 @@ export const UNIT_4_GREETINGS_SW: SeedLessonUnit = {
       type: "multiple-choice",
       question: "How do you say 'Good morning' in Swahili?",
       order: 4,
-      componentKey: "multiple-choice",
+      componentKey: "greetings-multiple-choice",
       contentRef: "activity-greetings-4",
     },
     {
@@ -48,7 +48,7 @@ export const UNIT_4_GREETINGS_SW: SeedLessonUnit = {
       type: "multiple-choice",
       question: "What is the correct response to 'Habari'?",
       order: 5,
-      componentKey: "multiple-choice",
+      componentKey: "greetings-multiple-choice",
       contentRef: "activity-greetings-5",
     },
     {
@@ -56,7 +56,7 @@ export const UNIT_4_GREETINGS_SW: SeedLessonUnit = {
       type: "multiple-choice",
       question: "How do you say 'Thank you very much'?",
       order: 6,
-      componentKey: "multiple-choice",
+      componentKey: "greetings-multiple-choice",
       contentRef: "activity-greetings-6",
     },
     {
@@ -64,7 +64,7 @@ export const UNIT_4_GREETINGS_SW: SeedLessonUnit = {
       type: "multiple-choice",
       question: "What does 'Kwaheri' mean?",
       order: 7,
-      componentKey: "multiple-choice",
+      componentKey: "greetings-multiple-choice",
       contentRef: "activity-greetings-7",
     },
     {
@@ -72,7 +72,7 @@ export const UNIT_4_GREETINGS_SW: SeedLessonUnit = {
       type: "spelling-completion",
       question: "Complete the Spelling of These Greetings",
       order: 8,
-      componentKey: "spelling-completion",
+      componentKey: "greetings-spelling-completion",
       contentRef: "activity-greetings-8",
     },
     {
@@ -80,7 +80,7 @@ export const UNIT_4_GREETINGS_SW: SeedLessonUnit = {
       type: "listening-dictation",
       question: "Listening Exercise: Greetings",
       order: 9,
-      componentKey: "listening-dictation",
+      componentKey: "greetings-listening-dictation",
       contentRef: "activity-greetings-9",
     },
     {
@@ -88,7 +88,7 @@ export const UNIT_4_GREETINGS_SW: SeedLessonUnit = {
       type: "matching",
       question: "Match Greetings to Their Meanings",
       order: 10,
-      componentKey: "matching",
+      componentKey: "greetings-matching",
       contentRef: "activity-greetings-10",
     },
     {
@@ -96,7 +96,7 @@ export const UNIT_4_GREETINGS_SW: SeedLessonUnit = {
       type: "conversation-practice",
       question: "Practice a Greeting Conversation",
       order: 11,
-      componentKey: "conversation-practice",
+      componentKey: "greetings-conversation-practice",
       contentRef: "activity-greetings-11",
     },
     {
@@ -104,7 +104,7 @@ export const UNIT_4_GREETINGS_SW: SeedLessonUnit = {
       type: "dialogue",
       question: "Meeting Someone New",
       order: 12,
-      componentKey: "dialogue",
+      componentKey: "greetings-dialogue",
       contentRef: "activity-greetings-12",
     },
   ],
