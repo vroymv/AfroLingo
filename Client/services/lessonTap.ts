@@ -11,8 +11,10 @@ export const toTitleCaseLevel = (lvl?: string) => {
 };
 
 // Select a single user progress entry (server may return an array)
-export const selectUserProgress = (upRaw: any) =>
-  Array.isArray(upRaw) ? upRaw[0] : upRaw || {};
+export const selectUserProgress = (upRaw: any) => {
+  if (Array.isArray(upRaw)) return upRaw[0] ?? {};
+  return upRaw || {};
+};
 
 // Convert API units to UI units expected by UnitCard/UnitsList
 export const mapUnitsToUi = (units: any[]): Unit[] => {
