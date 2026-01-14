@@ -82,6 +82,24 @@ import Unit5MatchingActivity, {
 import Unit5ListeningDictationActivity, {
   componentKey as unit5ListeningDictationKey,
 } from "@/components/learn/activities/unit5/ListeningDictationActivity";
+import Unit6IntroductionActivity, {
+  componentKey as unit6IntroductionKey,
+} from "@/components/learn/activities/unit6/IntroductionActivity";
+import Unit6VocabularyTableActivity, {
+  componentKey as unit6VocabularyTableKey,
+} from "@/components/learn/activities/unit6/VocabularyTableActivity";
+import Unit6MultipleChoiceActivity, {
+  componentKey as unit6MultipleChoiceKey,
+} from "@/components/learn/activities/unit6/MultipleChoiceActivity";
+import Unit6MatchingActivity, {
+  componentKey as unit6MatchingKey,
+} from "@/components/learn/activities/unit6/MatchingActivity";
+import Unit6SpellingCompletionActivity, {
+  componentKey as unit6SpellingCompletionKey,
+} from "@/components/learn/activities/unit6/SpellingCompletionActivity";
+import Unit6ListeningDictationActivity, {
+  componentKey as unit6ListeningDictationKey,
+} from "@/components/learn/activities/unit6/ListeningDictationActivity";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Activity } from "@/data/lessons";
@@ -144,6 +162,14 @@ export default function ActivityRenderer({
     [unit5SpellingCompletionKey]: Unit5SpellingCompletionActivity,
     [unit5MatchingKey]: Unit5MatchingActivity,
     [unit5ListeningDictationKey]: Unit5ListeningDictationActivity,
+
+    // Unit 6 (Plurals of Nouns)
+    [unit6IntroductionKey]: Unit6IntroductionActivity,
+    [unit6VocabularyTableKey]: Unit6VocabularyTableActivity,
+    [unit6MultipleChoiceKey]: Unit6MultipleChoiceActivity,
+    [unit6MatchingKey]: Unit6MatchingActivity,
+    [unit6SpellingCompletionKey]: Unit6SpellingCompletionActivity,
+    [unit6ListeningDictationKey]: Unit6ListeningDictationActivity,
   };
 
   // Support newly added componentKey coming from backend seed. Extend type locally.

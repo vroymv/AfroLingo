@@ -1,6 +1,3 @@
-import rawData from "./lessons.json";
-import { fetchLessons as fetchLessonsFromAPI } from "@/services/lessons";
-
 export interface Activity {
   id: string;
   type:
@@ -77,21 +74,17 @@ export interface LearningPath {
   totalXP: number;
 }
 
-// Static fallback data from JSON file (for offline or development use)
-export const mockLessonsData: LearningPath = rawData as LearningPath;
+// Note: The app currently fetches Units directly from the API (see LessonsTab / LessonPlayer).
+// Keep this module focused on shared types.
 
-/**
- * Fetch lessons from the API
- * Falls back to static data if API call fails
- */
-export const getLessonsData = async (level?: string): Promise<LearningPath> => {
-  try {
-    const data = await fetchLessonsFromAPI(level);
-    return data;
-  } catch (error) {
-    console.warn("Failed to fetch lessons from API, using static data:", error);
-    return mockLessonsData;
-  }
+export const mockLessonsData: LearningPath = {
+  id: "main-path",
+  name: "African Languages Journey",
+  units: [],
+  totalXP: 0,
 };
+
+export const getLessonsData = async (): Promise<LearningPath> =>
+  mockLessonsData;
 
 export default mockLessonsData;

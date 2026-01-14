@@ -45,6 +45,24 @@ import Unit5MatchingActivity, {
 import Unit5ListeningDictationActivity, {
   componentKey as unit5ListeningDictationKey,
 } from "@/components/learn/practiceActivities/unit5/ListeningDictationActivity";
+import Unit6IntroductionActivity, {
+  componentKey as unit6IntroductionKey,
+} from "@/components/learn/practiceActivities/unit6/IntroductionActivity";
+import Unit6VocabularyTableActivity, {
+  componentKey as unit6VocabularyTableKey,
+} from "@/components/learn/practiceActivities/unit6/VocabularyTableActivity";
+import Unit6MultipleChoiceActivity, {
+  componentKey as unit6MultipleChoiceKey,
+} from "@/components/learn/practiceActivities/unit6/MultipleChoiceActivity";
+import Unit6MatchingActivity, {
+  componentKey as unit6MatchingKey,
+} from "@/components/learn/practiceActivities/unit6/MatchingActivity";
+import Unit6SpellingCompletionActivity, {
+  componentKey as unit6SpellingCompletionKey,
+} from "@/components/learn/practiceActivities/unit6/SpellingCompletionActivity";
+import Unit6ListeningDictationActivity, {
+  componentKey as unit6ListeningDictationKey,
+} from "@/components/learn/practiceActivities/unit6/ListeningDictationActivity";
 import VocabularyFillInActivity, {
   componentKey as vocabularyFillInKey,
 } from "@/components/learn/practiceActivities/unit1/VocabularyFillInActivity";
@@ -85,6 +103,12 @@ export default function PracticeActivityRenderer({
     [unit5SpellingCompletionKey]: Unit5SpellingCompletionActivity,
     [unit5MatchingKey]: Unit5MatchingActivity,
     [unit5ListeningDictationKey]: Unit5ListeningDictationActivity,
+    [unit6IntroductionKey]: Unit6IntroductionActivity,
+    [unit6VocabularyTableKey]: Unit6VocabularyTableActivity,
+    [unit6MultipleChoiceKey]: Unit6MultipleChoiceActivity,
+    [unit6MatchingKey]: Unit6MatchingActivity,
+    [unit6SpellingCompletionKey]: Unit6SpellingCompletionActivity,
+    [unit6ListeningDictationKey]: Unit6ListeningDictationActivity,
     introduction: TimeIntroductionActivity,
     "vocabulary-table": TimeVocabularyTableActivity,
     matching: TimeMatchingActivity,
