@@ -64,6 +64,24 @@ import GreetingsConversationPracticeActivity, {
 import GreetingsDialogueActivity, {
   componentKey as greetingsDialogueKey,
 } from "@/components/learn/activities/unit4/DialogueActivity";
+import Unit5IntroductionActivity, {
+  componentKey as unit5IntroductionKey,
+} from "@/components/learn/activities/unit5/IntroductionActivity";
+import Unit5VocabularyTableActivity, {
+  componentKey as unit5VocabularyTableKey,
+} from "@/components/learn/activities/unit5/VocabularyTableActivity";
+import Unit5MultipleChoiceActivity, {
+  componentKey as unit5MultipleChoiceKey,
+} from "@/components/learn/activities/unit5/MultipleChoiceActivity";
+import Unit5SpellingCompletionActivity, {
+  componentKey as unit5SpellingCompletionKey,
+} from "@/components/learn/activities/unit5/SpellingCompletionActivity";
+import Unit5MatchingActivity, {
+  componentKey as unit5MatchingKey,
+} from "@/components/learn/activities/unit5/MatchingActivity";
+import Unit5ListeningDictationActivity, {
+  componentKey as unit5ListeningDictationKey,
+} from "@/components/learn/activities/unit5/ListeningDictationActivity";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Activity } from "@/data/lessons";
@@ -118,6 +136,14 @@ export default function ActivityRenderer({
     [greetingsMatchingKey]: GreetingsMatchingActivity,
     [greetingsConversationPracticeKey]: GreetingsConversationPracticeActivity,
     [greetingsDialogueKey]: GreetingsDialogueActivity,
+
+    // Unit 5 (Occupations and Places)
+    [unit5IntroductionKey]: Unit5IntroductionActivity,
+    [unit5VocabularyTableKey]: Unit5VocabularyTableActivity,
+    [unit5MultipleChoiceKey]: Unit5MultipleChoiceActivity,
+    [unit5SpellingCompletionKey]: Unit5SpellingCompletionActivity,
+    [unit5MatchingKey]: Unit5MatchingActivity,
+    [unit5ListeningDictationKey]: Unit5ListeningDictationActivity,
   };
 
   // Support newly added componentKey coming from backend seed. Extend type locally.

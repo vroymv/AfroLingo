@@ -1,0 +1,304 @@
+{
+  "id": "unit-5",
+  "title": "Occupations and Places",
+  "level": "Absolute Beginner",
+  "icon": "🏢",
+  "color": "#00BCD4",
+  "phrase": "Kazi na Maeneo",
+  "meaning": "Occupations and Places",
+  "pronunciation": "kah-zee nah mah-eh-neh-oh",
+  "audio": "/assets/audio/swahili-occupations-places.mp3",
+  "activities": [
+    {
+      "id": "activity-occ-places-1",
+      "type": "introduction",
+      "question": "Let's learn about different occupations and important places in our community!"
+    },
+    {
+      "id": "activity-occ-places-2",
+      "type": "vocabulary-table",
+      "question": "Common Places",
+      "description": "Learn the names of important places around you",
+      "audio": "/assets/audio/places.mp3",
+      "items": [
+        {
+          "swahili": "Darasa",
+          "english": "Class",
+          "pronunciation": "dah-rah-sah",
+          "image": "/assets/images/vocab/place-class.png",
+          "audio": "/assets/audio/place-class.mp3"
+        },
+        {
+          "swahili": "Nyumba",
+          "english": "House",
+          "pronunciation": "nyoom-bah",
+          "image": "/assets/images/vocab/place-house.png",
+          "audio": "/assets/audio/place-house.mp3"
+        },
+        {
+          "swahili": "Maktaba",
+          "english": "Library",
+          "pronunciation": "mah-ktah-bah",
+          "image": "/assets/images/vocab/place-library.png",
+          "audio": "/assets/audio/place-library.mp3"
+        },
+        {
+          "swahili": "Uwanja wa ndege",
+          "english": "Airport",
+          "pronunciation": "oo-wahn-jah wah ndeh-geh",
+          "image": "/assets/images/vocab/place-airport.png",
+          "audio": "/assets/audio/place-airport.mp3"
+        },
+        {
+          "swahili": "Soko",
+          "english": "Market",
+          "pronunciation": "soh-koh",
+          "image": "/assets/images/vocab/place-market.png",
+          "audio": "/assets/audio/place-market.mp3"
+        },
+        {
+          "swahili": "Ofisi",
+          "english": "Office",
+          "pronunciation": "oh-fee-see",
+          "image": "/assets/images/vocab/place-office.png",
+          "audio": "/assets/audio/place-office.mp3"
+        },
+        {
+          "swahili": "Duka la dawa",
+          "english": "Pharmacy",
+          "pronunciation": "doo-kah lah dah-wah",
+          "image": "/assets/images/vocab/place-pharmacy.png",
+          "audio": "/assets/audio/place-pharmacy.mp3"
+        },
+        {
+          "swahili": "Hospitali",
+          "english": "Hospital",
+          "pronunciation": "hoh-spee-tah-lee",
+          "image": "/assets/images/vocab/place-hospital.png",
+          "audio": "/assets/audio/place-hospital.mp3"
+        },
+        {
+          "swahili": "Benki",
+          "english": "Bank",
+          "pronunciation": "behn-kee",
+          "image": "/assets/images/vocab/place-bank.png",
+          "audio": "/assets/audio/place-bank.mp3"
+        },
+        {
+          "swahili": "Shule",
+          "english": "School",
+          "pronunciation": "shoo-leh",
+          "image": "/assets/images/vocab/place-school.png",
+          "audio": "/assets/audio/place-school.mp3"
+        }
+      ]
+    },
+    {
+      "id": "activity-occ-places-3",
+      "type": "vocabulary-table",
+      "question": "Common Occupations",
+      "description": "Learn the names of different professions",
+      "audio": "/assets/audio/occupations.mp3",
+      "items": [
+        {
+          "swahili": "Mwalimu",
+          "english": "Teacher",
+          "pronunciation": "mwah-lee-moo",
+          "image": "/assets/images/vocab/occupation-teacher.png",
+          "audio": "/assets/audio/occupation-teacher.mp3"
+        },
+        {
+          "swahili": "Karani",
+          "english": "Cashier",
+          "pronunciation": "kah-rah-nee",
+          "image": "/assets/images/vocab/occupation-cashier.png",
+          "audio": "/assets/audio/occupation-cashier.mp3"
+        },
+        {
+          "swahili": "Mtumishi",
+          "english": "Waiter",
+          "pronunciation": "mtoo-mee-shee",
+          "image": "/assets/images/vocab/occupation-waiter.png",
+          "audio": "/assets/audio/occupation-waiter.mp3"
+        },
+        {
+          "swahili": "Mwanasheria",
+          "english": "Lawyer",
+          "pronunciation": "mwah-nah-sheh-ree-ah",
+          "image": "/assets/images/vocab/occupation-lawyer.png",
+          "audio": "/assets/audio/occupation-lawyer.mp3"
+        },
+        {
+          "swahili": "Kinyozi",
+          "english": "Barber",
+          "pronunciation": "kee-nyoh-zee",
+          "image": "/assets/images/vocab/occupation-barber.png",
+          "audio": "/assets/audio/occupation-barber.mp3"
+        },
+        {
+          "swahili": "Askari",
+          "english": "Police",
+          "pronunciation": "ah-skah-ree",
+          "image": "/assets/images/vocab/occupation-police.png",
+          "audio": "/assets/audio/occupation-police.mp3"
+        },
+        {
+          "swahili": "Dereva",
+          "english": "Driver",
+          "pronunciation": "deh-reh-vah",
+          "image": "/assets/images/vocab/occupation-driver.png",
+          "audio": "/assets/audio/occupation-driver.mp3"
+        },
+        {
+          "swahili": "Daktari",
+          "english": "Doctor",
+          "pronunciation": "dah-ktah-ree",
+          "image": "/assets/images/vocab/occupation-doctor.png",
+          "audio": "/assets/audio/occupation-doctor.mp3"
+        },
+        {
+          "swahili": "Mfamasia",
+          "english": "Pharmacist",
+          "pronunciation": "mfah-mah-see-ah",
+          "image": "/assets/images/vocab/occupation-pharmacist.png",
+          "audio": "/assets/audio/occupation-pharmacist.mp3"
+        },
+        {
+          "swahili": "Mkulima",
+          "english": "Farmer",
+          "pronunciation": "mkoo-lee-mah",
+          "image": "/assets/images/vocab/occupation-farmer.png",
+          "audio": "/assets/audio/occupation-farmer.mp3"
+        }
+      ]
+    },
+    {
+      "id": "activity-occ-places-4",
+      "type": "multiple-choice",
+      "question": "Where would you find a 'Mwalimu'?",
+      "options": ["Soko", "Shule", "Benki", "Hospitali"],
+      "correctAnswer": 1,
+      "explanation": "A Mwalimu (Teacher) works at a Shule (School)"
+    },
+    {
+      "id": "activity-occ-places-5",
+      "type": "multiple-choice",
+      "question": "What is 'Hospitali' in English?",
+      "options": ["Hotel", "Hospital", "House", "Office"],
+      "correctAnswer": 1,
+      "explanation": "Hospitali means Hospital in Swahili"
+    },
+    {
+      "id": "activity-occ-places-6",
+      "type": "multiple-choice",
+      "question": "How do you say 'Doctor' in Swahili?",
+      "options": ["Daktari", "Dereva", "Mkulima", "Askari"],
+      "correctAnswer": 0,
+      "explanation": "Daktari means Doctor in Swahili"
+    },
+    {
+      "id": "activity-occ-places-7",
+      "type": "multiple-choice",
+      "question": "Where would you buy medicine?",
+      "options": ["Soko", "Maktaba", "Duka la dawa", "Ofisi"],
+      "correctAnswer": 2,
+      "explanation": "Duka la dawa (Pharmacy) is where you buy medicine"
+    },
+    {
+      "id": "activity-occ-places-8",
+      "type": "spelling-completion",
+      "question": "Complete the Spelling of Places",
+      "description": "Fill in the missing letters to complete each place name",
+      "items": [
+        {
+          "word": "Shule",
+          "blanks": "Sh__le",
+          "hint": "School",
+          "image": "/assets/images/vocab/place-school.png"
+        },
+        {
+          "word": "Nyumba",
+          "blanks": "Ny__mb__",
+          "hint": "House",
+          "image": "/assets/images/vocab/place-house.png"
+        },
+        {
+          "word": "Soko",
+          "blanks": "S__k__",
+          "hint": "Market",
+          "image": "/assets/images/vocab/place-market.png"
+        },
+        {
+          "word": "Benki",
+          "blanks": "B__nk__",
+          "hint": "Bank",
+          "image": "/assets/images/vocab/place-bank.png"
+        },
+        {
+          "word": "Maktaba",
+          "blanks": "M__kt__ba",
+          "hint": "Library",
+          "image": "/assets/images/vocab/place-library.png"
+        }
+      ]
+    },
+    {
+      "id": "activity-occ-places-9",
+      "type": "spelling-completion",
+      "question": "Complete the Spelling of Occupations",
+      "description": "Fill in the missing letters to complete each occupation",
+      "items": [
+        {
+          "word": "Mwalimu",
+          "blanks": "Mw__l__mu",
+          "hint": "Teacher",
+          "image": "/assets/images/vocab/occupation-teacher.png"
+        },
+        {
+          "word": "Daktari",
+          "blanks": "D__kt__ri",
+          "hint": "Doctor",
+          "image": "/assets/images/vocab/occupation-doctor.png"
+        },
+        {
+          "word": "Askari",
+          "blanks": "As__ar__",
+          "hint": "Police",
+          "image": "/assets/images/vocab/occupation-police.png"
+        },
+        {
+          "word": "Mkulima",
+          "blanks": "Mk__l__ma",
+          "hint": "Farmer",
+          "image": "/assets/images/vocab/occupation-farmer.png"
+        },
+        {
+          "word": "Dereva",
+          "blanks": "D__r__va",
+          "hint": "Driver",
+          "image": "/assets/images/vocab/occupation-driver.png"
+        }
+      ]
+    },
+    {
+      "id": "activity-occ-places-10",
+      "type": "matching",
+      "question": "Match Occupations to Their Workplaces",
+      "description": "Connect each occupation with where they work",
+      "pairs": [
+        { "left": "Mwalimu", "right": "Shule" },
+        { "left": "Daktari", "right": "Hospitali" },
+        { "left": "Mfamasia", "right": "Duka la dawa" },
+        { "left": "Karani", "right": "Benki" },
+        { "left": "Mkulima", "right": "Soko" }
+      ]
+    },
+    {
+      "id": "activity-occ-places-11",
+      "type": "listening-dictation",
+      "question": "Listening Exercise: Places and Occupations",
+      "description": "Write the words you hear",
+      "audio": "/assets/audio/occ-places-dictation.mp3"
+    }
+  ]
+}

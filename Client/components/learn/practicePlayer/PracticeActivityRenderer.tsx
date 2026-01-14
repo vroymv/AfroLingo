@@ -27,6 +27,24 @@ import NumbersTableActivity, {
 import NumbersTranslationActivity, {
   componentKey as numbersTranslationKey,
 } from "@/components/learn/practiceActivities/unit2/NumbersTranslationActivity";
+import Unit5IntroductionActivity, {
+  componentKey as unit5IntroductionKey,
+} from "@/components/learn/practiceActivities/unit5/IntroductionActivity";
+import Unit5VocabularyTableActivity, {
+  componentKey as unit5VocabularyTableKey,
+} from "@/components/learn/practiceActivities/unit5/VocabularyTableActivity";
+import Unit5MultipleChoiceActivity, {
+  componentKey as unit5MultipleChoiceKey,
+} from "@/components/learn/practiceActivities/unit5/MultipleChoiceActivity";
+import Unit5SpellingCompletionActivity, {
+  componentKey as unit5SpellingCompletionKey,
+} from "@/components/learn/practiceActivities/unit5/SpellingCompletionActivity";
+import Unit5MatchingActivity, {
+  componentKey as unit5MatchingKey,
+} from "@/components/learn/practiceActivities/unit5/MatchingActivity";
+import Unit5ListeningDictationActivity, {
+  componentKey as unit5ListeningDictationKey,
+} from "@/components/learn/practiceActivities/unit5/ListeningDictationActivity";
 import VocabularyFillInActivity, {
   componentKey as vocabularyFillInKey,
 } from "@/components/learn/practiceActivities/unit1/VocabularyFillInActivity";
@@ -61,6 +79,12 @@ export default function PracticeActivityRenderer({
     [numbersTableKey]: NumbersTableActivity,
     [numbersListeningKey]: NumbersListeningActivity,
     [numbersTranslationKey]: NumbersTranslationActivity,
+    [unit5IntroductionKey]: Unit5IntroductionActivity,
+    [unit5VocabularyTableKey]: Unit5VocabularyTableActivity,
+    [unit5MultipleChoiceKey]: Unit5MultipleChoiceActivity,
+    [unit5SpellingCompletionKey]: Unit5SpellingCompletionActivity,
+    [unit5MatchingKey]: Unit5MatchingActivity,
+    [unit5ListeningDictationKey]: Unit5ListeningDictationActivity,
     introduction: TimeIntroductionActivity,
     "vocabulary-table": TimeVocabularyTableActivity,
     matching: TimeMatchingActivity,
