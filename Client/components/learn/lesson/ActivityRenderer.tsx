@@ -100,6 +100,30 @@ import Unit6SpellingCompletionActivity, {
 import Unit6ListeningDictationActivity, {
   componentKey as unit6ListeningDictationKey,
 } from "@/components/learn/activities/unit6/ListeningDictationActivity";
+import Unit7IntroductionActivity, {
+  componentKey as unit7IntroductionKey,
+} from "@/components/learn/activities/unit7/IntroductionActivity";
+import Unit7VocabularyTableActivity, {
+  componentKey as unit7VocabularyTableKey,
+} from "@/components/learn/activities/unit7/VocabularyTableActivity";
+import Unit7MultipleChoiceActivity, {
+  componentKey as unit7MultipleChoiceKey,
+} from "@/components/learn/activities/unit7/MultipleChoiceActivity";
+import Unit7MatchingActivity, {
+  componentKey as unit7MatchingKey,
+} from "@/components/learn/activities/unit7/MatchingActivity";
+import Unit7SpellingCompletionActivity, {
+  componentKey as unit7SpellingCompletionKey,
+} from "@/components/learn/activities/unit7/SpellingCompletionActivity";
+import Unit7ListeningDictationActivity, {
+  componentKey as unit7ListeningDictationKey,
+} from "@/components/learn/activities/unit7/ListeningDictationActivity";
+import Unit7ConversationPracticeActivity, {
+  componentKey as unit7ConversationPracticeKey,
+} from "@/components/learn/activities/unit7/ConversationPracticeActivity";
+import Unit7DialogueActivity, {
+  componentKey as unit7DialogueKey,
+} from "@/components/learn/activities/unit7/DialogueActivity";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Activity } from "@/data/lessons";
@@ -170,6 +194,16 @@ export default function ActivityRenderer({
     [unit6MatchingKey]: Unit6MatchingActivity,
     [unit6SpellingCompletionKey]: Unit6SpellingCompletionActivity,
     [unit6ListeningDictationKey]: Unit6ListeningDictationActivity,
+
+    // Unit 7 (Colors - Rangi)
+    [unit7IntroductionKey]: Unit7IntroductionActivity,
+    [unit7VocabularyTableKey]: Unit7VocabularyTableActivity,
+    [unit7MultipleChoiceKey]: Unit7MultipleChoiceActivity,
+    [unit7MatchingKey]: Unit7MatchingActivity,
+    [unit7SpellingCompletionKey]: Unit7SpellingCompletionActivity,
+    [unit7ListeningDictationKey]: Unit7ListeningDictationActivity,
+    [unit7ConversationPracticeKey]: Unit7ConversationPracticeActivity,
+    [unit7DialogueKey]: Unit7DialogueActivity,
   };
 
   // Support newly added componentKey coming from backend seed. Extend type locally.

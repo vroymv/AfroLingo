@@ -1,0 +1,307 @@
+{
+  "id": "unit-7",
+  "title": "Colors - Rangi",
+  "level": "Absolute Beginner",
+  "progress": 0,
+  "totalLessons": 1,
+  "completedLessons": 0,
+  "icon": "🎨",
+  "color": "#E91E63",
+  "xpReward": 100,
+  "lessons": [
+    {
+      "id": "lesson-colors",
+      "phrase": "Rangi",
+      "meaning": "Colors",
+      "pronunciation": "rah-ngee",
+      "audio": "https://firebasestorage.googleapis.com/v0/b/afrolingo-e7ef3.firebasestorage.app/o/audio%2FKaraoke-type-test-audio.mp3?alt=media&token=86fa9267-b71a-415c-b02a-24c08f62f619",
+      "activities": [
+        {
+          "id": "activity-colors-1",
+          "type": "introduction",
+          "question": "Let's learn about colors in Swahili! Colors help us describe the world around us."
+        },
+        {
+          "id": "activity-colors-2",
+          "type": "vocabulary-table",
+          "question": "Basic Colors",
+          "description": "Learn the most common colors",
+          "audio": "https://firebasestorage.googleapis.com/v0/b/afrolingo-e7ef3.firebasestorage.app/o/audio%2FKaraoke-type-test-audio.mp3?alt=media&token=86fa9267-b71a-415c-b02a-24c08f62f619",
+          "items": [
+            {
+              "word": "Nyekundu",
+              "meaning": "Red",
+              "pronunciation": "nyeh-koon-doo",
+              "image": "/assets/images/vocab/color-red.png"
+            },
+            {
+              "word": "Bluu / Buluu",
+              "meaning": "Blue",
+              "pronunciation": "bloo-oo",
+              "image": "/assets/images/vocab/color-blue.png"
+            },
+            {
+              "word": "Kijani",
+              "meaning": "Green",
+              "pronunciation": "kee-jah-nee",
+              "image": "/assets/images/vocab/color-green.png"
+            },
+            {
+              "word": "Njano",
+              "meaning": "Yellow",
+              "pronunciation": "njah-no",
+              "image": "/assets/images/vocab/color-yellow.png"
+            },
+            {
+              "word": "Rangi ya chungwa",
+              "meaning": "Orange",
+              "pronunciation": "rah-ngee yah choon-gwah",
+              "image": "/assets/images/vocab/color-orange.png"
+            },
+            {
+              "word": "Zambarau",
+              "meaning": "Purple",
+              "pronunciation": "zahm-bah-rah-oo",
+              "image": "/assets/images/vocab/color-purple.png"
+            },
+            {
+              "word": "Waridi",
+              "meaning": "Pink",
+              "pronunciation": "wah-ree-dee",
+              "image": "/assets/images/vocab/color-pink.png"
+            },
+            {
+              "word": "Kahawia",
+              "meaning": "Brown",
+              "pronunciation": "kah-hah-wee-ah",
+              "image": "/assets/images/vocab/color-brown.png"
+            }
+          ]
+        },
+        {
+          "id": "activity-colors-3",
+          "type": "vocabulary-table",
+          "question": "Neutral Colors",
+          "description": "Learn neutral and basic colors",
+          "audio": "https://firebasestorage.googleapis.com/v0/b/afrolingo-e7ef3.firebasestorage.app/o/audio%2FKaraoke-type-test-audio.mp3?alt=media&token=86fa9267-b71a-415c-b02a-24c08f62f619",
+          "items": [
+            {
+              "word": "Nyeupe",
+              "meaning": "White",
+              "pronunciation": "nyeh-oo-peh",
+              "image": "/assets/images/vocab/color-white.png"
+            },
+            {
+              "word": "Nyeusi",
+              "meaning": "Black",
+              "pronunciation": "nyeh-oo-see",
+              "image": "/assets/images/vocab/color-black.png"
+            },
+            {
+              "word": "Kijivu",
+              "meaning": "Gray",
+              "pronunciation": "kee-jee-voo",
+              "image": "/assets/images/vocab/color-gray.png"
+            },
+            {
+              "word": "Dhahabu",
+              "meaning": "Gold",
+              "pronunciation": "thah-hah-boo",
+              "image": "/assets/images/vocab/color-gold.png"
+            },
+            {
+              "word": "Fedha",
+              "meaning": "Silver",
+              "pronunciation": "feh-thah",
+              "image": "/assets/images/vocab/color-silver.png"
+            }
+          ]
+        },
+        {
+          "id": "activity-colors-4",
+          "type": "multiple-choice",
+          "question": "What is 'Nyekundu' in English?",
+          "options": ["Blue", "Red", "Green", "Yellow"],
+          "correctAnswer": 1,
+          "explanation": "Nyekundu means Red in Swahili"
+        },
+        {
+          "id": "activity-colors-5",
+          "type": "multiple-choice",
+          "question": "How do you say 'Green' in Swahili?",
+          "options": ["Njano", "Bluu", "Kijani", "Nyeusi"],
+          "correctAnswer": 2,
+          "explanation": "Kijani means Green in Swahili"
+        },
+        {
+          "id": "activity-colors-6",
+          "type": "multiple-choice",
+          "question": "What color is 'Nyeupe'?",
+          "options": ["Black", "White", "Gray", "Brown"],
+          "correctAnswer": 1,
+          "explanation": "Nyeupe means White in Swahili"
+        },
+        {
+          "id": "activity-colors-7",
+          "type": "multiple-choice",
+          "question": "How do you say 'Purple' in Swahili?",
+          "options": ["Waridi", "Zambarau", "Kahawia", "Kijivu"],
+          "correctAnswer": 1,
+          "explanation": "Zambarau means Purple in Swahili"
+        },
+        {
+          "id": "activity-colors-8",
+          "type": "multiple-choice",
+          "question": "What is 'Rangi ya chungwa'?",
+          "options": ["Orange", "Yellow", "Pink", "Gold"],
+          "correctAnswer": 0,
+          "explanation": "Rangi ya chungwa means Orange (literally 'color of orange fruit')"
+        },
+        {
+          "id": "activity-colors-9",
+          "type": "spelling-completion",
+          "question": "Complete the Color Names",
+          "description": "Fill in the missing letters to complete each color",
+          "items": [
+            {
+              "word": "Nyekundu",
+              "blanks": "Nye__ndu",
+              "meaning": "Red"
+            },
+            {
+              "word": "Kijani",
+              "blanks": "Ki__ani",
+              "meaning": "Green"
+            },
+            {
+              "word": "Njano",
+              "blanks": "Nja__o",
+              "meaning": "Yellow"
+            },
+            {
+              "word": "Nyeupe",
+              "blanks": "Nye__pe",
+              "meaning": "White"
+            },
+            {
+              "word": "Nyeusi",
+              "blanks": "Nye__si",
+              "meaning": "Black"
+            },
+            {
+              "word": "Zambarau",
+              "blanks": "Zamb__rau",
+              "meaning": "Purple"
+            },
+            {
+              "word": "Waridi",
+              "blanks": "War__di",
+              "meaning": "Pink"
+            },
+            {
+              "word": "Kahawia",
+              "blanks": "Kah__wia",
+              "meaning": "Brown"
+            }
+          ]
+        },
+        {
+          "id": "activity-colors-10",
+          "type": "matching",
+          "question": "Match Colors to Their Meanings",
+          "description": "Connect the Swahili colors with their English translations",
+          "pairs": [
+            { "left": "Nyekundu", "right": "Red" },
+            { "left": "Kijani", "right": "Green" },
+            { "left": "Bluu", "right": "Blue" },
+            { "left": "Njano", "right": "Yellow" },
+            { "left": "Nyeupe", "right": "White" },
+            { "left": "Nyeusi", "right": "Black" }
+          ]
+        },
+        {
+          "id": "activity-colors-11",
+          "type": "listening-dictation",
+          "question": "Listening Exercise: Write the Colors",
+          "description": "Listen and write the color names you hear",
+          "audio": "https://firebasestorage.googleapis.com/v0/b/afrolingo-e7ef3.firebasestorage.app/o/audio%2FKaraoke-type-test-audio.mp3?alt=media&token=86fa9267-b71a-415c-b02a-24c08f62f619"
+        },
+        {
+          "id": "activity-colors-12",
+          "type": "conversation-practice",
+          "question": "Practice Describing Colors",
+          "description": "Practice talking about colors of objects",
+          "conversation": [
+            {
+              "speaker": "Teacher",
+              "text": "Rangi ya gari ni nini?",
+              "translation": "What color is the car?"
+            },
+            {
+              "speaker": "You",
+              "text": "Gari ni nyekundu.",
+              "translation": "The car is red."
+            },
+            {
+              "speaker": "Teacher",
+              "text": "Vizuri sana! Na rangi ya mti?",
+              "translation": "Very good! And the color of the tree?"
+            },
+            {
+              "speaker": "You",
+              "text": "Mti ni kijani.",
+              "translation": "The tree is green."
+            }
+          ]
+        },
+        {
+          "id": "activity-colors-13",
+          "type": "dialogue",
+          "question": "Shopping for Clothes",
+          "description": "Listen to a conversation about choosing colors while shopping",
+          "audio": "https://firebasestorage.googleapis.com/v0/b/afrolingo-e7ef3.firebasestorage.app/o/audio%2FKaraoke-type-test-audio.mp3?alt=media&token=86fa9267-b71a-415c-b02a-24c08f62f619",
+          "dialogue": [
+            {
+              "speaker": "Customer",
+              "text": "Habari! Nina taka kununua shati.",
+              "translation": "Hello! I want to buy a shirt."
+            },
+            {
+              "speaker": "Shopkeeper",
+              "text": "Karibu! Una taka rangi gani?",
+              "translation": "Welcome! What color do you want?"
+            },
+            {
+              "speaker": "Customer",
+              "text": "Nina taka shati la bluu.",
+              "translation": "I want a blue shirt."
+            },
+            {
+              "speaker": "Shopkeeper",
+              "text": "Tuna bluu, nyeupe, na nyekundu.",
+              "translation": "We have blue, white, and red."
+            },
+            {
+              "speaker": "Customer",
+              "text": "Nipe shati la bluu, tafadhali.",
+              "translation": "Give me the blue shirt, please."
+            },
+            {
+              "speaker": "Shopkeeper",
+              "text": "Hapa! Rangi nzuri sana.",
+              "translation": "Here! Very nice color."
+            }
+          ]
+        },
+        {
+          "id": "activity-colors-14",
+          "type": "multiple-choice",
+          "question": "In the phrase 'Rangi ya chungwa', what does 'chungwa' mean?",
+          "options": ["Color", "Orange (fruit)", "Bright", "Paint"],
+          "correctAnswer": 1,
+          "explanation": "Chungwa means 'orange fruit', so 'rangi ya chungwa' literally means 'color of orange'"
+        }
+      ]
+    }
+  ]
+}
