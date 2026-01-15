@@ -1,6 +1,8 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useOptionalLessonRuntime } from "@/contexts/LessonRuntimeContext";
 import { Activity } from "@/data/lessons";
+import { recordMistake } from "@/services/mistakes";
 import React, { useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 
@@ -20,6 +22,16 @@ export default function MatchingActivity({
   activity,
   onComplete,
 }: MatchingActivityProps) {
+  const runtime = useOptionalLessonRuntime();
+
+  const isPracticeRuntime =
+    typeof runtime?.unitId === "string" &&
+    runtime.unitId.startsWith("practice:");
+  const userId = runtime?.userId ?? null;
+  const unitId = runtime?.unitId;
+  const currentActivityNumber = runtime?.currentActivityNumber;
+  const totalActivities = runtime?.totalActivities;
+
   const pairs = activity.pairs || [];
 
   // Shuffle the right side
@@ -75,6 +87,35 @@ export default function MatchingActivity({
         setIncorrectPairs([]);
       } else {
         // Incorrect match
+        if (userId && unitId && !isPracticeRuntime) {
+          const expectedRight = pairs[selectedLeft]?.right;
+
+          void recordMistake({
+            userId,
+            unitId,
+            activityExternalId: activity.id,
+            questionText: String(activity.question || "Match the pairs"),
+            userAnswer: {
+              leftIndex: selectedLeft,
+              rightIndex: index,
+              left: leftValue,
+              right: rightValue,
+            },
+            correctAnswer: {
+              left: leftValue,
+              right: expectedRight,
+            },
+            mistakeType: "matching",
+            occurredAt: new Date().toISOString(),
+            metadata: {
+              currentActivityNumber,
+              totalActivities,
+              screen: "MatchingActivity",
+              pairsCount: pairs.length,
+            },
+          });
+        }
+
         setIncorrectPairs([{ left: selectedLeft, right: index }]);
         setSelectedRight(index);
 

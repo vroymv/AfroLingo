@@ -34,3 +34,7 @@ export function useLessonRuntime(): LessonRuntime {
   }
   return ctx;
 }
+
+export function useOptionalLessonRuntime(): LessonRuntime | undefined {
+  return useContext(LessonRuntimeContext);
+}

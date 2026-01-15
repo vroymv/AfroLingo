@@ -710,11 +710,20 @@ model UserMistake {
   activityId String
   unitId     String
 
+  // Optional client-generated id for idempotency (avoid duplicates on retries)
+  clientMistakeId String?
+
+  // Optional client-side timestamp for when the mistake occurred
+  occurredAt DateTime? @db.Timestamptz
+
   // Mistake details
   questionText  String  @db.Text
   userAnswer    Json // What they answered
   correctAnswer Json // What the correct answer was
   mistakeType   String? // e.g., "spelling", "grammar", "vocabulary", "pronunciation"
+
+  // Optional extra context (question ids, prompt ids, UI state, etc.)
+  metadata Json?
 
   // Learning value
   wasReviewed    Boolean   @default(false) // Has user seen this in review
@@ -735,6 +744,8 @@ model UserMistake {
   @@index([wasReviewed])
   @@index([isMastered])
   @@index([createdAt])
+  @@index([userId, createdAt(sort: Desc)])
+  @@unique([userId, clientMistakeId])
   @@map("user_mistakes")
 }
 

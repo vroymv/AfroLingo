@@ -2,6 +2,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useLessonRuntime } from "@/contexts/LessonRuntimeContext";
 import { Activity } from "@/data/lessons";
+import { recordMistake } from "@/services/mistakes";
 import { updateUserProgress } from "@/services/userprogress";
 import { awardXP } from "@/services/xp";
 import { Ionicons } from "@expo/vector-icons";
@@ -179,6 +180,49 @@ export default function VocabularyFillInActivity({
 
     setCorrectItems(correct);
     setShowFeedback(true);
+
+    if (userId && unitId) {
+      vocabularyItems.forEach((item) => {
+        if (correct.has(item.id)) return;
+
+        const providedLetters = (userAnswers[item.id] || []).map((l) =>
+          String(l || "")
+        );
+        const expectedLetters = item.blanks.map((blankPos) =>
+          String(item.word[blankPos] || "")
+        );
+        const incorrectBlankIndices = item.blanks
+          .map((_, idx) =>
+            providedLetters[idx] === expectedLetters[idx] ? null : idx
+          )
+          .filter((v): v is number => v !== null);
+
+        void recordMistake({
+          userId,
+          unitId,
+          activityExternalId: activity.id,
+          questionText: String(activity.question || "Complete the Words"),
+          userAnswer: {
+            itemId: item.id,
+            providedLetters,
+            blanks: item.blanks,
+            incorrectBlankIndices,
+          },
+          correctAnswer: {
+            word: item.word,
+            expectedLetters,
+            blanks: item.blanks,
+          },
+          mistakeType: "vocabulary-fill-in",
+          occurredAt: new Date().toISOString(),
+          metadata: {
+            currentActivityNumber,
+            totalActivities,
+            screen: "VocabularyFillInActivity",
+          },
+        });
+      });
+    }
 
     // If all correct, complete the activity
     if (correct.size === vocabularyItems.length) {

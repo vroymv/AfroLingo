@@ -4,6 +4,7 @@ import { Activity } from "@/data/lessons";
 import { getMultipleChoiceActivities } from "@/data/multiple-choice-activity-content";
 import { useLessonRuntime } from "@/contexts/LessonRuntimeContext";
 import { awardXP } from "@/services/xp";
+import { recordMistake } from "@/services/mistakes";
 import React, { useEffect, useState } from "react";
 import { TouchableOpacity, View } from "react-native";
 import { styles } from "./MultipleChoiceActivity.styles";
@@ -64,6 +65,31 @@ export default function MultipleChoiceActivity({
       setShowResult(true);
 
       const isCorrectNow = selectedAnswer === correctAnswerIndex;
+
+      if (!isCorrectNow && userId && unitId) {
+        void recordMistake({
+          userId,
+          unitId,
+          activityExternalId: activity.id,
+          questionText: String(question),
+          userAnswer: {
+            selectedAnswerIndex: selectedAnswer,
+            selectedAnswerText: options[selectedAnswer],
+          },
+          correctAnswer: {
+            correctAnswerIndex,
+            correctAnswerText: options[correctAnswerIndex],
+          },
+          mistakeType: "multiple-choice",
+          occurredAt: new Date().toISOString(),
+          metadata: {
+            currentActivityNumber,
+            totalActivities,
+            screen: "MultipleChoiceActivity",
+            contentId: (currentActivity as any)?.id,
+          },
+        });
+      }
       if (isCorrectNow && userId && !correctXPAwarded) {
         const sourceKey = `${activity.id}:${currentActivity.id}`;
         const result = await awardXP({

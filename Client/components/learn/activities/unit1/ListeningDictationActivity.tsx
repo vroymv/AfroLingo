@@ -2,6 +2,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useLessonRuntime } from "@/contexts/LessonRuntimeContext";
 import { Activity } from "@/data/lessons";
+import { recordMistake } from "@/services/mistakes";
 import { updateUserProgress } from "@/services/userprogress";
 import { awardXP } from "@/services/xp";
 import { Ionicons } from "@expo/vector-icons";
@@ -73,6 +74,30 @@ export default function ListeningDictationActivity({
     setIsCorrect(correct);
     setShowFeedback(true);
     setIsChecking(false);
+
+    if (!correct && userId && unitId) {
+      void recordMistake({
+        userId,
+        unitId,
+        activityExternalId: activity.id,
+        questionText: String(activity.question || "Listen and Write"),
+        userAnswer: {
+          raw: userAnswer,
+          normalized,
+        },
+        correctAnswer: {
+          expected: correctAnswer,
+          letters: CORRECT_LETTERS,
+        },
+        mistakeType: "listening-dictation",
+        occurredAt: new Date().toISOString(),
+        metadata: {
+          currentActivityNumber,
+          totalActivities,
+          screen: "ListeningDictationActivity",
+        },
+      });
+    }
 
     if (correct) {
       if (userId && !correctXPAwarded) {

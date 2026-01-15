@@ -1,7 +1,9 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useLessonRuntime } from "@/contexts/LessonRuntimeContext";
 import type { Activity } from "@/data/lessons";
 import { getUnit6ActivityByRef } from "@/data/unit6/pluralsOfNounsContent";
+import { recordMistake } from "@/services/mistakes";
 import { Ionicons } from "@expo/vector-icons";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import React, { useMemo, useState } from "react";
@@ -27,6 +29,9 @@ export default function Unit6ListeningDictationActivity({
   activity,
   onComplete,
 }: Props) {
+  const { userId, unitId, currentActivityNumber, totalActivities } =
+    useLessonRuntime();
+
   useLessonProgressReporter();
   const { award } = useCompletionXP(15, "unit6-dictation");
 
@@ -117,6 +122,25 @@ export default function Unit6ListeningDictationActivity({
       <TouchableOpacity
         style={styles.continueButton}
         onPress={async () => {
+          if (userId && unitId && answer.trim().length === 0) {
+            void recordMistake({
+              userId,
+              unitId,
+              activityExternalId: activity.id,
+              questionText: String(question),
+              userAnswer: { answer },
+              correctAnswer: { requirement: "non-empty answer" },
+              mistakeType: "listening-dictation-empty",
+              occurredAt: new Date().toISOString(),
+              metadata: {
+                currentActivityNumber,
+                totalActivities,
+                screen: "Unit6ListeningDictationActivity",
+                contentRef: activity.contentRef,
+              },
+            });
+          }
+
           await award({
             screen: "Unit6ListeningDictationActivity",
             reason: "completed",

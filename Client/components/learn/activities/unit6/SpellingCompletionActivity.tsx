@@ -1,6 +1,7 @@
 import BaseSpellingCompletionActivity from "@/components/learn/activities/SpellingCompletionActivity";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useLessonRuntime } from "@/contexts/LessonRuntimeContext";
 import type { Activity } from "@/data/lessons";
 import { getUnit6ActivityByRef } from "@/data/unit6/pluralsOfNounsContent";
 import React, { useMemo } from "react";
@@ -22,6 +23,9 @@ export default function Unit6SpellingCompletionActivity({
 }: Props) {
   useLessonProgressReporter();
   const { award } = useCompletionXP(15, "unit6-spelling");
+
+  const { userId, unitId, currentActivityNumber, totalActivities } =
+    useLessonRuntime();
 
   const content = useMemo(
     () => getUnit6ActivityByRef(activity.contentRef || activity.id),
@@ -61,6 +65,17 @@ export default function Unit6SpellingCompletionActivity({
   return (
     <BaseSpellingCompletionActivity
       activity={merged as any}
+      mistakeReporting={{
+        userId,
+        unitId,
+        activityExternalId: activity.id,
+        screen: "Unit6SpellingCompletionActivity",
+        metadata: {
+          currentActivityNumber,
+          totalActivities,
+          contentRef: activity.contentRef,
+        },
+      }}
       onComplete={async () => {
         await award({
           screen: "Unit6SpellingCompletionActivity",

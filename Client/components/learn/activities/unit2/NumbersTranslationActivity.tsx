@@ -2,6 +2,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Activity } from "@/data/lessons";
 import { useLessonRuntime } from "@/contexts/LessonRuntimeContext";
+import { recordMistake } from "@/services/mistakes";
 import { updateUserProgress } from "@/services/userprogress";
 import { awardXP } from "@/services/xp";
 import { Ionicons } from "@expo/vector-icons";
@@ -100,6 +101,35 @@ export default function NumbersTranslationActivity({
     setIsCorrect(allCorrect);
     setShowFeedback(true);
     setIsChecking(false);
+
+    if (!allCorrect && userId && unitId) {
+      const submitted = userAnswers.map((a) => normalizeAnswer(a));
+      const expected = NUMBER_PAIRS.map((p) => normalizeAnswer(p.number));
+      const incorrectIndices = expected
+        .map((exp, i) => (submitted[i] === exp ? null : i))
+        .filter((v): v is number => v !== null);
+
+      void recordMistake({
+        userId,
+        unitId,
+        activityExternalId: activity.id,
+        questionText: String(activity.question || "Write Numbers as Figures"),
+        userAnswer: {
+          submitted,
+          incorrectIndices,
+        },
+        correctAnswer: {
+          expected,
+        },
+        mistakeType: "numbers-translation",
+        occurredAt: new Date().toISOString(),
+        metadata: {
+          currentActivityNumber,
+          totalActivities,
+          screen: "NumbersTranslationActivity",
+        },
+      });
+    }
 
     if (allCorrect) {
       if (userId && !correctXPAwarded) {

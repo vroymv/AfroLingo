@@ -1,5 +1,6 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { recordMistake } from "@/services/mistakes";
 import React, { useState } from "react";
 import {
   Image,
@@ -24,11 +25,21 @@ interface SpellingCompletionActivityProps {
     items?: SpellingItem[];
   };
   onComplete: () => void;
+
+  // Optional context for reporting mistakes.
+  mistakeReporting?: {
+    userId?: string;
+    unitId?: string;
+    activityExternalId?: string;
+    screen?: string;
+    metadata?: Record<string, any>;
+  };
 }
 
 export default function SpellingCompletionActivity({
   activity,
   onComplete,
+  mistakeReporting,
 }: SpellingCompletionActivityProps) {
   const items = activity.items || [];
   const [answers, setAnswers] = useState<string[]>(
@@ -49,6 +60,44 @@ export default function SpellingCompletionActivity({
       const correctAnswer = item.complete.toLowerCase();
       return userAnswer === correctAnswer;
     });
+
+    if (
+      mistakeReporting?.userId &&
+      mistakeReporting?.unitId &&
+      mistakeReporting?.activityExternalId
+    ) {
+      const baseQuestion = activity.question || "Complete the Spelling";
+      const nowIso = new Date().toISOString();
+
+      items.forEach((item, index) => {
+        if (newResults[index]) return;
+
+        void recordMistake({
+          userId: mistakeReporting.userId!,
+          unitId: mistakeReporting.unitId!,
+          activityExternalId: mistakeReporting.activityExternalId!,
+          questionText: `${baseQuestion} — ${item.hint}`,
+          userAnswer: {
+            text: answers[index],
+            normalized: answers[index].trim().toLowerCase(),
+            index,
+          },
+          correctAnswer: {
+            text: item.complete,
+            normalized: item.complete.toLowerCase(),
+          },
+          mistakeType: "spelling",
+          occurredAt: nowIso,
+          metadata: {
+            screen: mistakeReporting.screen || "SpellingCompletionActivity",
+            itemHint: item.hint,
+            itemPartial: item.partial,
+            ...mistakeReporting.metadata,
+          },
+        });
+      });
+    }
+
     setResults(newResults);
     setSubmitted(true);
   };

@@ -2,6 +2,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Activity } from "@/data/lessons";
 import { useLessonRuntime } from "@/contexts/LessonRuntimeContext";
+import { recordMistake } from "@/services/mistakes";
 import { updateUserProgress } from "@/services/userprogress";
 import { awardXP } from "@/services/xp";
 import { Ionicons } from "@expo/vector-icons";
@@ -114,6 +115,35 @@ export default function NumbersListeningActivity({
     setIsCorrect(allCorrect);
     setShowFeedback(true);
     setIsChecking(false);
+
+    if (!allCorrect && userId && unitId) {
+      const submitted = userAnswers.map((a) => normalizeAnswer(a));
+      const expected = CORRECT_NUMBERS.map((n) => normalizeAnswer(n));
+      const incorrectIndices = expected
+        .map((exp, i) => (submitted[i] === exp ? null : i))
+        .filter((v): v is number => v !== null);
+
+      void recordMistake({
+        userId,
+        unitId,
+        activityExternalId: activity.id,
+        questionText: String(activity.question || "Numbers Listening Exercise"),
+        userAnswer: {
+          submitted,
+          incorrectIndices,
+        },
+        correctAnswer: {
+          expected,
+        },
+        mistakeType: "numbers-listening",
+        occurredAt: new Date().toISOString(),
+        metadata: {
+          currentActivityNumber,
+          totalActivities,
+          screen: "NumbersListeningActivity",
+        },
+      });
+    }
 
     if (allCorrect) {
       if (userId && !correctXPAwarded) {

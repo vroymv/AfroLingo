@@ -4,6 +4,7 @@ import { useLessonRuntime } from "@/contexts/LessonRuntimeContext";
 import type { Activity } from "@/data/lessons";
 import { getGreetingsActivityByRef } from "@/data/unit4/greetingsContent";
 import { awardXP } from "@/services/xp";
+import { recordMistake } from "@/services/mistakes";
 import React, { useEffect, useMemo, useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import {
@@ -71,6 +72,31 @@ export default function GreetingsMultipleChoiceActivity({
 
     if (!showResult) {
       setShowResult(true);
+
+      if (!isCorrect && userId && unitId) {
+        void recordMistake({
+          userId,
+          unitId,
+          activityExternalId: activity.id,
+          questionText: String(question),
+          userAnswer: {
+            selectedAnswerIndex: selectedAnswer,
+            selectedAnswerText: options[selectedAnswer],
+          },
+          correctAnswer: {
+            correctAnswerIndex,
+            correctAnswerText: options[correctAnswerIndex],
+          },
+          mistakeType: "multiple-choice",
+          occurredAt: new Date().toISOString(),
+          metadata: {
+            currentActivityNumber,
+            totalActivities,
+            screen: "GreetingsMultipleChoiceActivity",
+            contentRef: activity.contentRef,
+          },
+        });
+      }
 
       if (isCorrect && userId && !correctXPAwarded) {
         const sourceKey = `${activity.id}:${

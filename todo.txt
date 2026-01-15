@@ -4,3 +4,5 @@ After each of the activities or units are completed, have the UserDailyActivity 
 
 Running the seed for a table: 
 npx ts-node prisma/seed-tutors.ts
+
+Each new activity component should record user progress, award XPs, and report user mistakes.

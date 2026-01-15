@@ -21,3 +21,4 @@ export { default as tutorChatRouter } from "./tutorChat";
 export { default as profileRouter } from "./profile";
 export { default as communityRouter } from "./community";
 export { default as homeRouter } from "./home";
+export { default as mistakesRouter } from "./mistakes";
