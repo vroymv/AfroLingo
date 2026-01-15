@@ -93,37 +93,13 @@ export default function LoginScreen() {
   };
 
   const handleGoogleLogin = async () => {
-    // Clear any previous auth errors
-    if (authError) {
-      clearError();
-    }
-
-    try {
-      setIsGoogleLoading(true);
-      await loginWithGoogle();
-      // Navigation will be handled by the root layout based on auth state
-    } catch {
-      // Error is now displayed inline via authError state
-    } finally {
-      setIsGoogleLoading(false);
-    }
+    // Show alert for coming soon
+    alert("Coming soon");
   };
 
   const handleAppleLogin = async () => {
-    // Clear any previous auth errors
-    if (authError) {
-      clearError();
-    }
-
-    try {
-      setIsAppleLoading(true);
-      await loginWithApple();
-      // Navigation will be handled by the root layout based on auth state
-    } catch {
-      // Error is now displayed inline via authError state
-    } finally {
-      setIsAppleLoading(false);
-    }
+    // Show alert for coming soon
+    alert("Coming soon");
   };
 
   return (
