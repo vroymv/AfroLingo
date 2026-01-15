@@ -28,8 +28,8 @@ import { Ionicons } from "@expo/vector-icons";
 export default function LoginScreen() {
   const {
     login,
-    loginWithGoogle,
-    loginWithApple,
+    // loginWithGoogle,
+    // loginWithApple,
     isLoading,
     error: authError,
     clearError,
@@ -39,8 +39,8 @@ export default function LoginScreen() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [isAppleLoading, setIsAppleLoading] = useState(false);
+  // const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  // const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
     {}
   );
@@ -207,8 +207,8 @@ export default function LoginScreen() {
               <SocialAuthButtons
                 onGooglePress={handleGoogleLogin}
                 onApplePress={handleAppleLogin}
-                isGoogleLoading={isGoogleLoading}
-                isAppleLoading={isAppleLoading}
+                isGoogleLoading={false}
+                isAppleLoading={false}
                 disabled={isLoading}
               />
 

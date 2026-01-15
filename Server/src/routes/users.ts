@@ -9,7 +9,7 @@ const createUserSchema = z.object({
   firebaseUid: z.string().min(1, "Firebase UID is required"),
   email: z.string().email("Invalid email format"),
   name: z.string().min(2, "Name must be at least 2 characters"),
-  createdAt: z.string().datetime().optional(),
+  createdAt: z.coerce.date().optional(),
 });
 
 const communityUserTypeSchema = z.enum(["LEARNER", "NATIVE", "TUTOR"]);
@@ -54,9 +54,7 @@ router.post("/", async (req: Request, res: Response) => {
         id: validatedData.firebaseUid,
         email: validatedData.email,
         name: validatedData.name,
-        createdAt: validatedData.createdAt
-          ? new Date(validatedData.createdAt)
-          : new Date(),
+        createdAt: validatedData.createdAt ?? new Date(),
       },
     });
 

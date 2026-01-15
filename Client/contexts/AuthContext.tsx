@@ -46,21 +46,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Best-effort: ensure a matching Prisma User record exists
         // (required by onboarding/profile stats/community)
         if (API_BASE_URL) {
-          fetch(`${API_BASE_URL}/users`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${idToken}`,
-            },
-            body: JSON.stringify({
-              firebaseUid: firebaseUser.uid,
-              email: firebaseUser.email || "",
-              name: firebaseUser.displayName || "",
-              createdAt: firebaseUser.metadata.creationTime || undefined,
-            }),
-          }).catch(() => {
-            // Ignore network errors; user can still proceed
-          });
+          // Only attempt to create/sync a DB user when we have the required fields.
+          // Avoid sending Firebase `creationTime` (not guaranteed to be RFC3339) and avoid empty strings.
+          const email = firebaseUser.email?.trim();
+          const fallbackNameFromEmail = email?.split("@")[0]?.trim();
+          const name =
+            firebaseUser.displayName?.trim() ||
+            (fallbackNameFromEmail && fallbackNameFromEmail.length >= 2
+              ? fallbackNameFromEmail
+              : "User");
+
+          if (email) {
+            fetch(`${API_BASE_URL}/users`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${idToken}`,
+              },
+              body: JSON.stringify({
+                firebaseUid: firebaseUser.uid,
+                email,
+                name,
+              }),
+            }).catch(() => {
+              // Ignore network errors; user can still proceed
+            });
+          }
         }
       } else {
         setUser(null);
