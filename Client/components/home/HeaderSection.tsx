@@ -4,7 +4,7 @@ import { Colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotificationBadge } from "@/contexts/community/NotificationBadgeContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -16,6 +16,57 @@ import {
   markCommunityNotificationRead,
   type ServerNotification,
 } from "@/services/communityNotifications";
+
+const formatTimeLabel = (date: Date): string => {
+  const now = Date.now();
+  const diffMs = now - date.getTime();
+  if (diffMs < 60_000) return "Just now";
+  if (diffMs < 60 * 60_000)
+    return `${Math.max(1, Math.floor(diffMs / 60_000))}m`;
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  if (date.getTime() >= startOfToday.getTime()) return "Today";
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
+};
+
+const toAppNotification = (n: ServerNotification): AppNotification => {
+  const createdAt = new Date(n.createdAt);
+  const read = Boolean(n.readAt);
+
+  if (n.type === "GROUP_INVITE") {
+    const invitedByName = String(n.data?.invitedByName ?? "Someone");
+    const groupName = String(n.data?.groupName ?? "a group");
+    return {
+      id: n.id,
+      title: "Group invite",
+      body: `${invitedByName} invited you to ${groupName}.`,
+      timeLabel: formatTimeLabel(createdAt),
+      read,
+    };
+  }
+
+  if (n.type === "GROUP_MESSAGE") {
+    const preview = typeof n.data?.preview === "string" ? n.data.preview : "";
+    return {
+      id: n.id,
+      title: "New group message",
+      body: preview.trim().length ? preview : "You have a new message.",
+      timeLabel: formatTimeLabel(createdAt),
+      read,
+    };
+  }
+
+  return {
+    id: n.id,
+    title: "Update",
+    body: "You have a new notification.",
+    timeLabel: formatTimeLabel(createdAt),
+    read,
+  };
+};
 
 interface HeaderSectionProps {
   selectedLanguage: string | null;
@@ -34,59 +85,8 @@ export default function HeaderSection({
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
   const [notificationsError, setNotificationsError] = useState<string | null>(
-    null
+    null,
   );
-
-  const formatTimeLabel = (date: Date): string => {
-    const now = Date.now();
-    const diffMs = now - date.getTime();
-    if (diffMs < 60_000) return "Just now";
-    if (diffMs < 60 * 60_000)
-      return `${Math.max(1, Math.floor(diffMs / 60_000))}m`;
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-    if (date.getTime() >= startOfToday.getTime()) return "Today";
-    return date.toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  const toAppNotification = (n: ServerNotification): AppNotification => {
-    const createdAt = new Date(n.createdAt);
-    const read = Boolean(n.readAt);
-
-    if (n.type === "GROUP_INVITE") {
-      const invitedByName = String(n.data?.invitedByName ?? "Someone");
-      const groupName = String(n.data?.groupName ?? "a group");
-      return {
-        id: n.id,
-        title: "Group invite",
-        body: `${invitedByName} invited you to ${groupName}.`,
-        timeLabel: formatTimeLabel(createdAt),
-        read,
-      };
-    }
-
-    if (n.type === "GROUP_MESSAGE") {
-      const preview = typeof n.data?.preview === "string" ? n.data.preview : "";
-      return {
-        id: n.id,
-        title: "New group message",
-        body: preview.trim().length ? preview : "You have a new message.",
-        timeLabel: formatTimeLabel(createdAt),
-        read,
-      };
-    }
-
-    return {
-      id: n.id,
-      title: "Update",
-      body: "You have a new notification.",
-      timeLabel: formatTimeLabel(createdAt),
-      read,
-    };
-  };
 
   const loadNotifications = useCallback(async () => {
     if (!user?.id) return;
@@ -183,7 +183,7 @@ export default function HeaderSection({
     // Rotate based on day of year to keep it fresh
     const dayOfYear = Math.floor(
       (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) /
-        86400000
+        86400000,
     );
     return phrases[dayOfYear % phrases.length];
   };
@@ -193,7 +193,7 @@ export default function HeaderSection({
 
     // Optimistic UI
     setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
     );
 
     const res = await markCommunityNotificationRead({
@@ -221,8 +221,8 @@ export default function HeaderSection({
 
     await Promise.all(
       unreadIds.map((id) =>
-        markCommunityNotificationRead({ userId: user.id, notificationId: id })
-      )
+        markCommunityNotificationRead({ userId: user.id, notificationId: id }),
+      ),
     );
 
     void refreshUnreadCount();
@@ -232,7 +232,9 @@ export default function HeaderSection({
     <ThemedView style={styles.header}>
       <View style={styles.headerTop}>
         <View style={styles.headerContent}>
-          <ThemedText style={styles.greeting}>{getGreeting()}, Roy!</ThemedText>
+          <ThemedText style={styles.greeting}>
+            {getGreeting()}, {user?.name?.trim() ? user.name.trim() : "there"}!
+          </ThemedText>
           <ThemedText style={styles.motivationalPhrase}>
             {getMotivationalPhrase()}
           </ThemedText>

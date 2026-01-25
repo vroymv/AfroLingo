@@ -89,6 +89,7 @@ export const StoriesTab: React.FC = () => {
     <ThemedView style={styles.container}>
       <ScrollView
         style={styles.scrollView}
+        contentContainerStyle={styles.scrollViewContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -172,6 +173,9 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     paddingHorizontal: 16,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
   },
   // Stories Section
   storiesSection: {
