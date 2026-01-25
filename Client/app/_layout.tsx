@@ -3,6 +3,7 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
+import React from "react";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import "react-native-reanimated";
@@ -58,6 +59,28 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
+
+  React.useEffect(() => {
+    // Local notifications only (no push). Kept behind a dynamic import so dev builds
+    // without the native module won't crash at startup.
+    void (async () => {
+      try {
+        const Notifications = await import("expo-notifications");
+        Notifications.setNotificationHandler({
+          handleNotification: async () => ({
+            shouldShowAlert: true,
+            shouldPlaySound: false,
+            shouldSetBadge: false,
+          }),
+        });
+      } catch (e) {
+        console.warn(
+          "[notifications] expo-notifications not available (rebuild dev client if needed)",
+          e,
+        );
+      }
+    })();
+  }, []);
 
   if (!loaded) return null;
 

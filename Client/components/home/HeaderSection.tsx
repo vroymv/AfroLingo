@@ -7,6 +7,7 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import React, { useCallback, useEffect, useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import {
   AppNotification,
   NotificationsSheet,
@@ -39,23 +40,30 @@ const toAppNotification = (n: ServerNotification): AppNotification => {
   if (n.type === "GROUP_INVITE") {
     const invitedByName = String(n.data?.invitedByName ?? "Someone");
     const groupName = String(n.data?.groupName ?? "a group");
+    const inviteId =
+      typeof n.data?.inviteId === "string" ? n.data.inviteId : "";
     return {
       id: n.id,
       title: "Group invite",
       body: `${invitedByName} invited you to ${groupName}.`,
       timeLabel: formatTimeLabel(createdAt),
       read,
+      href: inviteId
+        ? `/community/groups/invites?inviteId=${inviteId}`
+        : "/community/groups/invites",
     };
   }
 
   if (n.type === "GROUP_MESSAGE") {
     const preview = typeof n.data?.preview === "string" ? n.data.preview : "";
+    const groupId = typeof n.data?.groupId === "string" ? n.data.groupId : "";
     return {
       id: n.id,
       title: "New group message",
       body: preview.trim().length ? preview : "You have a new message.",
       timeLabel: formatTimeLabel(createdAt),
       read,
+      href: groupId ? `/community/groups/${groupId}` : undefined,
     };
   }
 
@@ -75,6 +83,7 @@ interface HeaderSectionProps {
 export default function HeaderSection({
   selectedLanguage,
 }: HeaderSectionProps) {
+  const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? "light"];
 
@@ -228,6 +237,14 @@ export default function HeaderSection({
     void refreshUnreadCount();
   };
 
+  const onPressNotification = (n: AppNotification) => {
+    markRead(n.id);
+    setNotificationsOpen(false);
+    if (n.href) {
+      router.push(n.href as any);
+    }
+  };
+
   return (
     <ThemedView style={styles.header}>
       <View style={styles.headerTop}>
@@ -273,6 +290,7 @@ export default function HeaderSection({
         onClose={() => setNotificationsOpen(false)}
         onMarkRead={markRead}
         onMarkAllRead={markAllRead}
+        onPressNotification={onPressNotification}
       />
     </ThemedView>
   );

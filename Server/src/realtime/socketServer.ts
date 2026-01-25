@@ -125,7 +125,7 @@ async function getOnlineUserIdsForGroup(params: {
 }
 
 function getBearerTokenFromAuthorizationHeader(
-  value: string | string[] | undefined
+  value: string | string[] | undefined,
 ): string | null {
   if (!value) return null;
   const header = Array.isArray(value) ? value[0] : value;
@@ -143,7 +143,7 @@ function getHandshakeToken(socket: any): string | null {
   if (fromAuth && fromAuth.length > 0) return fromAuth;
 
   const fromHeader = getBearerTokenFromAuthorizationHeader(
-    socket?.handshake?.headers?.authorization
+    socket?.handshake?.headers?.authorization,
   );
   return fromHeader;
 }
@@ -474,10 +474,24 @@ export function initSocketServer(httpServer: HttpServer) {
         });
 
         const onlineSet = new Set(onlineUserIds);
-        const recipientUserIds = members
+        let recipientUserIds = members
           .map((m) => m.userId)
           .filter((id) => id !== userId)
           .filter((id) => !onlineSet.has(id));
+
+        if (recipientUserIds.length > 0) {
+          const allowed = await prisma.user.findMany({
+            where: {
+              id: { in: recipientUserIds },
+              groupMessageNotificationsEnabled: true,
+            },
+            select: { id: true },
+          });
+          const allowedSet = new Set(allowed.map((u) => u.id));
+          recipientUserIds = recipientUserIds.filter((id) =>
+            allowedSet.has(id),
+          );
+        }
 
         if (recipientUserIds.length > 0) {
           const preview =
@@ -508,8 +522,8 @@ export function initSocketServer(httpServer: HttpServer) {
                   createdAt: true,
                   readAt: true,
                 },
-              })
-            )
+              }),
+            ),
           );
 
           for (const notification of createdNotifications) {
@@ -581,7 +595,7 @@ export function initSocketServer(httpServer: HttpServer) {
           userId,
           isTyping: true,
         });
-      }
+      },
     );
 
     socket.on(
@@ -600,7 +614,7 @@ export function initSocketServer(httpServer: HttpServer) {
           userId,
           isTyping: false,
         });
-      }
+      },
     );
 
     // Re-sync rooms after the client joins/leaves groups via HTTP.

@@ -26,6 +26,19 @@ npm install
 npm start        # launches Expo development server
 ```
 
+### Environment variables
+
+This app expects Expo public env vars (see `Client/.env.example`).
+
+```bash
+cp .env.example .env
+```
+
+Important:
+
+- `EXPO_PUBLIC_API_BASE_URL` should include the `/api` prefix (example: `http://localhost:3000/api`).
+- Socket.io connects to the same server host, but without `/api` (the client derives this automatically).
+
 From the terminal/UI you can open:
 
 - iOS Simulator

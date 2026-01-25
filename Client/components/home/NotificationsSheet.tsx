@@ -19,6 +19,7 @@ export type AppNotification = {
   body: string;
   timeLabel: string;
   read: boolean;
+  href?: string;
 };
 
 export function NotificationsSheet({
@@ -30,6 +31,7 @@ export function NotificationsSheet({
   onClose,
   onMarkRead,
   onMarkAllRead,
+  onPressNotification,
 }: {
   visible: boolean;
   notifications: AppNotification[];
@@ -39,6 +41,7 @@ export function NotificationsSheet({
   onClose: () => void;
   onMarkRead: (id: string) => void;
   onMarkAllRead: () => void;
+  onPressNotification?: (notification: AppNotification) => void;
 }) {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? "light"];
@@ -59,7 +62,7 @@ export function NotificationsSheet({
 
   const unreadCount = useMemo(
     () => notifications.filter((n) => !n.read).length,
-    [notifications]
+    [notifications],
   );
 
   const closeWithAnimation = () => {
@@ -73,6 +76,14 @@ export function NotificationsSheet({
   };
 
   const renderItem = ({ item }: { item: AppNotification }) => {
+    const handlePress = () => {
+      if (onPressNotification) {
+        onPressNotification(item);
+        return;
+      }
+      onMarkRead(item.id);
+    };
+
     return (
       <Swipeable
         overshootRight={false}
@@ -95,7 +106,7 @@ export function NotificationsSheet({
         onSwipeableOpen={() => onMarkRead(item.id)}
       >
         <Pressable
-          onPress={() => onMarkRead(item.id)}
+          onPress={handlePress}
           style={({ pressed }) => [
             styles.rowPress,
             pressed && { opacity: 0.7 },

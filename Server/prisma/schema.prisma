@@ -171,6 +171,10 @@ model User {
   dailyReminderEnabled                    Boolean @default(true)
   dailyReminderTime                       String  @default("09:00") // local time, HH:mm
   streakAlertsEnabled                     Boolean @default(true)
+  reactivationNudgesEnabled               Boolean @default(true)
+  tutorChatMessageNotificationsEnabled    Boolean @default(true)
+  groupMessageNotificationsEnabled        Boolean @default(true)
+  newFollowerNotificationsEnabled         Boolean @default(true)
   weeklySummaryEnabled                    Boolean @default(false)
   achievementUnlockedNotificationsEnabled Boolean @default(true)
   communityActivityNotificationsEnabled   Boolean @default(false)

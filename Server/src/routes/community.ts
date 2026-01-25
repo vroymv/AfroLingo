@@ -262,7 +262,7 @@ router.get("/feed", async (req: Request, res: Response) => {
       hasMore && page.length > 0
         ? encodeCursor(
             page[page.length - 1].createdAt,
-            page[page.length - 1].id
+            page[page.length - 1].id,
           )
         : null;
 
@@ -462,7 +462,7 @@ router.post(
         message: "Failed to toggle like",
       });
     }
-  }
+  },
 );
 
 // GET /api/community/feed/:postId/comments
@@ -519,7 +519,7 @@ router.get("/feed/:postId/comments", async (req: Request, res: Response) => {
       hasMore && page.length > 0
         ? encodeCursor(
             page[page.length - 1].createdAt,
-            page[page.length - 1].id
+            page[page.length - 1].id,
           )
         : null;
 
@@ -762,7 +762,7 @@ router.get("/people/discover/:userId", async (req: Request, res: Response) => {
 
     const followingSet = new Set(follows.map((f) => f.followingId));
     const xpByUserId = new Map(
-      xpAgg.map((row) => [row.userId, row._sum.amount ?? 0])
+      xpAgg.map((row) => [row.userId, row._sum.amount ?? 0]),
     );
 
     const data = users.map((u) => ({
@@ -866,7 +866,7 @@ router.post(
         message: "Failed to follow user",
       });
     }
-  }
+  },
 );
 
 // DELETE /api/community/people/:userId/follow/:targetUserId
@@ -921,7 +921,7 @@ router.delete(
         message: "Failed to unfollow user",
       });
     }
-  }
+  },
 );
 
 // ============================================================
@@ -949,10 +949,10 @@ router.post("/groups/:userId/create", async (req: Request, res: Response) => {
     }
 
     const requestedInviteIds = Array.from(
-      new Set((body.invitedUserIds ?? []).map((id) => String(id).trim()))
+      new Set((body.invitedUserIds ?? []).map((id) => String(id).trim())),
     ).filter(Boolean);
     const invitedUserIds = requestedInviteIds.filter(
-      (id) => id !== creatorUserId
+      (id) => id !== creatorUserId,
     );
 
     const io = req.app.get("io") as SocketIOServer | undefined;
@@ -1056,8 +1056,8 @@ router.post("/groups/:userId/create", async (req: Request, res: Response) => {
                 createdAt: true,
                 readAt: true,
               },
-            })
-          )
+            }),
+          ),
         );
 
         for (const notification of createdNotifications) {
@@ -1254,7 +1254,7 @@ router.post(
         message: "Failed to accept invite",
       });
     }
-  }
+  },
 );
 
 // POST /api/community/groups/:userId/invites/:inviteId/decline
@@ -1310,7 +1310,7 @@ router.post(
         message: "Failed to decline invite",
       });
     }
-  }
+  },
 );
 
 // GET /api/community/groups/discover/:userId
@@ -1503,7 +1503,7 @@ router.get("/groups/my/:userId", async (req: Request, res: Response) => {
             messages: undefined,
           },
         };
-      })
+      }),
     );
 
     return res.status(200).json({
@@ -1598,7 +1598,7 @@ router.post(
         message: "Failed to join group",
       });
     }
-  }
+  },
 );
 
 // DELETE /api/community/groups/:userId/leave/:groupId
@@ -1644,7 +1644,7 @@ router.delete(
         message: "Failed to leave group",
       });
     }
-  }
+  },
 );
 
 // GET /api/community/groups/:userId/:groupId/messages
@@ -1656,7 +1656,7 @@ router.get(
       const userId = userIdSchema.parse(req.params.userId);
       const groupId = userIdSchema.parse(req.params.groupId);
       const { cursor, limit, markRead } = groupsMessagesQuerySchema.parse(
-        req.query
+        req.query,
       );
 
       const membership = await prisma.groupMembership.findUnique({
@@ -1744,7 +1744,7 @@ router.get(
         message: "Failed to fetch messages",
       });
     }
-  }
+  },
 );
 
 // POST /api/community/groups/:userId/:groupId/messages
@@ -1874,10 +1874,24 @@ router.post(
           ]);
 
           const onlineSet = new Set(onlineUserIds);
-          const recipientUserIds = memberships
+          let recipientUserIds = memberships
             .map((m) => m.userId)
             .filter((id) => id !== userId)
             .filter((id) => !onlineSet.has(id));
+
+          if (recipientUserIds.length > 0) {
+            const allowed = await prisma.user.findMany({
+              where: {
+                id: { in: recipientUserIds },
+                groupMessageNotificationsEnabled: true,
+              },
+              select: { id: true },
+            });
+            const allowedSet = new Set(allowed.map((u) => u.id));
+            recipientUserIds = recipientUserIds.filter((id) =>
+              allowedSet.has(id),
+            );
+          }
 
           if (recipientUserIds.length > 0) {
             const preview =
@@ -1908,8 +1922,8 @@ router.post(
                     createdAt: true,
                     readAt: true,
                   },
-                })
-              )
+                }),
+              ),
             );
 
             for (const notification of createdNotifications) {
@@ -1945,7 +1959,7 @@ router.post(
         message: "Failed to send message",
       });
     }
-  }
+  },
 );
 
 // GET /api/community/notifications/:userId
@@ -2047,7 +2061,7 @@ router.post(
         message: "Failed to mark notification read",
       });
     }
-  }
+  },
 );
 
 // POST /api/community/groups/:userId/:groupId/report
@@ -2089,7 +2103,7 @@ router.post(
         message: "Failed to submit report",
       });
     }
-  }
+  },
 );
 
 export default router;
