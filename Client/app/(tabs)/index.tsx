@@ -73,6 +73,16 @@ export default function HomeScreen() {
   };
 
   const handleQuickAction = (action: string) => {
+    if (action === "Listening") {
+      router.push({
+        pathname: "/karaoke/random",
+        params: state.selectedLanguage
+          ? { language: state.selectedLanguage }
+          : undefined,
+      } as any);
+      return;
+    }
+
     // Handle quick actions
     console.log(`Starting ${action} practice...`);
   };

@@ -3,6 +3,7 @@ import { ThemedText } from "@/components/ThemedText";
 import {
   getActiveKaraokeExercise,
   getKaraokeExercise,
+  getRandomKaraokeExercise,
   type KaraokeExercise,
   type KaraokeLine,
   type KaraokeWord,
@@ -43,10 +44,14 @@ export function KaraokeLyricsModal({
   visible,
   onClose,
   exerciseId,
+  mode = "active",
+  language,
 }: {
   visible: boolean;
   onClose: () => void;
   exerciseId?: string | null;
+  mode?: "active" | "random";
+  language?: string | null;
 }) {
   const colorScheme = useColorScheme() ?? "light";
 
@@ -56,14 +61,14 @@ export function KaraokeLyricsModal({
 
   const lines: KaraokeLine[] = useMemo(
     () => exercise?.transcript?.lines ?? [],
-    [exercise]
+    [exercise],
   );
 
   const flatWords = useMemo(() => flattenWords(lines), [lines]);
   const justWords = useMemo(
     () =>
       flatWords.map(({ text, startMs, endMs }) => ({ text, startMs, endMs })),
-    [flatWords]
+    [flatWords],
   );
 
   const [isReady, setIsReady] = useState(false);
@@ -80,7 +85,7 @@ export function KaraokeLyricsModal({
 
   const activeIndex = useMemo(
     () => findActiveWordIndex(justWords, positionMs),
-    [justWords, positionMs]
+    [justWords, positionMs],
   );
 
   const activeTokenKey = activeIndex >= 0 ? `${activeIndex}` : "-1";
@@ -99,7 +104,9 @@ export function KaraokeLyricsModal({
     (async () => {
       const result = exerciseId
         ? await getKaraokeExercise(exerciseId)
-        : await getActiveKaraokeExercise();
+        : mode === "random"
+          ? await getRandomKaraokeExercise(language)
+          : await getActiveKaraokeExercise();
       if (canceled) return;
 
       if (!result.success || !result.data) {
@@ -127,7 +134,7 @@ export function KaraokeLyricsModal({
     return () => {
       canceled = true;
     };
-  }, [exerciseId, visible]);
+  }, [exerciseId, language, mode, visible]);
 
   useEffect(() => {
     if (!visible) return;
