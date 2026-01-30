@@ -1,4 +1,5 @@
 import { Router, Request, Response } from "express";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../config/prisma";
 import { getRedisClient } from "../config/redis";
@@ -17,6 +18,12 @@ const groupsDiscoverQuerySchema = z.object({
   q: z.string().trim().min(1).max(100).optional(),
   language: z.string().trim().min(2).max(10).optional(),
   limit: z.coerce.number().int().min(1).max(100).optional(),
+});
+
+const groupsTopActiveQuerySchema = z.object({
+  language: z.string().trim().min(2).max(10).optional(),
+  limit: z.coerce.number().int().min(1).max(20).optional(),
+  windowDays: z.coerce.number().int().min(1).max(90).optional(),
 });
 
 const groupsMessagesQuerySchema = z.object({
@@ -1420,6 +1427,144 @@ router.get("/groups/discover/:userId", async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       message: "Failed to discover groups",
+    });
+  }
+});
+
+// GET /api/community/groups/top-active
+// Returns the top groups by message volume in a recent time window.
+router.get("/groups/top-active", async (req: Request, res: Response) => {
+  try {
+    const { limit, language, windowDays } = groupsTopActiveQuerySchema.parse(
+      req.query,
+    );
+
+    const take = limit ?? 3;
+    const days = windowDays ?? 7;
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const trimmedLanguage = language?.trim();
+
+    const groupByWhere = {
+      createdAt: { gte: since },
+      group: {
+        isActive: true,
+        ...(trimmedLanguage ? { language: trimmedLanguage } : {}),
+      },
+    };
+
+    const recentArgs = Prisma.validator<Prisma.GroupMessageGroupByArgs>()({
+      by: ["groupId"],
+      where: groupByWhere,
+      _count: { groupId: true },
+      _max: { createdAt: true },
+      orderBy: {
+        _count: {
+          groupId: "desc",
+        },
+      },
+      take,
+    });
+
+    const recentActivity = await prisma.groupMessage.groupBy(recentArgs);
+
+    const activity =
+      recentActivity.length > 0
+        ? recentActivity
+        : await prisma.groupMessage.groupBy(
+            Prisma.validator<Prisma.GroupMessageGroupByArgs>()({
+              by: ["groupId"],
+              where: {
+                group: {
+                  isActive: true,
+                  ...(trimmedLanguage ? { language: trimmedLanguage } : {}),
+                },
+              },
+              _count: { groupId: true },
+              _max: { createdAt: true },
+              orderBy: {
+                _count: {
+                  groupId: "desc",
+                },
+              },
+              take,
+            }),
+          );
+
+    const groupIds = activity.map((a) => a.groupId);
+    if (groupIds.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: { groups: [] },
+      });
+    }
+
+    const groups = await prisma.group.findMany({
+      where: {
+        id: { in: groupIds },
+        isActive: true,
+      },
+      select: {
+        id: true,
+        externalId: true,
+        name: true,
+        description: true,
+        language: true,
+        tags: true,
+        privacy: true,
+        avatarUrl: true,
+        coverImageUrl: true,
+        createdAt: true,
+        _count: {
+          select: {
+            memberships: {
+              where: {
+                leftAt: null,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const groupById = new Map(groups.map((g) => [g.id, g]));
+
+    const data = activity
+      .map((a) => {
+        const g = groupById.get(a.groupId);
+        if (!g) return null;
+
+        return {
+          ...g,
+          memberCount: g._count.memberships,
+          messageCount: a._count?.groupId ?? 0,
+          lastMessageAt: a._max?.createdAt
+            ? a._max.createdAt.toISOString()
+            : null,
+          _count: undefined,
+        };
+      })
+      .filter(Boolean);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        groups: data,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching top active groups:", error);
+
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation error",
+        errors: error.issues,
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch top active groups",
     });
   }
 });

@@ -1,5 +1,11 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import {
+  fetchTopActiveGroups,
+  type TopActiveGroupRow,
+} from "@/services/communityGroups";
+import { useRouter } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 
 interface CommunitySectionProps {
@@ -11,18 +17,74 @@ export default function CommunitySection({
   selectedLanguage,
   onNavigateToCommunity,
 }: CommunitySectionProps) {
+  const router = useRouter();
+  const [groups, setGroups] = useState<TopActiveGroupRow[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   const getLanguageName = (language: string | null) => {
     if (!language) return "Language";
     return language.charAt(0).toUpperCase() + language.slice(1);
   };
 
+  const filterLanguage = useMemo(() => {
+    const value = selectedLanguage?.trim();
+    return value && value.length >= 2 ? value : undefined;
+  }, [selectedLanguage]);
+
+  const formatTimeAgo = (iso: string | null) => {
+    if (!iso) return "New";
+    const timestamp = new Date(iso);
+    if (Number.isNaN(timestamp.getTime())) return "New";
+    const diffSeconds = Math.floor((Date.now() - timestamp.getTime()) / 1000);
+    if (diffSeconds < 60) return "Just now";
+    if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)}m ago`;
+    if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)}h ago`;
+    return `${Math.floor(diffSeconds / 86400)}d ago`;
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoading(true);
+
+    fetchTopActiveGroups({
+      limit: 3,
+      windowDays: 7,
+      language: filterLanguage,
+    })
+      .then((result) => {
+        if (cancelled) return;
+        if (result.success) {
+          setGroups(result.data);
+        } else {
+          setGroups([]);
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setGroups([]);
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [filterLanguage]);
+
   return (
     <ThemedView style={styles.communitySection}>
       <View style={styles.communitySectionHeader}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
-          Community & Live Classes
+          Communities
         </ThemedText>
-        <TouchableOpacity onPress={onNavigateToCommunity}>
+        <TouchableOpacity
+          onPress={() => {
+            onNavigateToCommunity();
+            router.push("/(tabs)/community/groups" as any);
+          }}
+        >
           <ThemedText style={styles.seeAllText}>See All</ThemedText>
         </TouchableOpacity>
       </View>
@@ -33,75 +95,69 @@ export default function CommunitySection({
         style={styles.communityScrollView}
         contentContainerStyle={styles.communityScrollContent}
       >
-        <TouchableOpacity style={styles.liveClassCard}>
-          <View style={styles.liveClassHeader}>
-            <View style={styles.liveBadge}>
-              <ThemedText style={styles.liveBadgeText}>LIVE</ThemedText>
+        {isLoading ? (
+          <View style={styles.discussionCard}>
+            <View style={styles.discussionHeader}>
+              <ThemedText style={styles.discussionBadge}>👥</ThemedText>
+              <ThemedText style={styles.discussionTime}>Loading…</ThemedText>
             </View>
-            <ThemedText style={styles.liveClassTime}>in 2h</ThemedText>
-          </View>
-          <ThemedText style={styles.liveClassTitle}>
-            Conversational {getLanguageName(selectedLanguage)}
-          </ThemedText>
-          <ThemedText style={styles.liveClassTeacher}>
-            with Teacher Amara
-          </ThemedText>
-          <View style={styles.participantsRow}>
-            <ThemedText style={styles.participantsText}>12 joined</ThemedText>
-            <View style={styles.participantAvatars}>
-              <View style={[styles.avatar, { backgroundColor: "#FF6B35" }]} />
-              <View
-                style={[
-                  styles.avatar,
-                  { backgroundColor: "#4ECDC4", marginLeft: -8 },
-                ]}
-              />
-              <View
-                style={[
-                  styles.avatar,
-                  { backgroundColor: "#45B7D1", marginLeft: -8 },
-                ]}
-              />
-            </View>
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.discussionCard}>
-          <View style={styles.discussionHeader}>
-            <ThemedText style={styles.discussionBadge}>💬</ThemedText>
-            <ThemedText style={styles.discussionTime}>3h ago</ThemedText>
-          </View>
-          <ThemedText style={styles.discussionTitle}>
-            Share your cultural stories!
-          </ThemedText>
-          <ThemedText style={styles.discussionPreview}>
-            &ldquo;My grandmother used to say this beautiful phrase in...&rdquo;
-          </ThemedText>
-          <View style={styles.discussionStats}>
-            <ThemedText style={styles.discussionStat}>32 replies</ThemedText>
-            <ThemedText style={styles.discussionStat}>•</ThemedText>
-            <ThemedText style={styles.discussionStat}>18 hearts</ThemedText>
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.discussionCard}>
-          <View style={styles.discussionHeader}>
-            <ThemedText style={styles.discussionBadge}>🎯</ThemedText>
-            <ThemedText style={styles.discussionTime}>1d ago</ThemedText>
-          </View>
-          <ThemedText style={styles.discussionTitle}>
-            Weekly Challenge: Family Tree
-          </ThemedText>
-          <ThemedText style={styles.discussionPreview}>
-            &ldquo;Learn 10 family relationship words and share a
-            photo...&rdquo;
-          </ThemedText>
-          <View style={styles.discussionStats}>
-            <ThemedText style={styles.discussionStat}>
-              89 participants
+            <ThemedText style={styles.discussionTitle}>
+              Top {getLanguageName(selectedLanguage)} communities
+            </ThemedText>
+            <ThemedText style={styles.discussionPreview}>
+              Fetching active groups from the community feed…
             </ThemedText>
           </View>
-        </TouchableOpacity>
+        ) : groups.length === 0 ? (
+          <View style={styles.discussionCard}>
+            <View style={styles.discussionHeader}>
+              <ThemedText style={styles.discussionBadge}>👥</ThemedText>
+              <ThemedText style={styles.discussionTime}>
+                No activity yet
+              </ThemedText>
+            </View>
+            <ThemedText style={styles.discussionTitle}>
+              No active communities found
+            </ThemedText>
+            <ThemedText style={styles.discussionPreview}>
+              Be the first to start a conversation.
+            </ThemedText>
+          </View>
+        ) : (
+          groups.map((g) => (
+            <TouchableOpacity
+              key={g.id}
+              style={styles.discussionCard}
+              onPress={() =>
+                router.push({
+                  pathname: "/community/groups/[groupId]" as any,
+                  params: { groupId: g.id },
+                })
+              }
+            >
+              <View style={styles.discussionHeader}>
+                <ThemedText style={styles.discussionBadge}>👥</ThemedText>
+                <ThemedText style={styles.discussionTime}>
+                  {formatTimeAgo(g.lastMessageAt)}
+                </ThemedText>
+              </View>
+              <ThemedText style={styles.discussionTitle}>{g.name}</ThemedText>
+              <ThemedText style={styles.discussionPreview}>
+                {g.description ||
+                  `Join the ${g.name} community and start chatting.`}
+              </ThemedText>
+              <View style={styles.discussionStats}>
+                <ThemedText style={styles.discussionStat}>
+                  {g.messageCount} messages
+                </ThemedText>
+                <ThemedText style={styles.discussionStat}>•</ThemedText>
+                <ThemedText style={styles.discussionStat}>
+                  {g.memberCount ?? 0} members
+                </ThemedText>
+              </View>
+            </TouchableOpacity>
+          ))
+        )}
       </ScrollView>
     </ThemedView>
   );

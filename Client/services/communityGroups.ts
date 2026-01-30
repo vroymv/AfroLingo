@@ -5,7 +5,7 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 function requireApiBaseUrl(): string {
   if (!API_BASE_URL) {
     throw new Error(
-      "API base URL is not configured. Set EXPO_PUBLIC_API_BASE_URL in env."
+      "API base URL is not configured. Set EXPO_PUBLIC_API_BASE_URL in env.",
     );
   }
   return API_BASE_URL;
@@ -28,6 +28,11 @@ export type ServerGroup = {
   coverImageUrl: string | null;
   createdAt: string;
   memberCount?: number;
+};
+
+export type TopActiveGroupRow = ServerGroup & {
+  messageCount: number;
+  lastMessageAt: string | null;
 };
 
 export type CreateGroupWithInvitesInput = {
@@ -160,6 +165,43 @@ export async function fetchDiscoverGroups(params: {
   };
 }
 
+export async function fetchTopActiveGroups(params?: {
+  language?: string;
+  limit?: number;
+  windowDays?: number;
+}) {
+  const baseUrl = requireApiBaseUrl();
+  const authHeader = await getAuthHeader();
+
+  const url = new URL(`${baseUrl}/community/groups/top-active`);
+  if (params?.language) url.searchParams.set("language", params.language);
+  if (typeof params?.limit === "number")
+    url.searchParams.set("limit", String(params.limit));
+  if (typeof params?.windowDays === "number")
+    url.searchParams.set("windowDays", String(params.windowDays));
+
+  const res = await fetch(url.toString(), {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeader,
+    },
+  });
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok || json?.success === false) {
+    return {
+      success: false as const,
+      message: json?.message || `Request failed with status ${res.status}`,
+    };
+  }
+
+  return {
+    success: true as const,
+    data: (json?.data?.groups ?? []) as TopActiveGroupRow[],
+  };
+}
+
 export async function joinGroup(params: { userId: string; groupId: string }) {
   const baseUrl = requireApiBaseUrl();
   const authHeader = await getAuthHeader();
@@ -172,7 +214,7 @@ export async function joinGroup(params: { userId: string; groupId: string }) {
         "Content-Type": "application/json",
         ...authHeader,
       },
-    }
+    },
   );
 
   const json = await res.json().catch(() => ({}));
@@ -198,7 +240,7 @@ export async function leaveGroup(params: { userId: string; groupId: string }) {
         "Content-Type": "application/json",
         ...authHeader,
       },
-    }
+    },
   );
 
   const json = await res.json().catch(() => ({}));
@@ -213,7 +255,7 @@ export async function leaveGroup(params: { userId: string; groupId: string }) {
 }
 
 export async function createGroupWithInvites(
-  params: CreateGroupWithInvitesInput
+  params: CreateGroupWithInvitesInput,
 ) {
   const baseUrl = requireApiBaseUrl();
   const authHeader = await getAuthHeader();
@@ -234,7 +276,7 @@ export async function createGroupWithInvites(
         privacy: params.privacy,
         invitedUserIds: params.invitedUserIds,
       }),
-    }
+    },
   );
 
   const json = await res.json().catch(() => ({}));
@@ -299,7 +341,7 @@ export async function acceptGroupInvite(params: {
         "Content-Type": "application/json",
         ...authHeader,
       },
-    }
+    },
   );
 
   const json = await res.json().catch(() => ({}));
@@ -331,7 +373,7 @@ export async function declineGroupInvite(params: {
         "Content-Type": "application/json",
         ...authHeader,
       },
-    }
+    },
   );
 
   const json = await res.json().catch(() => ({}));
@@ -370,7 +412,7 @@ export async function fetchGroupMessages(params: {
   const authHeader = await getAuthHeader();
 
   const url = new URL(
-    `${baseUrl}/community/groups/${params.userId}/${params.groupId}/messages`
+    `${baseUrl}/community/groups/${params.userId}/${params.groupId}/messages`,
   );
   if (params.cursor) url.searchParams.set("cursor", params.cursor);
   if (typeof params.limit === "number")
@@ -428,7 +470,7 @@ export async function sendGroupMessage(params: {
         channelId: params.channelId,
         metadata: params.metadata,
       }),
-    }
+    },
   );
 
   const json = await res.json().catch(() => ({}));

@@ -2,7 +2,13 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { getGrammarTipOfDay } from "@/services/grammarTips";
 import React, { useEffect, useMemo, useState } from "react";
-import { Dimensions, StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Dimensions,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 const { width } = Dimensions.get("window");
 
@@ -51,14 +57,14 @@ export default function QuickActionsSection({
 
     const dayOfYear = Math.floor(
       (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) /
-        86400000
+        86400000,
     );
 
     return languageTips[dayOfYear % languageTips.length];
   };
 
   const [grammarTip, setGrammarTip] = useState<string>(() =>
-    getLocalGrammarTip(selectedLanguage)
+    getLocalGrammarTip(selectedLanguage),
   );
 
   const languageForTip = useMemo(() => {
@@ -113,7 +119,12 @@ export default function QuickActionsSection({
 
         <TouchableOpacity
           style={styles.actionCard}
-          onPress={() => onQuickAction("Pronunciation")}
+          onPress={() => {
+            Alert.alert(
+              "Coming soon",
+              "Pronunciation Drill is coming soon. Stay tuned!",
+            );
+          }}
         >
           <View
             style={[
