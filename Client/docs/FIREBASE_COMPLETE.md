@@ -128,7 +128,6 @@ app.post("/api/users", async (req, res) => {
    ```
 
 3. **In the app:**
-
    - Navigate to Sign Up screen
    - Enter name, email, password
    - Tap "Sign Up"
@@ -136,7 +135,6 @@ app.post("/api/users", async (req, res) => {
    - ✅ User data sent to your backend
 
 4. **Verify in Firebase Console:**
-
    - Go to: https://console.firebase.google.com/
    - Select AfroLingo project
    - Click Authentication → Users
@@ -218,7 +216,9 @@ async function verifyFirebaseToken(req, res, next) {
 
 ### For iOS (Physical Device Testing)
 
-The `GoogleService-Info.plist` is already added. To test on a real iOS device:
+Do **not** commit `GoogleService-Info.plist` to GitHub.
+
+To test on a real iOS device, download `GoogleService-Info.plist` from the Firebase Console and place it at `ios/AfroLingo/GoogleService-Info.plist`, then:
 
 1. Open Xcode project:
 
@@ -233,7 +233,9 @@ The `GoogleService-Info.plist` is already added. To test on a real iOS device:
 
 ### For Android (When Ready)
 
-The `google-services.json` is in the project. When you create a development build:
+Do **not** commit `google-services.json` to GitHub.
+
+When you create a development build, download `google-services.json` from the Firebase Console and place it at `android/app/google-services.json`, then:
 
 1. Run:
 

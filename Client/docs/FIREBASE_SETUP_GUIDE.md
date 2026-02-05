@@ -92,6 +92,8 @@ App Store ID: (leave blank for now)
 1. Download **`GoogleService-Info.plist`**
 2. Save it - we'll add it to the project soon
 
+Important: **Do not commit this file to GitHub** (it is ignored by `.gitignore`).
+
 #### D. Click "Next" through the remaining steps
 
 - SDK setup (we'll do this via npm)
@@ -116,6 +118,8 @@ Debug signing certificate SHA-1: (we'll add this later)
 
 1. Download **`google-services.json`**
 2. Save it - we'll add it to the project soon
+
+Important: **Do not commit this file to GitHub** (it is ignored by `.gitignore`).
 
 #### D. Click "Next" through the remaining steps
 
@@ -184,6 +188,8 @@ npm install firebase @react-native-firebase/app @react-native-firebase/auth
 cp ~/Downloads/GoogleService-Info.plist ./ios/AfroLingo/
 ```
 
+Note: This file should stay local (not committed).
+
 #### B. Update Podfile
 
 File: `ios/Podfile`
@@ -211,6 +217,8 @@ cd ..
 # Copy the downloaded file to Android folder
 cp ~/Downloads/google-services.json ./android/app/
 ```
+
+Note: This file should stay local (not committed).
 
 #### B. Update build.gradle (Project level)
 
@@ -412,12 +420,10 @@ Copy the SHA-1 fingerprint.
 **Ready to begin?** Tell me:
 
 1. **Do you already have a Firebase account?**
-
    - Yes → Let's go to Step 1
    - No → Create one at https://firebase.google.com/
 
 2. **What's your preferred bundle ID/package name?**
-
    - Example: `com.yourcompany.afrolingo`
    - Or: `com.afrolingo.app`
 

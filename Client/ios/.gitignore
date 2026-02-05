@@ -28,3 +28,7 @@ project.xcworkspace
 
 # CocoaPods
 /Pods/
+
+# Firebase / Google services config (do not commit)
+GoogleService-Info.plist
+**/GoogleService-Info.plist
