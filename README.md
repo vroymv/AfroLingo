@@ -133,7 +133,8 @@ For the detailed Community summary, see `Client/README_COMMUNITY.md`.
   <img src="./docs/screenshots/Alphabet%20Lesson.png" alt="Alphabet Lesson" width="220" loading="lazy" style="display:inline-block; margin-right:10px;" />
   <img src="./docs/screenshots/Word%20Complete%20lesson.png" alt="Word Complete lesson" width="220" loading="lazy" style="display:inline-block; margin-right:10px;" />
   <img src="./docs/screenshots/Spelling%20Lesson.png" alt="Spelling Lesson" width="220" loading="lazy" style="display:inline-block; margin-right:10px;" />
-  <img src="./docs/screenshots/Screenshot%202026-02-04%20at%2003.32.42.png" alt="Lesson screenshot" width="220" loading="lazy" style="display:inline-block;" />
+  <img src="./docs/screenshots/Story.png" alt="Story" width="360" loading="lazy" style="display:inline-block;" />
+
 </div>
 
 ## <h2> <b>Tutors + 1:1 Chat</b>: </h2>
@@ -147,7 +148,7 @@ For the detailed Community summary, see `Client/README_COMMUNITY.md`.
 
 <div style="text-align: center;">
   <img src="./docs/screenshots/Groups.png" alt="Groups" width="360" loading="lazy" style="display:inline-block; margin-right:10px;" />
-  <img src="./docs/screenshots/Story.png" alt="Story" width="360" loading="lazy" style="display:inline-block;" />
+  
 </div>
 
 ## <a name="quick-start">Quick Start</a>
