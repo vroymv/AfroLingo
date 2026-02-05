@@ -28,19 +28,19 @@
   </div>
 </div>
 
-## 📋 <a name="table">Table of Contents</a>
+## <a name="table">Table of Contents</a>
 
-1. 🤖 [Introduction](#introduction)
-2. 🚨 [About](#about)
-3. ⚙️ [Tech Stack](#tech-stack)
-4. 🔋 [Features](#features)
-5. 🧩 [Architecture](#architecture)
-6. 📷 [Screenshots](#screenshots)
-7. 🤸 [Quick Start](#quick-start)
-8. 🕸️ [Snippets](#snippets)
-9. 🔗 [Links](#links)
+1. [Introduction](#introduction)
+2. [About](#about)
+3. [Tech Stack](#tech-stack)
+4. [Features](#features)
+5. [Architecture](#architecture)
+6. [Screenshots](#screenshots)
+7. [Quick Start](#quick-start)
+8. [Snippets](#snippets)
+9. [Links](#links)
 
-## <a name="introduction">🤖 Introduction</a>
+## <a name="introduction">Introduction</a>
 
 This repository contains both:
 
@@ -49,7 +49,7 @@ This repository contains both:
 
 The client talks to the server over HTTP (REST endpoints under `/api`) and subscribes to realtime updates via Socket.IO.
 
-## 🚨 <a name="about">About</a>
+## <a name="about">About</a>
 
 AfroLingo’s goal is to help learners reconnect with African languages and cultural context through:
 
@@ -58,9 +58,9 @@ AfroLingo’s goal is to help learners reconnect with African languages and cult
 - Tutor discovery and 1:1 messaging (real-time)
 - Community experiences (UI prototype demonstrating scalable feature structure)
 
-This README is written to be useful for **job applications**: it’s skimmable, highlights engineering decisions, and includes reliable setup instructions.
+This README is written to be useful in understanding how the project works.
 
-## <a name="tech-stack">⚙️ Tech Stack</a>
+## <a name="tech-stack">Tech Stack</a>
 
 - **Client**: React Native (Expo), Expo Router, TypeScript, Firebase (Auth), Socket.IO client
 - **Server**: Node.js, Express, TypeScript, Socket.IO, Zod
@@ -68,7 +68,7 @@ This README is written to be useful for **job applications**: it’s skimmable, 
 - **ORM**: Prisma
 - **Realtime infra**: Redis (presence, rate limiting, Socket.IO adapter)
 
-## <a name="features">🔋 Features</a>
+## <a name="features">Features</a>
 
 ### Learning + progress
 
@@ -91,7 +91,7 @@ This README is written to be useful for **job applications**: it’s skimmable, 
 
 For the detailed Community summary, see `Client/README_COMMUNITY.md`.
 
-## <a name="architecture">🧩 Architecture</a>
+## <a name="architecture">Architecture</a>
 
 ### High-level flow
 
@@ -108,51 +108,49 @@ For the detailed Community summary, see `Client/README_COMMUNITY.md`.
 - Tutor chat: `tutor_chat:message:new`
 - Groups: message + presence/typing patterns
 
-## <a name="screenshots">📷 Screenshots</a>
+## <a name="screenshots">Screenshots</a>
 
-Drop screenshots into `docs/screenshots/` (see `docs/screenshots/README.md` for the expected filenames).
-
-## <h2> 👉 <b>Onboarding</b>: </h2>
+## <h2> <b>Onboarding</b>: </h2>
 
 <div style="text-align: center;">
-  <img src="./docs/screenshots/Onboarding%201.png" alt="Onboarding 1" style="display:inline-block; margin-right:10px;" />
-  <img src="./docs/screenshots/Onboarding%202.png" alt="Onboarding 2" style="display:inline-block; margin-right:10px;" />
-  <img src="./docs/screenshots/Onboarding%203.png" alt="Onboarding 3" style="display:inline-block; margin-right:10px;" />
-  <img src="./docs/screenshots/Onboarding%204.png" alt="Onboarding 4" style="display:inline-block; margin-right:10px;" />
-  <img src="./docs/screenshots/Onboarding%205.png" alt="Onboarding 5" style="display:inline-block;" />
+  <img src="./docs/screenshots/Onboarding%201.png" alt="Onboarding 1" width="160" loading="lazy" style="display:inline-block; margin-right:10px;" />
+  <img src="./docs/screenshots/Onboarding%202.png" alt="Onboarding 2" width="160" loading="lazy" style="display:inline-block; margin-right:10px;" />
+  <img src="./docs/screenshots/Onboarding%203.png" alt="Onboarding 3" width="160" loading="lazy" style="display:inline-block; margin-right:10px;" />
+  <img src="./docs/screenshots/Onboarding%204.png" alt="Onboarding 4" width="160" loading="lazy" style="display:inline-block; margin-right:10px;" />
+  <img src="./docs/screenshots/Onboarding%205.png" alt="Onboarding 5" width="160" loading="lazy" style="display:inline-block;" />
 </div>
 
-## <h2> 👉 <b>Home / Dashboard</b>: </h2>
+## <h2> <b>Home / Dashboard</b>: </h2>
 
 <div style="text-align: center;">
-  <img src="./docs/screenshots/Home.png" alt="Home" style="display:inline-block; margin-right:10px;" />
-  <img src="./docs/screenshots/Learn%20Page.png" alt="Learn Page" style="display:inline-block;" />
+  <img src="./docs/screenshots/Home.png" alt="Home" width="360" loading="lazy" style="display:inline-block; margin-right:10px;" />
+  <img src="./docs/screenshots/Learn%20Page.png" alt="Learn Page" width="360" loading="lazy" style="display:inline-block;" />
 </div>
 
-## <h2> 👉 <b>Lesson / Practice</b>: </h2>
+## <h2> <b>Lesson / Practice</b>: </h2>
 
 <div style="text-align: center;">
-  <img src="./docs/screenshots/Alphabet%20Lesson.png" alt="Alphabet Lesson" style="display:inline-block; margin-right:10px;" />
-  <img src="./docs/screenshots/Word%20Complete%20lesson.png" alt="Word Complete lesson" style="display:inline-block; margin-right:10px;" />
-  <img src="./docs/screenshots/Spelling%20Lesson.png" alt="Spelling Lesson" style="display:inline-block; margin-right:10px;" />
-  <img src="./docs/screenshots/Screenshot%202026-02-04%20at%2003.32.42.png" alt="Lesson screenshot" style="display:inline-block;" />
+  <img src="./docs/screenshots/Alphabet%20Lesson.png" alt="Alphabet Lesson" width="220" loading="lazy" style="display:inline-block; margin-right:10px;" />
+  <img src="./docs/screenshots/Word%20Complete%20lesson.png" alt="Word Complete lesson" width="220" loading="lazy" style="display:inline-block; margin-right:10px;" />
+  <img src="./docs/screenshots/Spelling%20Lesson.png" alt="Spelling Lesson" width="220" loading="lazy" style="display:inline-block; margin-right:10px;" />
+  <img src="./docs/screenshots/Screenshot%202026-02-04%20at%2003.32.42.png" alt="Lesson screenshot" width="220" loading="lazy" style="display:inline-block;" />
 </div>
 
-## <h2> 👉 <b>Tutors + 1:1 Chat</b>: </h2>
+## <h2> <b>Tutors + 1:1 Chat</b>: </h2>
 
 <div style="text-align: center;">
-  <img src="./docs/screenshots/Tutors.png" alt="Tutors" style="display:inline-block; margin-right:10px;" />
+  <img src="./docs/screenshots/Tutors.png" alt="Tutors" width="360" loading="lazy" style="display:inline-block; margin-right:10px;" />
   <i>Add 1:1 chat screenshots here (optional).</i>
 </div>
 
-## <h2> 👉 <b>Community</b>: </h2>
+## <h2> <b>Community</b>: </h2>
 
 <div style="text-align: center;">
-  <img src="./docs/screenshots/Groups.png" alt="Groups" style="display:inline-block; margin-right:10px;" />
-  <img src="./docs/screenshots/Story.png" alt="Story" style="display:inline-block;" />
+  <img src="./docs/screenshots/Groups.png" alt="Groups" width="360" loading="lazy" style="display:inline-block; margin-right:10px;" />
+  <img src="./docs/screenshots/Story.png" alt="Story" width="360" loading="lazy" style="display:inline-block;" />
 </div>
 
-## <a name="quick-start">🤸 Quick Start</a>
+## <a name="quick-start">Quick Start</a>
 
 Follow these steps to run the full project locally.
 
@@ -220,7 +218,7 @@ npm start
 
 Then open iOS Simulator / Android Emulator / Web from the Expo CLI.
 
-## <a name="snippets">🕸️ Snippets</a>
+## <a name="snippets">Snippets</a>
 
 ### Example API base URL (Client)
 
@@ -246,7 +244,7 @@ The Socket.IO server expects a Firebase ID token sent during the handshake (clie
 // io("http://localhost:3000", { auth: { token: "<firebase-id-token>" } })
 ```
 
-## <a name="links">🔗 Links</a>
+## <a name="links">Links</a>
 
 - Client docs: `Client/docs/`
 - Community summary: `Client/README_COMMUNITY.md`
